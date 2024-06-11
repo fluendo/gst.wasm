@@ -1,0 +1,18 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+from cerbero.config import Platform, Architecture, Distro, DistroVersion
+
+# The current path
+path = os.path.dirname(os.path.abspath(__file__))
+
+# The target information
+target_platform = Platform.EMSCRIPTEN
+target_distro = Distro.EMSCRIPTEN
+target_arch = Architecture.WASM
+
+# The home dir defines 
+folder_name = 'gst.wasm_{}_{}_{}'.format(platform, target_platform, target_arch, target_distro)
+home_dir = os.path.join(path, 'build', folder_name)
+
+external_recipes = {
+    'gst.wasm': (os.path.join(path, 'recipes'), 1),
+}
