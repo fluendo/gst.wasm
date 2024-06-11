@@ -48,4 +48,6 @@ core ones, as shown in the gray boxes of the [above diagram](#the-stack)
 
 ## Usage
 
+### Samples
+
 ## Development
