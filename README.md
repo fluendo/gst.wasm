@@ -39,5 +39,13 @@ block-beta
 
 ## Dependencies
 GStreamer has plenty of dependencies, especially at the plugin level, but our goal is focused on the
-core ones, as shown in the gray boxes of the above diagram
+core ones, as shown in the gray boxes of the [above diagram](#the-stack)
 
+### libffi
+### GLib
+### GStreamer
+### Cerbero
+
+## Usage
+
+## Development
