@@ -5,11 +5,11 @@ from cerbero.config import Platform, Architecture, Distro, DistroVersion
 path = os.path.dirname(os.path.abspath(__file__))
 
 # The target information
-target_platform = Platform.EMSCRIPTEN
+target_platform = Platform.WEB
 target_distro = Distro.EMSCRIPTEN
-target_arch = Architecture.WASM
+target_arch = Architecture.WASM32
 
-# The home dir defines 
+# The home dir defines
 folder_name = 'gst.wasm_{}_{}_{}'.format(platform, target_platform, target_arch, target_distro)
 home_dir = os.path.join(path, 'build', folder_name)
 
