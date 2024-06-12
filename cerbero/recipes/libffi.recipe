@@ -10,7 +10,7 @@ class Recipe(recipe.Recipe):
     autoreconf = True
     # FIXME: this recipe is used as a build-tool and it depends on
     # a newer version of autoconf.
-    deps = ["autoconf"]
+    deps = ["autoconf", "libtool"]
     configure_options = "--disable-docs"
 
     files_libs = ["libffi"]
@@ -19,3 +19,4 @@ class Recipe(recipe.Recipe):
     def prepare(self):
         if self.config.target_platform == Platform.WEB:
             self.deps.remove("autoconf")
+            self.deps.remove("libtool")
