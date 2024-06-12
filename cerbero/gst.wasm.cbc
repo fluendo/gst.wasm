@@ -17,5 +17,24 @@ external_recipes = {
     'gst.wasm': (os.path.join(path, 'recipes'), 1),
 }
 
+gst_url = 'https://github.com/fluendo/gstreamer.git'
+gst_commit = 'fluendo/gst.wasm'
+
+recipes_remotes = {
+    'gstreamer-1.0': {'fluendo': gst_url },
+    'gst-plugins-base-1.0': {'fluendo': gst_url },
+    'gst-plugins-good-1.0': {'fluendo': gst_url },
+    'gst-plugins-bad-1.0': {'fluendo': gst_url },
+    'gst-plugins-ugly-1.0': {'fluendo': gst_url }
+}
+
+recipes_commits = {
+    'gstreamer-1.0': gst_commit,
+    'gst-plugins-base-1.0': gst_commit,
+    'gst-plugins-good-1.0': gst_commit,
+    'gst-plugins-bad-1.0': gst_commit,
+    'gst-plugins-ugly-1.0': gst_commit
+}
+
 # FIXME: remove this once all variables are correctly configured in web.config
 host = "wasm32-unknown-linux"
