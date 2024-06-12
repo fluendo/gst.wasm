@@ -39,7 +39,9 @@ block-beta
 
 ## Dependencies
 GStreamer has plenty of dependencies, especially at the plugin level, but our goal is focused on the
-core ones, as shown in the gray boxes of the [above diagram](#the-stack)
+core ones, as shown in the gray boxes of the [above diagram](#the-stack). All dependencies use the
+[git-upstream-workflow](https://github.com/fluendo/git-upstream-workflow ) meaning that all branches
+will be committed upstream and all features are cumulative.
 
 ### libffi
 ### GLib
