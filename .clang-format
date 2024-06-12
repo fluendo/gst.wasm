@@ -1,0 +1,13 @@
+---
+# GStreamer code style
+Language: Cpp
+BasedOnStyle: GNU
+AlignAfterOpenBracket: DontAlign
+BreakBeforeBraces: Mozilla
+BreakBeforeBinaryOperators: None
+IndentCaseLabels: true
+IndentGotoLabels: false
+SortIncludes: false
+SpaceAfterCStyleCast: true
+TabWidth: 2
+---
