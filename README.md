@@ -57,6 +57,9 @@ The current status is:
 
 ### Samples
 
+![videotestsrc ball pattern](docs/img/videotestsrc-sample.jpg)
+
+
 #### Prepare environment
 
 **Note: These steps will change once we got a cerbero shell working with gstreamer and emsdk.**
