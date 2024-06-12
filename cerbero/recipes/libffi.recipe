@@ -1,0 +1,21 @@
+
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+class Recipe(recipe.Recipe):
+    name = "libffi"
+    version = "master"
+    remotes = {"origin": "https://github.com/libffi/libffi.git"}
+    commit = "origin/master"
+    licenses = [{License.BSD_like: ["LICENSE"]}]
+    btype = BuildType.AUTOTOOLS
+    autoreconf = True
+    # FIXME: this recipe is used as a build-tool and it depends on
+    # a newer version of autoconf.
+    deps = ["autoconf"]
+    configure_options = "--disable-docs"
+
+    files_libs = ["libffi"]
+    files_devel = ["include/ffi*.h", "%(libdir)s/pkgconfig/libffi.pc"]
+
+    def prepare(self):
+        if self.config.target_platform == Platform.WEB:
+            self.deps.remove("autoconf")

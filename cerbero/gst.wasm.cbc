@@ -16,3 +16,6 @@ home_dir = os.path.join(path, 'build', folder_name)
 external_recipes = {
     'gst.wasm': (os.path.join(path, 'recipes'), 1),
 }
+
+# FIXME: remove this once all variables are correctly configured in web.config
+host = "wasm32-unknown-linux"
