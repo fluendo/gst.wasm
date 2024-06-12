@@ -23,13 +23,13 @@ GLIB_CONFIG_UNVERSAL='''\
 
 class Recipe(recipe.Recipe):
     name = 'glib'
-    version = '2.74.4'
+    version = '2.76.0'
     stype = SourceType.TARBALL
     url = 'gnome://'
-    tarball_checksum = '0e82da5ea129b4444227c7e4a9e598f7288d1994bf63f129c44b90cfd2432172'
+    tarball_checksum = '525bb703b807142e1aee5ccf222c344e8064b21c0c45677ef594e587874c6797'
     licenses = [License.LGPLv2Plus]
     btype = BuildType.MESON
-    meson_options = {'libmount': 'disabled', 'dtrace': 'false', 'iconv': 'auto'}
+    meson_options = {'libmount': 'disabled', 'dtrace': 'false'}
     deps = ['libffi', 'zlib', 'pcre2']
 
     patches = [
@@ -38,17 +38,13 @@ class Recipe(recipe.Recipe):
         'glib/0006-giomodule-do-not-try-to-load-modules-from-gio-module.patch',
         'glib/0008-Unhide-_g_io_modules_ensure_extension_points_registe.patch',
         # TODO upstreaming
-        'glib/0001-meson-Fix-detection-of-a-system-provided-proxy-libin.patch',
+        #'glib/0001-meson-Fix-detection-of-a-system-provided-proxy-libin.patch',
         # TODO upstreaming
-        'glib/0001-gio-gsocket-fix-compiler-warnings-on-armv7-Android.patch',
+        #'glib/0001-gio-gsocket-fix-compiler-warnings-on-armv7-Android.patch',
         # TODO upstreaming
         'glib/0001-gtypes.h-workaround-for-g_uint64_checked_mul-issue-w.patch',
         # TODO upstreaming
-        'glib/0001-gio-fix-duplicate-g_trace_-symbols-in-static-libs-wi.patch',
-        # From post-2.74.4 glib upstream (remove when bumping version)
-        'glib/0001-gthread-posix-need-to-include-errno.h.patch',
-        # Upstreamed since 2.75 (remove when bumping version)
-        'glib/0001-giomodule-Automatically-detect-modules-on-macOS.patch',
+        #'glib/0001-gio-fix-duplicate-g_trace_-symbols-in-static-libs-wi.patch',
         # futex_time64 is seccomp blocked in Android API level < 30
         # Upstreamed since 2.81 (remove when bumping version)
         f'{name}/0009-glib-gthread-posix-Block-futex_time64-usage-on-Andro.patch',
@@ -249,6 +245,9 @@ class Recipe(recipe.Recipe):
             else:
                 raise FatalError(_("Add specific for other Linux distributions here"))
             self._set_gio_flags(path1, path2, use_old_uri_scheme)
+
+        elif self.config.target_platform == Platform.WEB:
+                self.patches += ["glib/emscripten.patch"]
 
         if self.config.platform in [Platform.DARWIN, Platform.IOS]:
             # Meson doesn't yet introduce rpaths properly.
