@@ -12,6 +12,6 @@ gstaudio_dep = dependency('gstreamer-audio-1.0')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
 common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstaudiotestsrc_dep]
 
-# subdir('audiotestsrc') will be added in Fabian's PR
+subdir('audiotestsrc')
 subdir('videotestsrc')
 subdir('openal')
