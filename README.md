@@ -57,4 +57,30 @@ The current status is:
 
 ### Samples
 
+#### Prepare environment
+
+**Note: These steps will change once we got a cerbero shell working with gstreamer and emsdk.**
+
+1. Enter into an emsdk environment. Follow [these](https://emscripten.org/docs/getting_started/downloads.html#installation-instructions-using-the-emsdk-recommended) instructions.
+2. Clone `https://github.com/fluendo/RDI090-fluendo-wasm` (on `enable-openal` branch), and run `./build.sh`.
+3. Export the following environment variables:
+
+```
+EM_PKG_CONFIG_PATH="$GIT_DIR/RDI090-fluendo-wasm/build/target/lib/pkgconfig:$GIT_DIR/RDI090-fluendo-wasm/build/target/lib/gstreamer-1.0/pkgconfig/"
+```
+
+#### Compile samples
+
+```
+cd samples
+meson --cross-file=emscripten-crossfile.meson builddir
+```
+
+#### Running the samples
+```
+emrun builddir/videotestsrc/videotestsrc-example.html
+emrun builddir/audiotestsrc/index.html # Press the 'play' button to hear to a sound.
+emrun builddir/openal/openal-example.html # Click to hear to a sound.
+```
+
 ## Development
