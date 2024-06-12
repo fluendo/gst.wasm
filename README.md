@@ -45,6 +45,13 @@ core ones, as shown in the gray boxes of the [above diagram](#the-stack)
 ### GLib
 ### GStreamer
 ### Cerbero
+We use the fork at [Fluendo](https://github.com/fluendo/cerbero) in the [gst.wasm](https://github.com/fluendo/cerbero/tree/gst.wasm) branch.
+The current status is:
+* packaging ❌
+* local_source ❌
+* tests3 ❌
+* tests2 ❌ [link](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1477)
+* tests 📓 [link](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1471)
 
 ## Usage
 
