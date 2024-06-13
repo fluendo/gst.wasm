@@ -8,7 +8,10 @@ executable('videotestsrc-example',
     link_args: [
       '-sPTHREAD_POOL_SIZE=32',
       '-sINITIAL_MEMORY=536870912',
-      '-sUSE_SDL=2'
+      '-sUSE_SDL=2',
+      '-lhtml5',
+      '-sASYNCIFY',
+      '-lGL'
     ],
     name_suffix: 'html'
 )

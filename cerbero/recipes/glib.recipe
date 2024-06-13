@@ -247,7 +247,8 @@ class Recipe(recipe.Recipe):
             self._set_gio_flags(path1, path2, use_old_uri_scheme)
 
         elif self.config.target_platform == Platform.WEB:
-                self.patches += ["glib/emscripten.patch"]
+            self.patches += ["glib/emscripten.patch"]
+            self.meson_options["nls"] = "disabled"
 
         if self.config.platform in [Platform.DARWIN, Platform.IOS]:
             # Meson doesn't yet introduce rpaths properly.
