@@ -62,15 +62,13 @@ We use the fork at [Fluendo](https://github.com/fluendo/gstreamer) in the [gst.w
 
 The [current status](https://github.com/fluendo/gstreamer/compare/main...fluendo:gst.wasm) is grouped in the next cumulative branches:
 <!-- START guw gstreamer.toml markdown -->
-* ⏳ `wasm-1.22-to-split`: First successful build with support for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-1.22-to-split)
-* ⏳ `wasm-1.22-test`: Enable unit tests for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-1.22-test)
-* ⏳ `wasm-1.22-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-1.22-wip)
-* ⏳ `wasm-1.22-function-pointer`: Fix null function or function signature mismatch runtime errors [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-1.22-function-pointer)
-* ⏳ `wasm-1.22-openal`: Add emscripten support OpenAL to play audio [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-1.22-openal)
+* 🔄 `meson_fix_nls`: Use nls option to set ENABLE_NLS [(PR link)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7017)
+* ⏳ `wasm-main-function-pointer`: Fix null function or function signature mismatch runtime errors [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-function-pointer)
+* ⏳ `wasm-main-enable`: Enable support for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-enable)
+* ⏳ `wasm-main-test`: Enable unit tests for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-test)
+* ⏳ `wasm-main-openal`: Add emscripten support OpenAL to play audio [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-openal)
+* ⏳ `wasm-main-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-wip)
 <!-- END guw gstreamer.toml markdown -->
-
-> [!NOTE]
-> Rebase with main is in process.
 
 ### Cerbero
 We use the fork at [Fluendo](https://github.com/fluendo/cerbero) in the [gst.wasm](https://github.com/fluendo/cerbero/tree/gst.wasm) branch.
