@@ -3,11 +3,11 @@ from cerbero.tools.libtool import LibtoolLibrary
 
 
 class Recipe(recipe.Recipe):
-    name = "gst.wasm-samples"
+    name = "gst.wasm"
     version = "main"
     stype = SourceType.CUSTOM
     btype = BuildType.MESON
 
     def prepare(self):
-        self.sources_dir = os.path.join(self.recipe_dir(), "..", "..", "samples")
+        self.sources_dir = os.path.join(self.recipe_dir(), "..", "..", "gst.wasm")
         self.config_build_dir = os.path.join(self.sources_dir, "_builddir")
