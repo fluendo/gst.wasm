@@ -99,15 +99,16 @@ Use cerbero environmenet (TODO: cerbero environment is in progress)
 #### Compile samples
 
 ```
-cd samples
-meson --cross-file=emscripten-crossfile.meson builddir
+cd gst.wasm
+meson --cross-file=emscripten-crossfile.meson _builddir
 ```
 
 #### Running the samples
+
 ```
-emrun builddir/videotestsrc/videotestsrc-example.html
-emrun builddir/audiotestsrc/index.html # Press the 'play' button to hear to a sound.
-emrun builddir/openal/openal-example.html # Click to hear to a sound.
+emrun _builddir/subprojects/videotestsrc/videotestsrc-example.html
+emrun _builddir/subprojects/audiotestsrc/index.html # Press the 'play' button to hear to a sound.
+emrun _builddir/subprojects/openal/openal-example.html # Click to hear to a sound.
 ```
 
 ## Development
