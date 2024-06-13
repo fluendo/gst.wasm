@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - 'cerbero/**'
+      - 'samples/**'
   pull_request:
     branches:
       - '**'
     paths:
       - 'cerbero/**'
+      - 'samples/**'
 
 jobs:
   build:
