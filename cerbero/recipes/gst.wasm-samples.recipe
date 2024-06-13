@@ -1,0 +1,13 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+from cerbero.tools.libtool import LibtoolLibrary
+
+
+class Recipe(recipe.Recipe):
+    name = "gst.wasm-samples"
+    version = "main"
+    stype = SourceType.CUSTOM
+    btype = BuildType.MESON
+
+    def prepare(self):
+        self.sources_dir = os.path.join(self.recipe_dir(), "..", "..", "samples")
+        self.config_build_dir = os.path.join(self.sources_dir, "_builddir")
