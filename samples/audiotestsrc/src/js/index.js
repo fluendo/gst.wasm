@@ -61,12 +61,12 @@ normalize = (val, format) => {
     return 0;
 }
 
-const playButton = document.getElementById("play");
 
 Module.onRuntimeInitialized = function() {
   if (!gst_init())
     throw new DOMException('', 'NotSupportedError');
 
+  const playButton = document.getElementById("play");
   playButton.onclick = () => {
     const audioContext = new AudioContext({ latencyHint: "playback" });
     let currentTime = 0;
