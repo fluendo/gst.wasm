@@ -7,6 +7,12 @@ class Recipe(recipe.Recipe):
     version = "main"
     stype = SourceType.CUSTOM
     btype = BuildType.MESON
+    deps = [
+        "gstreamer-1.0",
+        "gst-plugins-base-1.0",
+        "gst-plugins-good-1.0",
+        "gst-plugins-bad-1.0",
+    ]
 
     def prepare(self):
         self.sources_dir = os.path.join(self.recipe_dir(), "..", "..", "gst.wasm")
