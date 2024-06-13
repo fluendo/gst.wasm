@@ -94,7 +94,11 @@ The [current status](https://github.com/fluendo/cerbero/compare/main...fluendo:c
 
 #### Prepare environment
 
-Use cerbero environmenet (TODO: cerbero environment is in progress)
+```
+git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
+./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc bootstrap
+./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc build gst.wasm
+```
 
 #### Compile samples
 
