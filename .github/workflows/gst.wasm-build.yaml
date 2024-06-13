@@ -21,16 +21,16 @@ jobs:
           fetch-depth: 0
       - name: Clone cerbero
         run: |
-          git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
+          git clone https://github.com/fluendo/cerbero -b gst.wasm --depth=1
       - name: Bootstrap
         run: |
-          ./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc bootstrap
+          ./cerbero/cerbero-uninstalled -c cerbero/gst.wasm.cbc bootstrap
       - name: Build GStreamer
         run: |
-          ./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc build gst-plugins-base-1.0 gst-plugins-good-1.0 gst-plugins-bad-1.0
+          ./cerbero/cerbero-uninstalled -c cerbero/gst.wasm.cbc build gst-plugins-base-1.0 gst-plugins-good-1.0 gst-plugins-bad-1.0
       - name: Build samples
         run: |
-          ./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc build gst.wasm
+          ./cerbero/cerbero-uninstalled -c cerbero/gst.wasm.cbc build gst.wasm
       - name: Create tarball
         run: |
           tar -cvJf gst.wasm.tar.xz -C cerbero/build/gst.wasm_linux_web_wasm32/dist/web_wasm32/ -c .
