@@ -6,13 +6,13 @@ on:
       - main
     paths:
       - 'cerbero/**'
-      - 'samples/**'
+      - 'gst.wasm/subprojects/**'
   pull_request:
     branches:
       - '**'
     paths:
       - 'cerbero/**'
-      - 'samples/**'
+      - 'gst.wasm/subprojects/**'
 
 jobs:
   build:
