@@ -4,7 +4,8 @@ executable('openal-example',
     dependencies: [common_deps, dependency('gstopenal')],
     link_args: [
       '-sPTHREAD_POOL_SIZE=32',
-      '-sINITIAL_MEMORY=536870912'
+      '-sINITIAL_MEMORY=536870912',
+      '-lopenal'
     ],
     name_suffix: 'html'
 )
