@@ -121,7 +121,7 @@ emrun _builddir/subprojects/openal/openal-example.html # Click to hear to a soun
 
 ## Resources
 * Blog post [GstWASM: GStreamer for the web](https://fluendo.com/en/blog/gstwasm-gstreamer-for-the-web/)
-* GstConf2023 presentation [GstWASM: Gstreamer for the web] (https://gstconf.ubicast.tv/videos/gstwasm-gstreamer-for-the-web/)
+* GstConf2023 presentation [GstWASM: Gstreamer for the web](https://gstconf.ubicast.tv/videos/gstwasm-gstreamer-for-the-web/)
 
 ## Aknowledgements
 * Special thanks to [Fluendo](https://fluendo.com) for promoting and funding this project
