@@ -35,7 +35,7 @@ jobs:
           ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
       - name: Create tarball
         run: |
-          tar -cvJf gst.wasm.tar.xz -C build/build/gst.wasm_linux_web_wasm32/dist/web_wasm32/ -c .
+          tar -cvJf gst.wasm.tar.xz -C build/gst.wasm_web_wasm32/ -c .
       - name: Upload gst.wasm
         uses: actions/upload-artifact@v4
         with:
