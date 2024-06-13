@@ -1,6 +1,6 @@
 executable('openal-example',
     'openal-example.c',
-    install: false,
+    install: true,
     dependencies: [common_deps, dependency('gstopenal')],
     link_args: [
       '-sPTHREAD_POOL_SIZE=32',
