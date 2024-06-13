@@ -88,8 +88,7 @@ The [current status](https://github.com/fluendo/cerbero/compare/main...fluendo:c
 ## Usage
 
 ### Samples
-
-[Samples site](https://fluendo.github.io/gst.wasm/)
+We keep on sync all the samples found at [samples](gst.wasm/subprojects/samples) into a [public website](https://fluendo.github.io/gst.wasm/) for test them easilt from any browser.
 
 ![videotestsrc ball pattern](docs/img/videotestsrc-sample.jpg)
 
