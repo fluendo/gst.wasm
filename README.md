@@ -67,6 +67,7 @@ The [current status](https://github.com/fluendo/gstreamer/compare/main...fluendo
 * ⏳ `wasm-main-enable`: Enable support for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-enable)
 * ⏳ `wasm-main-test`: Enable unit tests for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-test)
 * ⏳ `wasm-main-openal`: Add emscripten support OpenAL to play audio [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-openal)
+* ⏳ `wasm-main-sdl2`: Add emscripten helper and sdl2sink [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-sdl2)
 * ⏳ `wasm-main-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-wip)
 <!-- END guw gstreamer.toml markdown -->
 
