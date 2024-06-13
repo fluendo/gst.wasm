@@ -48,12 +48,12 @@ We forked the excellent work done by [kleisauke](https://github.com/kleisauke/gl
 
 The [current status](https://github.com/GNOME/glib/compare/2.76.0...fluendo:gst.wasm) is grouped in the next cumulative branches:
 <!-- START guw glib.toml markdown -->
-* ⏳ `wasm-2.76.0-revert-gregex` [(Branch link)](https://github.com/kleisauke/glib/tree/wasm-2.76.0-revert-gregex)
-* ⏳ `wasm-2.76.0-no-g_error` [(Branch link)](https://github.com/kleisauke/glib/tree/wasm-2.76.0-no-g_error)
-* ⏳ `wasm-2.76.0-function-pointer` [(Branch link)](https://github.com/kleisauke/glib/tree/wasm-2.76.0-function-pointer)
-* ⏳ `wasm-2.76.0-wasm-vs-emscripten` [(Branch link)](https://github.com/kleisauke/glib/tree/wasm-2.76.0-wasm-vs-emscripten)
-* ⏳ `wasm-2.76.0-canvas-in-thread` [(Branch link)](https://github.com/kleisauke/glib/tree/wasm-2.76.0-canvas-in-thread)
-* ⏳ `wasm-2.76.0-main-loop-support` [(Branch link)](https://github.com/kleisauke/glib/tree/wasm-2.76.0-main-loop-support)
+* ⏳ `wasm-2.76.0-revert-gregex` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-revert-gregex)
+* ⏳ `wasm-2.76.0-no-g_error` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-no-g_error)
+* ⏳ `wasm-2.76.0-function-pointer` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-function-pointer)
+* ⏳ `wasm-2.76.0-wasm-vs-emscripten` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-wasm-vs-emscripten)
+* ⏳ `wasm-2.76.0-canvas-in-thread` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-canvas-in-thread)
+* ⏳ `wasm-2.76.0-main-loop-support` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-main-loop-support)
 <!-- END guw glib.toml markdown -->
 
 
