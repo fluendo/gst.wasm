@@ -9,8 +9,9 @@ gst_dep = dependency('gstreamer-1.0')
 gstcoreelements_dep = dependency('gstcoreelements')
 gstapp_dep = dependency('gstapp')
 gstaudio_dep = dependency('gstreamer-audio-1.0')
+gstvideo_dep = dependency('gstreamer-video-1.0')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
-common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstaudiotestsrc_dep]
+common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_dep, gstaudiotestsrc_dep]
 
 subdir('audiotestsrc')
 subdir('videotestsrc')
