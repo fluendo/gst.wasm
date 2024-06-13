@@ -89,6 +89,8 @@ The [current status](https://github.com/fluendo/cerbero/compare/main...fluendo:c
 
 ### Samples
 
+[Samples site](https://fluendo.github.io/gst.wasm/)
+
 ![videotestsrc ball pattern](docs/img/videotestsrc-sample.jpg)
 
 
