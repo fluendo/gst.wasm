@@ -10,8 +10,8 @@ target_distro = Distro.EMSCRIPTEN
 target_arch = Architecture.WASM32
 
 # The home dir defines
-folder_name = 'gst.wasm_{}_{}_{}'.format(platform, target_platform, target_arch, target_distro)
-home_dir = os.path.join(path, 'build', folder_name)
+folder_name = 'gst.wasm_{}_{}'.format(target_platform, target_arch)
+home_dir = os.path.join(path, folder_name)
 
 external_recipes = {
     'gst.wasm': (os.path.join(path, 'recipes'), 1),
@@ -35,9 +35,6 @@ recipes_commits = {
     'gst-plugins-bad-1.0': gst_commit,
     'gst-plugins-ugly-1.0': gst_commit
 }
-
-# Set the final build directory
-home_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), f"gst.wasm_{target_platform}_{target_arch}")
 
 # FIXME: remove this once all variables are correctly configured in web.config
 host = "wasm32-unknown-linux"
