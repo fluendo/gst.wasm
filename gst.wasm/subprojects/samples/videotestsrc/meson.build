@@ -1,6 +1,6 @@
 executable('videotestsrc-example',
     'videotestsrc-example.c',
-    install: false,
+    install: true,
     dependencies: [common_deps,
                    dependency('gstreamer-video-1.0'),
                    dependency('gstvideotestsrc')],

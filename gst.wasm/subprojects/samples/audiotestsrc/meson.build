@@ -11,7 +11,7 @@ sources = [
 
 executable('index',
   sources,
-  install: false,
+  install: true,
   dependencies: common_deps,
   include_directories: include_directories('src'),
   link_args: [

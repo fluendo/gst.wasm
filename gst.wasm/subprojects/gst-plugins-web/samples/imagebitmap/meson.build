@@ -4,7 +4,7 @@ sources = [
 
 executable('index',
   sources,
-  install: false,
+  install: true,
   dependencies: common_deps,
   link_with: gstimagebitmapsrc_dep,
   include_directories: include_directories('.'),
