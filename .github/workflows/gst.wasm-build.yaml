@@ -17,7 +17,7 @@ on:
 jobs:
   build:
     runs-on: 'ubuntu-latest'
-    steps:
+    steps: # these steps are used in README.md to describe preparation; keep in-sync, please!
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -26,16 +26,16 @@ jobs:
           git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
       - name: Bootstrap
         run: |
-          ./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc bootstrap
+          ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap
       - name: Build GStreamer
         run: |
-          ./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc build-deps gst.wasm
+          ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build-deps gst.wasm
       - name: Build samples
         run: |
-          ./cerbero-src/cerbero-uninstalled -c cerbero/gst.wasm.cbc build gst.wasm
+          ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
       - name: Create tarball
         run: |
-          tar -cvJf gst.wasm.tar.xz -C cerbero/build/gst.wasm_linux_web_wasm32/dist/web_wasm32/ -c .
+          tar -cvJf gst.wasm.tar.xz -C build/gst.wasm_web_wasm32/ -c .
       - name: Upload gst.wasm
         uses: actions/upload-artifact@v4
         with:

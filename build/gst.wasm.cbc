@@ -36,5 +36,8 @@ recipes_commits = {
     'gst-plugins-ugly-1.0': gst_commit
 }
 
+# Set the final build directory
+home_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), f"gst.wasm_{target_platform}_{target_arch}")
+
 # FIXME: remove this once all variables are correctly configured in web.config
 host = "wasm32-unknown-linux"
