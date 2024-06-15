@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - 'cerbero/**'
+      - 'build/**'
       - 'gst.wasm/subprojects/**'
   pull_request:
     branches:
       - '**'
     paths:
-      - 'cerbero/**'
+      - 'build/**'
       - 'gst.wasm/subprojects/**'
 
 jobs:
