@@ -1,4 +1,4 @@
-name: GStreamer Build
+name: Build
 
 on:
   push:
@@ -27,10 +27,10 @@ jobs:
       - name: Bootstrap
         run: |
           ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap
-      - name: Build GStreamer
+      - name: Build dependencies
         run: |
           ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build-deps gst.wasm
-      - name: Build samples
+      - name: Build gst.wasm
         run: |
           ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
       - name: Create tarball
