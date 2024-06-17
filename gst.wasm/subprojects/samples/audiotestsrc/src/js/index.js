@@ -10,7 +10,8 @@ AudioData = class extends AudioData {
 AudioPlayer = class {
   constructor(options) {
     // FIXME: EMBIND forbids extending Module.AudioPlayer.
-    this._audioDecoder = new Module.AudioPlayer(this);
+    const pipeline_desc = document.getElementById("pipeline").value;
+    this._audioDecoder = new Module.AudioPlayer(this, pipeline_desc);
     this.options = options;
   }
 

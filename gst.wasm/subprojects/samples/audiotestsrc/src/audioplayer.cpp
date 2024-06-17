@@ -25,18 +25,18 @@ private:
 public:
   GAsyncQueue *queue;
 
-  AudioPlayer (val parent) : m_parent (parent)
+  AudioPlayer (val parent, std::string pipeline_desc) : m_parent (parent)
   {
     GST_DEBUG_CATEGORY_INIT (
         GST_CAT_DEFAULT, "audioplayer", 0, "audiotestsrc player");
 
+    char *full_pipeline_desc = g_strdup_printf ("%s! appsink name=sink emit-signals=true",
+        pipeline_desc.c_str());
+
     queue = g_async_queue_new_full ((GDestroyNotify) gst_sample_unref);
-    pipe = gst_parse_launch (
-        "audiotestsrc ! "
-        "audio/"
-        "x-raw,format=F32LE,layout=non-interleaved,rate=44100,channels=2 ! "
-        "appsink name=sink emit-signals=true",
-        NULL);
+    pipe = gst_parse_launch (full_pipeline_desc, NULL);
+    g_free (full_pipeline_desc);
+
     g_assert (pipe != NULL);
     sink = gst_bin_get_by_name (GST_BIN (pipe), "sink");
     g_assert (sink != NULL);
@@ -141,6 +141,6 @@ output_sample (AudioPlayer *decoder)
 EMSCRIPTEN_BINDINGS (my_class_example2)
 {
   class_<AudioPlayer> ("AudioPlayer")
-      .constructor<val> ()
+      .constructor<val, std::string> ()
       .function ("play", &AudioPlayer::Play);
 }
