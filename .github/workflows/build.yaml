@@ -6,13 +6,15 @@ on:
       - main
     paths:
       - 'build/**'
-      - 'gst.wasm/subprojects/**'
+      - 'gst.wasm/**'
+      - '.github/workflows/build.yaml'
   pull_request:
     branches:
       - '**'
     paths:
       - 'build/**'
-      - 'gst.wasm/subprojects/**'
+      - 'gst.wasm/**'
+      - '.github/workflows/build.yaml'
 
 jobs:
   build:
