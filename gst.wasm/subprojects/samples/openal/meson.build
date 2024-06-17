@@ -9,3 +9,9 @@ executable('openal-example',
     ],
     name_suffix: 'html'
 )
+
+custom_target('js',
+  output: 'openal-example.js',
+  command: ['echo', 'installing js file'],
+  install: true,
+  install_dir: 'bin')
