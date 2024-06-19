@@ -16,3 +16,4 @@ common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_
 subdir('audiotestsrc')
 subdir('videotestsrc')
 subdir('openal')
+subdir('gstlaunch')
