@@ -2,7 +2,7 @@ sources = [
   'imagebitmap-example.c'
 ]
 
-executable('index',
+executable('imagebitmap-example',
   sources,
   install: true,
   dependencies: common_deps,

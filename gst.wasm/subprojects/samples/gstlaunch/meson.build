@@ -1,4 +1,4 @@
-executable('gstlaunch',
+executable('gstlaunch-example',
     'gstlaunch-example.c',
     install: true,
     dependencies: [common_deps,

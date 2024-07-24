@@ -9,7 +9,7 @@ sources = [
   'utils.c',
 ]
 
-executable('index',
+executable('audiotestsrc-example',
   sources,
   install: true,
   dependencies: common_deps,
