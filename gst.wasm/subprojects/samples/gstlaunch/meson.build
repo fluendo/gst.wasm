@@ -1,5 +1,5 @@
 executable('gstlaunch',
-    'gstlaunch.c',
+    'gstlaunch-example.c',
     install: true,
     dependencies: [common_deps,
                    dependency('gstsdl2'),
@@ -15,7 +15,7 @@ executable('gstlaunch',
       '-lhtml5',
       '-sASYNCIFY',
       '-lGL',
-      '--shell-file=@0@/index.html'.format(meson.current_source_dir())
+      '--shell-file=@0@/html/index.html'.format(meson.current_source_dir())
     ],
     name_suffix: 'html'
 )

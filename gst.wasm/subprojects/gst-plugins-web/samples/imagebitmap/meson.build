@@ -1,5 +1,5 @@
 sources = [
-  'main.c'
+  'imagebitmap-example.c'
 ]
 
 executable('index',
