@@ -1,6 +1,5 @@
-executable('videotestsrc-example',
+executable(executable_name,
     'videotestsrc-example.c',
-    install: true,
     dependencies: [common_deps,
                    dependency('gstsdl2'),
                    dependency('gstreamer-emscripten-1.0'),
@@ -12,11 +11,13 @@ executable('videotestsrc-example',
       '-sASYNCIFY',
       '-lGL'
     ],
-    name_suffix: 'html'
+    name_suffix: 'html',
+    install: true,
+    install_dir: install_dir,
 )
 
 custom_target('js',
   output: 'videotestsrc-example.js',
   command: ['echo', 'installing js file'],
   install: true,
-  install_dir: 'bin')
+  install_dir: install_dir)

@@ -4,7 +4,6 @@ sources = [
 
 executable('imagebitmap-example',
   sources,
-  install: true,
   dependencies: common_deps,
   link_with: gstimagebitmapsrc_dep,
   include_directories: include_directories('.'),
@@ -15,5 +14,13 @@ executable('imagebitmap-example',
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
       '-sPTHREAD_POOL_SIZE=4',
   ],
-  name_suffix: 'html'
+  name_suffix: 'html',
+  install: true,
+  install_dir: install_dir,
 )
+
+custom_target('js',
+  output: 'imagebitmap-example.js',
+  command: ['echo', 'installing js file'],
+  install: true,
+  install_dir: install_dir)

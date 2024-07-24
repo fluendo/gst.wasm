@@ -11,7 +11,6 @@ sources = [
 
 executable('audiotestsrc-example',
   sources,
-  install: true,
   dependencies: common_deps,
   include_directories: include_directories('.'),
   link_args: [
@@ -23,5 +22,13 @@ executable('audiotestsrc-example',
       '--extern-post-js=@0@/html/scripts/index.js'.format(meson.current_source_dir()),
       '--shell-file=@0@/html/index.html'.format(meson.current_source_dir())
   ],
-  name_suffix: 'html'
+  name_suffix: 'html',
+  install: true,
+  install_dir: install_dir,
 )
+
+custom_target('js',
+  output: 'audiotestsrc-example.js',
+  command: ['echo', 'installing js file'],
+  install: true,
+  install_dir: install_dir)

@@ -1,6 +1,5 @@
-executable('gstlaunch-example',
+executable(executable_name,
     'gstlaunch-example.c',
-    install: true,
     dependencies: [common_deps,
                    dependency('gstsdl2'),
                    dependency('gstopenal'),
@@ -17,11 +16,13 @@ executable('gstlaunch-example',
       '-lGL',
       '--shell-file=@0@/html/index.html'.format(meson.current_source_dir())
     ],
-    name_suffix: 'html'
+    name_suffix: 'html',
+    install: true,
+    install_dir: install_dir,
 )
 
 custom_target('js',
-  output: 'gstlaunch.js',
+  output: 'gstlaunch-example.js',
   command: ['echo', 'installing js file'],
   install: true,
-  install_dir: 'bin')
+  install_dir: install_dir)
