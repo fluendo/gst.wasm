@@ -15,7 +15,7 @@ GST_DEBUG_CATEGORY_STATIC (image_bitmap_src_debug);
 #define GST_CAT_DEFAULT image_bitmap_src_debug
 
 // #define DEFAULT_PATTERN            GST_IMAGE_BITMAP_SRC_SMPTE
-#define DEFAULT_IS_LIVE            TRUE
+#define DEFAULT_IS_LIVE TRUE
 
 enum
 {
@@ -24,35 +24,33 @@ enum
   PROP_LAST
 };
 
-#define VTS_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) "," \
-  "multiview-mode = { mono, left, right }"                              \
+#define VTS_VIDEO_CAPS                                                        \
+  GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)                                 \
+  ","                                                                         \
+  "multiview-mode = { mono, left, right }"                                    \
   ";"
 
 static GstStaticPadTemplate gst_image_bitmap_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VTS_VIDEO_CAPS)
-    );
+    GST_STATIC_PAD_TEMPLATE (
+        "src", GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS (VTS_VIDEO_CAPS));
 
 #define gst_image_bitmap_src_parent_class parent_class
 G_DEFINE_TYPE (GstImageBitmapSrc, gst_image_bitmap_src, GST_TYPE_PUSH_SRC);
-GST_ELEMENT_REGISTER_DEFINE (imagebitmapsrc, "imagebitmapsrc",
-    GST_RANK_NONE, GST_TYPE_IMAGE_BITMAP_SRC);
+GST_ELEMENT_REGISTER_DEFINE (imagebitmapsrc, "imagebitmapsrc", GST_RANK_NONE,
+    GST_TYPE_IMAGE_BITMAP_SRC);
 
-static void gst_image_bitmap_src_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_image_bitmap_src_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+static void gst_image_bitmap_src_set_property (
+    GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void gst_image_bitmap_src_get_property (
+    GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstFlowReturn gst_image_bitmap_src_fill (GstPushSrc * psrc,
-    GstBuffer * buffer);
-static gboolean gst_image_bitmap_src_start (GstBaseSrc * basesrc);
-static gboolean gst_image_bitmap_src_stop (GstBaseSrc * basesrc);
-
+static GstFlowReturn gst_image_bitmap_src_fill (
+    GstPushSrc *psrc, GstBuffer *buffer);
+static gboolean gst_image_bitmap_src_start (GstBaseSrc *basesrc);
+static gboolean gst_image_bitmap_src_stop (GstBaseSrc *basesrc);
 
 static void
-gst_image_bitmap_src_class_init (GstImageBitmapSrcClass * klass)
+gst_image_bitmap_src_class_init (GstImageBitmapSrcClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -68,15 +66,16 @@ gst_image_bitmap_src_class_init (GstImageBitmapSrcClass * klass)
   gobject_class->get_property = gst_image_bitmap_src_get_property;
 
   g_object_class_install_property (gobject_class, PROP_ID,
-      g_param_spec_string ("id", "id", "id of canvas DOM element",
-          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS)));
+      g_param_spec_string ("id", "id", "id of canvas DOM element", NULL,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+                         G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_set_static_metadata (gstelement_class,
-      "Video test source", "Source/Video",
-      "Consumes data from an ImageBitmap", "Fluendo S.A. <engineering@fluendo.com>");
+  gst_element_class_set_static_metadata (gstelement_class, "Video test source",
+      "Source/Video", "Consumes data from an ImageBitmap",
+      "Fluendo S.A. <engineering@fluendo.com>");
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_image_bitmap_src_template);
+  gst_element_class_add_static_pad_template (
+      gstelement_class, &gst_image_bitmap_src_template);
 
   gstbasesrc_class->start = gst_image_bitmap_src_start;
   gstbasesrc_class->stop = gst_image_bitmap_src_stop;
@@ -84,17 +83,16 @@ gst_image_bitmap_src_class_init (GstImageBitmapSrcClass * klass)
 }
 
 static void
-gst_image_bitmap_src_init (GstImageBitmapSrc * src)
+gst_image_bitmap_src_init (GstImageBitmapSrc *src)
 {
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
 }
 
-
 static void
-gst_image_bitmap_src_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+gst_image_bitmap_src_set_property (
+    GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstImageBitmapSrc *src = GST_IMAGE_BITMAP_SRC (object);
 
@@ -109,8 +107,8 @@ gst_image_bitmap_src_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_image_bitmap_src_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
+gst_image_bitmap_src_get_property (
+    GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstImageBitmapSrc *src = GST_IMAGE_BITMAP_SRC (object);
 
@@ -125,23 +123,25 @@ gst_image_bitmap_src_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_image_bitmap_src_get_bitmap_data (GstImageBitmapSrc * src)
+gst_image_bitmap_src_get_bitmap_data (GstImageBitmapSrc *src)
 {
-  val document = val::global("document");
-  val canvas = document.call<val>("getElementById", val(std::string(src->id)));
-  val context2d = canvas.call<val>("getContext", std::string("2d"));
-  // val image_data = context2d.call<val>("getImageData", 0, 0, src->info.width, src->info.height);
-  val image_data = context2d.call<val>("getImageData", 0, 0, 300, 150);
+  val document = val::global ("document");
+  val canvas =
+      document.call<val> ("getElementById", val (std::string (src->id)));
+  val context2d = canvas.call<val> ("getContext", std::string ("2d"));
+  // val image_data = context2d.call<val>("getImageData", 0, 0,
+  // src->info.width, src->info.height);
+  val image_data = context2d.call<val> ("getImageData", 0, 0, 300, 150);
   val data = image_data["data"];
 
-  auto raw_data = vecFromJSArray<unsigned char>(data);  
-  guint length = data["length"].as<int>();
+  auto raw_data = vecFromJSArray<unsigned char> (data);
+  guint length = data["length"].as<int> ();
 
-  g_print("length: %d\n", length);
+  g_print ("length: %d\n", length);
 }
 
 static GstFlowReturn
-gst_image_bitmap_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
+gst_image_bitmap_src_fill (GstPushSrc *psrc, GstBuffer *buffer)
 {
   GstImageBitmapSrc *src;
   GstClockTime next_time;
@@ -162,9 +162,8 @@ gst_image_bitmap_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   //   return GST_FLOW_OK;
   // }
 
-
-  emscripten_sync_run_in_main_runtime_thread_ (
-      EM_FUNC_SIG_VI, (void *) (gst_image_bitmap_src_get_bitmap_data), src, NULL);
+  emscripten_sync_run_in_main_runtime_thread_ (EM_FUNC_SIG_VI,
+      (void *) (gst_image_bitmap_src_get_bitmap_data), src, NULL);
 
   // TODO: Calculate timestamps and fill buffer.
   GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -177,7 +176,7 @@ gst_image_bitmap_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 }
 
 static gboolean
-gst_image_bitmap_src_start (GstBaseSrc * basesrc)
+gst_image_bitmap_src_start (GstBaseSrc *basesrc)
 {
   GstImageBitmapSrc *src = GST_IMAGE_BITMAP_SRC (basesrc);
 
@@ -189,7 +188,7 @@ gst_image_bitmap_src_start (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_image_bitmap_src_stop (GstBaseSrc * basesrc)
+gst_image_bitmap_src_stop (GstBaseSrc *basesrc)
 {
   GstImageBitmapSrc *src = GST_IMAGE_BITMAP_SRC (basesrc);
   guint i;
@@ -198,16 +197,14 @@ gst_image_bitmap_src_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (image_bitmap_src_debug, "imagebitmapsrc", 0,
-      "ImageBitmap Source");
+  GST_DEBUG_CATEGORY_INIT (
+      image_bitmap_src_debug, "imagebitmapsrc", 0, "ImageBitmap Source");
 
   return GST_ELEMENT_REGISTER (imagebitmapsrc, plugin);
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    imagebitmapsrc,
-    "Creates a test video stream",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, imagebitmapsrc,
+    "Creates a test video stream", plugin_init, VERSION, GST_LICENSE,
+    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

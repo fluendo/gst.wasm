@@ -30,8 +30,8 @@ public:
     GST_DEBUG_CATEGORY_INIT (
         GST_CAT_DEFAULT, "audioplayer", 0, "audiotestsrc player");
 
-    char *full_pipeline_desc = g_strdup_printf ("%s! appsink name=sink emit-signals=true",
-        pipeline_desc.c_str());
+    char *full_pipeline_desc = g_strdup_printf (
+        "%s! appsink name=sink emit-signals=true", pipeline_desc.c_str ());
 
     queue = g_async_queue_new_full ((GDestroyNotify) gst_sample_unref);
     pipe = gst_parse_launch (full_pipeline_desc, NULL);
