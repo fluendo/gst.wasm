@@ -7,10 +7,8 @@ executable(executable_name,
                    dependency('gstreamer-emscripten-1.0'),
                    dependency('gstvideotestsrc'),
                    dependency('gstaudiotestsrc')],
-    link_args: [
+    link_args: common_link_args + [
       '-sEXPORTED_FUNCTIONS=_init_pipeline,_main,cwrap',
-      '-sPTHREAD_POOL_SIZE=32',
-      '-sINITIAL_MEMORY=536870912',
       '-lhtml5',
       '-sASYNCIFY',
       '-lGL',

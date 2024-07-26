@@ -4,9 +4,7 @@ executable(executable_name,
                    dependency('gstsdl2'),
                    dependency('gstreamer-emscripten-1.0'),
                    dependency('gstvideotestsrc')],
-    link_args: [
-      '-sPTHREAD_POOL_SIZE=32',
-      '-sINITIAL_MEMORY=536870912',
+    link_args: common_link_args + [
       '-lhtml5',
       '-sASYNCIFY',
       '-lGL'
