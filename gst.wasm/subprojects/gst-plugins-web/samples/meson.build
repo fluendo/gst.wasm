@@ -1,5 +1,6 @@
 examples = [
   'imagebitmap',
+  'emhttpsrc',
 ]
 
 foreach example : examples
