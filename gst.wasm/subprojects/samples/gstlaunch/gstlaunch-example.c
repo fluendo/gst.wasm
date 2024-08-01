@@ -7,6 +7,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (example_dbg);
 #define GST_CAT_DEFAULT example_dbg
+#define PIPELINE_INPUT_ID "pipeline"
 
 static GstElement *pipeline;
 
@@ -35,7 +36,7 @@ init_pipeline ()
   }
 
   const char *value = emscripten_run_script_string (
-      "document.getElementById('myInput').value");
+      "document.getElementById('" PIPELINE_INPUT_ID "').value");
   GST_INFO ("pipeline: %s", value);
 
   pipeline = gst_parse_launch (value, NULL);

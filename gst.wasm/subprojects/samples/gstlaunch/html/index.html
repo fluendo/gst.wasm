@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
   <head>
-    <title>Get Input Data Example</title>
+    <title>gstlaunch-example</title>
     <script type="text/javascript">
       function getInputData() {
         // Get the value from the input field
-        var inputData = document.getElementById("myInput").value;
+        var inputData = document.getElementById("pipeline").value;
         // Display the input data
         _init_pipeline();
       }
@@ -30,15 +30,14 @@
     </style>
   </head>
   <body>
-    <h2>Input Data Example</h2>
-    <label for="myInput">Enter something:</label>
+    <label for="pipeline">Pipeline description:</label>
     <input
       type="text"
-      id="myInput"
-      name="myInput"
+      id="pipeline"
+      name="pipeline"
       value="videotestsrc ! sdl2sink"
     />
-    <button onclick="getInputData()">Submit</button>
+    <input type="button" id="play" value="Play" onclick="getInputData()" />
 
     <canvas
       class="emscripten"
