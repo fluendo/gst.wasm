@@ -38,3 +38,6 @@ recipes_commits = {
 
 # FIXME: remove this once all variables are correctly configured in web.config
 host = "wasm32-unknown-linux"
+
+emscripten_path = os.path.join(home_dir, "emsdk", "upstream", "emscripten")
+env['PATH'] = f'{emscripten_path}:{env["PATH"]}'
