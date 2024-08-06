@@ -1,6 +1,5 @@
-executable('gstlaunch',
-    'gstlaunch.c',
-    install: true,
+executable(executable_name,
+    'gstlaunch-example.c',
     dependencies: [common_deps,
                    dependency('gstsdl2'),
                    dependency('gstopenal'),
@@ -8,20 +7,20 @@ executable('gstlaunch',
                    dependency('gstreamer-emscripten-1.0'),
                    dependency('gstvideotestsrc'),
                    dependency('gstaudiotestsrc')],
-    link_args: [
+    link_args: common_link_args + [
       '-sEXPORTED_FUNCTIONS=_init_pipeline,_main,cwrap',
-      '-sPTHREAD_POOL_SIZE=32',
-      '-sINITIAL_MEMORY=536870912',
       '-lhtml5',
       '-sASYNCIFY',
       '-lGL',
-      '--shell-file=@0@/index.html'.format(meson.current_source_dir())
+      '--shell-file=@0@/html/index.html'.format(meson.current_source_dir())
     ],
-    name_suffix: 'html'
+    name_suffix: 'html',
+    install: true,
+    install_dir: install_dir,
 )
 
 custom_target('js',
-  output: 'gstlaunch.js',
+  output: 'gstlaunch-example.js',
   command: ['echo', 'installing js file'],
   install: true,
-  install_dir: 'bin')
+  install_dir: install_dir)

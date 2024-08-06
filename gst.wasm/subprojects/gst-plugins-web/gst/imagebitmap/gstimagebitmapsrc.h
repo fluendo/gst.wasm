@@ -10,16 +10,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_IMAGE_BITMAP_SRC (gst_image_bitmap_src_get_type())
-G_DECLARE_FINAL_TYPE (GstImageBitmapSrc, gst_image_bitmap_src, GST, IMAGE_BITMAP_SRC,
-    GstPushSrc)
+#define GST_TYPE_IMAGE_BITMAP_SRC (gst_image_bitmap_src_get_type ())
+G_DECLARE_FINAL_TYPE (
+    GstImageBitmapSrc, gst_image_bitmap_src, GST, IMAGE_BITMAP_SRC, GstPushSrc)
 
 /**
  * GstImageBitmapSrc:
  *
  * Opaque data structure.
  */
-struct _GstImageBitmapSrc {
+struct _GstImageBitmapSrc
+{
   GstPushSrc element;
 
   /*< private >*/

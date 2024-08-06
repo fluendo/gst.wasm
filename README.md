@@ -100,15 +100,15 @@ To build an environment, you can use [steps from CI](.github/workflows/gst.wasm-
 ```
 git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
 ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap
-./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build-deps gst.wasm
+./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
 ```
 
-As a result, in the local directory `build/build/gst.wasm_linux_web_wasm32/dist/web_wasm32`
+As a result, in the local directory `build/gst.wasm_web_wasm32/dist/web_wasm32`
 you've got all the needed packages with corresponding `*.pc` files, which could be used
 to build your project based on the WASM version of GStreamer and its dependencies:
 
 ```
-$ ls build/build/gst.wasm_linux_web_wasm32/dist/web_wasm32/
+$ ls build/gst.wasm_web_wasm32/dist/web_wasm32
 bin  include  lib  share
 ```
 

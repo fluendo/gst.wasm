@@ -13,7 +13,21 @@ gstvideo_dep = dependency('gstreamer-video-1.0')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
 common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_dep, gstaudiotestsrc_dep]
 
-subdir('audiotestsrc')
-subdir('videotestsrc')
-subdir('openal')
-subdir('gstlaunch')
+
+examples = [
+  'audiotestsrc',
+  'gstlaunch',
+  'openal',
+  'videotestsrc',
+]
+
+common_link_args = [
+  '-sPTHREAD_POOL_SIZE=32',
+  '-sINITIAL_MEMORY=536870912',
+]
+
+foreach example : examples
+  executable_name = '@0@-example'.format(example)
+  install_dir = 'share/gst.wasm/samples/@0@'.format(executable_name)
+  subdir(example)
+endforeach
