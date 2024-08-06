@@ -1,11 +1,7 @@
 /* Copyright (C) Fluendo S.A. <support@fluendo.com> */
-AudioData = class extends AudioData {
-  constructor(init) {
-    super(init);
-    // FIXME: How to access native AudioData's data otherwise? this.copyTo?
-    this.data = init.data;
-  }
-};
+
+var AudioData;
+var AudioPlayer;
 
 AudioPlayer = class {
   constructor(options) {
@@ -55,6 +51,27 @@ normalize = (val, format) => {
 };
 
 Module.onRuntimeInitialized = function () {
+  if (!window.AudioData) {
+    console.warn("AudioData not supported, defining dummy AudioData class.");
+    AudioData = class {
+      constructor(init) {
+        this.format = init.format;
+        this.sampleRate = init.sampleRate;
+        this.numberOfFrames = init.numberOfFrames;
+        this.numberOfChannels = init.numberOfChannels;
+        this.timestamp = init.timestamp;
+      }
+    };
+  }
+
+  AudioData = class extends AudioData {
+    constructor(init) {
+      super(init);
+      // FIXME: How to access native AudioData's data otherwise? this.copyTo?
+      this.data = init.data;
+    }
+  };
+
   if (!gst_init()) throw new DOMException("", "NotSupportedError");
 
   const playButton = document.getElementById("play");
