@@ -31,3 +31,6 @@ foreach example : examples
   install_dir = 'share/gst.wasm/samples/@0@'.format(executable_name)
   subdir(example)
 endforeach
+
+install_data(sources: 'ci/static/index.html', install_dir: 'share/gst.wasm/samples/')
+install_data(sources: 'ci/static/enable-threads.js', install_dir: 'share/gst.wasm/samples/')

@@ -16,6 +16,11 @@ on:
       - 'gst.wasm/**'
       - '.github/workflows/build.yaml'
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: 'ubuntu-latest'
@@ -45,3 +50,20 @@ jobs:
         with:
           name: gst.wasm
           path: gst.wasm.tar.xz
+      # Workaround for ghpages: https://github.com/orgs/community/discussions/13309
+      - name: Prepate artifact to pages
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          find ./build/gst.wasm_web_wasm32/dist/web_wasm32/share/gst.wasm/samples/ -name "*example.html" -exec sed -i 's#</head>#<script src="../enable-threads.js"></script></head>#g' {}  \;
+      - name: Setup Pages
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/configure-pages@v5
+      - name: Upload pages artifact
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './build/gst.wasm_web_wasm32/dist/web_wasm32/share/gst.wasm/samples'
+      - name: Deploy to GitHub Pages
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: deployment
+        uses: actions/deploy-pages@v4
