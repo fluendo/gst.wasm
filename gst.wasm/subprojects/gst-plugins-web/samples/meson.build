@@ -1,5 +1,5 @@
 examples = [
-  'imagebitmap',
+  'webcanvassrc',
   'emhttpsrc',
 ]
 
