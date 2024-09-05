@@ -9,7 +9,7 @@ GST_PLUGIN_STATIC_DECLARE (audiotestsrc);
 static void
 glib_print_handler (const gchar *string)
 {
-  gchar *em_script = g_strdup_printf ("console.log('%s')", string);
+  gchar *em_script = g_strdup_printf ("console.log('%s');", string);
   emscripten_run_script (em_script);
   g_free (em_script);
 }
@@ -32,7 +32,7 @@ init (void)
   if (initialized)
     return TRUE;
 
-  char *argv[] = { "test01", "--gst-debug", "audiotestsrc:6", NULL };
+  char *argv[] = { "test01", "--gst-debug", "audioplayer:6", NULL };
   int argc = sizeof (argv) / sizeof (argv[0]) - 1;
   char **nargv = calloc (sizeof (char *), argc + 1);
 
@@ -41,7 +41,7 @@ init (void)
     nargv[i] = strdup (argv[i]);
   nargv[i] = NULL;
 
-  g_set_print_handler (glib_print_handler);
+  // g_set_print_handler (glib_print_handler);
   g_set_printerr_handler (glib_print_handler);
   g_log_set_default_handler (glib_log_handler, NULL);
 

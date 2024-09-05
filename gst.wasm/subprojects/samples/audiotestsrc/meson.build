@@ -18,6 +18,8 @@ executable('audiotestsrc-example',
       '-sAUTO_NATIVE_LIBRARIES=1',
       '-sEXPORTED_FUNCTIONS=_init', # defined in audiotestsrc-example.c
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
+      # '-sUSE_PTHREADS=1',
+      # '-sPROXY_TO_PTHREAD=1',
       '--extern-post-js=@0@/html/scripts/index.js'.format(meson.current_source_dir()),
       '--shell-file=@0@/html/index.html'.format(meson.current_source_dir()),
   ],

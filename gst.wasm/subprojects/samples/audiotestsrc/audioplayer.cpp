@@ -10,7 +10,7 @@
 using namespace emscripten;
 
 class AudioPlayer;
-static void output_sample (AudioPlayer *decoder);
+static void output_sample (AudioPlayer *decoder, GstSample *sample);
 
 GST_DEBUG_CATEGORY (audioplayer_debug);
 #define GST_CAT_DEFAULT (audioplayer_debug)
@@ -33,7 +33,7 @@ public:
     char *full_pipeline_desc = g_strdup_printf (
         "%s! appsink name=sink emit-signals=true", pipeline_desc.c_str ());
 
-    queue = g_async_queue_new_full ((GDestroyNotify) gst_sample_unref);
+    // queue = g_async_queue_new_full ((GDestroyNotify) gst_sample_unref);
     pipe = gst_parse_launch (full_pipeline_desc, NULL);
     g_free (full_pipeline_desc);
 
@@ -65,12 +65,12 @@ public:
              ", duration = %" GST_TIME_FORMAT,
         gst_buffer_get_size (buffer), GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
-    g_async_queue_push (decoder->queue, sample);
+    // g_async_queue_push (decoder->queue, sample);
 
     GST_LOG ("Pushing to the main thread");
     // FIXME: Should run asynchronously.
-    emscripten_sync_run_in_main_runtime_thread_ (
-        EM_FUNC_SIG_VI, (void *) (output_sample), decoder);
+    emscripten_async_run_in_main_runtime_thread (
+        EM_FUNC_SIG_VII, (void *) (output_sample), decoder, sample);
     GST_LOG ("Main thread done");
     return GST_FLOW_OK;
   }
@@ -123,18 +123,23 @@ public:
 };
 
 static void
-output_sample (AudioPlayer *decoder)
+output_sample (AudioPlayer *decoder, GstSample *sample)
 {
-  GstSample *sample;
+  // GstSample *sample;
 
-  GST_ERROR ("Handle sample on main thread");
-  sample = (GstSample *) g_async_queue_try_pop (decoder->queue);
-  if (!sample) {
-    GST_ERROR ("No sample found.");
-    return;
-  }
-  GST_ERROR ("Have sample of %" G_GSIZE_FORMAT " bytes",
-      gst_buffer_get_size (gst_sample_get_buffer (sample)));
+  // int x = 1 + 2;
+
+  // emscripten_run_script ("console.log('blah')");
+
+  // g_print ("blaj...\n");
+  // GST_ERROR ("Handle sample on main thread");
+  // sample = (GstSample *) g_async_queue_try_pop (decoder->queue);
+  // if (!sample) {
+  //   // GST_ERROR ("No sample found.");
+  //   return;
+  // }
+  // GST_ERROR ("Have sample of %" G_GSIZE_FORMAT " bytes",
+  //     gst_buffer_get_size (gst_sample_get_buffer (sample)));
   decoder->NewSampleCb (sample);
 }
 
