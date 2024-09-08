@@ -10,10 +10,14 @@ gstcoreelements_dep = dependency('gstcoreelements')
 gstapp_dep = dependency('gstapp')
 gstaudio_dep = dependency('gstreamer-audio-1.0')
 gstvideo_dep = dependency('gstreamer-video-1.0')
+gstpbutils_dep = dependency('gstreamer-pbutils-1.0')
+gstgl_dep = dependency('gstreamer-gl-1.0')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
 common_deps = [gst_dep, gstcoreelements_dep]
 
-gst_libraries = []
+# TODO handle these properly
+api_version = '1.0'
+
 
 pkgconfig_variables = ['exec_prefix=${prefix}',
     'toolsdir=${exec_prefix}/bin',
@@ -39,6 +43,10 @@ soversion = 0
 libversion = '@0@.@1@.0'.format(soversion, curversion)
 
 libinc = include_directories('gst-libs')
+configinc = include_directories('.')
+gst_plugins_web_args = [
+  '-DHAVE_CONFIG_H=1',
+]
 
 cdata = configuration_data()
 cdata.set_quoted('VERSION', '1.22.0') # TODO
@@ -50,6 +58,8 @@ cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Plugins Web')
 cdata.set_quoted('GST_PACKAGE_ORIGIN', 'https://fluendo.com')
 cdata.set_quoted('GST_LICENSE', 'UNKNOWN') # TODO
 
+# For subdirs to fill
+gst_libraries = []
 plugins = []
 
 subdir('gst-libs')
