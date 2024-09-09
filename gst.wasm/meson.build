@@ -4,5 +4,5 @@ project(
   meson_version : '>= 0.56.0',
 )
 
-subproject('samples')
 subproject('gst-plugins-web')
+subproject('samples')

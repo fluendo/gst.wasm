@@ -23,5 +23,22 @@ cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Plugins Web')
 cdata.set_quoted('GST_PACKAGE_ORIGIN', 'https://fluendo.com')
 cdata.set_quoted('GST_LICENSE', 'UNKNOWN') # TODO
 
+plugins = []
 subdir('gst')
-subdir('samples')
+
+pkgconfig = import('pkgconfig')
+plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+# plugin_names = []
+# gst_plugins = []
+foreach plugin: plugins
+  pkgconfig.generate(plugin, install_dir: plugins_pkgconfig_install_dir)
+  dep = declare_dependency(link_with: plugin, variables: {'full_path': plugin.full_path()})
+  meson.override_dependency(plugin.name(), dep)
+  # gst_plugins += [dep]
+  # if plugin.name().startswith('gst')
+  #   plugin_names += [plugin.name().substring(3)]
+  # else
+  #   plugin_names += [plugin.name()]
+  # endif
+endforeach

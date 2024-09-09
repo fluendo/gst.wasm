@@ -16,3 +16,5 @@ gstwebcanvassrc_dep = static_library('gstwebcanvassrc',
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
   ],
 )
+
+plugins += [gstwebcanvassrc_dep]
