@@ -1,5 +1,5 @@
 /*
- * GStreamer - GStreamer ImageBitmap Animation example.
+ * GStreamer - GStreamer WebCanvasSrc Animation example.
  *
  * Copyright 2024 Fluendo S.A.
  *  @author: Cesar Fabian Orccon Chipana <forccon@fluendo.com>
@@ -107,7 +107,7 @@ main (int argc, char **argv)
   gst_emscripten_init ();
   register_elements ();
 
-  GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "ImageBitmap example");
+  GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "WebCanvasSrc example");
 
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
   gst_debug_set_threshold_from_string ("*:2,example:5,webcanvassrc:5", TRUE);
