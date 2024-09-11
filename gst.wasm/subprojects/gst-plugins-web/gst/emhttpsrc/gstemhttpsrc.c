@@ -37,6 +37,7 @@ static void gst_em_http_src_uri_handler_init (
 #define parent_class gst_em_http_src_parent_class
 
 #define GST_EM_HTTP_SRC_BYTES_CR " bytes "
+#define CHUNK_SIZE 1048576
 
 #define PROP_LOCATION_DEFAULT NULL
 
@@ -299,7 +300,7 @@ gst_em_http_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   GST_OBJECT_LOCK (self);
   *outbuf = gst_em_http_src_fetch_range (
-      self, self->download_offset, self->download_offset + 2048);
+      self, self->download_offset, self->download_offset + CHUNK_SIZE);
 
   if (G_UNLIKELY (*outbuf == NULL)) {
     GST_OBJECT_UNLOCK (self);
