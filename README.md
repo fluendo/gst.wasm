@@ -129,6 +129,9 @@ emrun _builddir/subprojects/openal/openal-example.html # Click to hear to a soun
 
 ## Development
 
+### Coding style
+
+Refer to the [Coding Style guide ](CONTRIBUTING.md)
 
 ## Resources
 * Blog post [GstWASM: GStreamer for the web](https://fluendo.com/en/blog/gstwasm-gstreamer-for-the-web/)
