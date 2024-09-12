@@ -13,6 +13,33 @@ gstvideo_dep = dependency('gstreamer-video-1.0')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
 common_deps = [gst_dep, gstcoreelements_dep]
 
+gst_libraries = []
+
+pkgconfig_variables = ['exec_prefix=${prefix}',
+    'toolsdir=${exec_prefix}/bin',
+    'pluginsdir=${libdir}/gstreamer-1.0',
+    'datarootdir=${prefix}/share',
+    'girdir=${datadir}/gir-1.0',
+    'typelibdir=${libdir}/girepository-1.0']
+
+pkgconfig_subdirs = ['gstreamer-1.0']
+
+plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
+
+pkgconfig = import('pkgconfig')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+
+gst_version = meson.project_version()
+version_arr = gst_version.split('.')
+gst_version_major = version_arr[0].to_int()
+gst_version_minor = version_arr[1].to_int()
+gst_version_micro = version_arr[2].to_int()
+curversion = gst_version_minor * 100 + gst_version_micro
+soversion = 0
+libversion = '@0@.@1@.0'.format(soversion, curversion)
+
+libinc = include_directories('gst-libs')
+
 cdata = configuration_data()
 cdata.set_quoted('VERSION', '1.22.0') # TODO
 cdata.set_quoted('PACKAGE', 'gst-plugins-web')
@@ -24,7 +51,10 @@ cdata.set_quoted('GST_PACKAGE_ORIGIN', 'https://fluendo.com')
 cdata.set_quoted('GST_LICENSE', 'UNKNOWN') # TODO
 
 plugins = []
+
+subdir('gst-libs')
 subdir('gst')
+subdir('ext')
 
 pkgconfig = import('pkgconfig')
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')

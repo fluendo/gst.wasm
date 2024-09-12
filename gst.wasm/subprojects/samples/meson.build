@@ -11,6 +11,7 @@ gstapp_dep = dependency('gstapp')
 gstaudio_dep = dependency('gstreamer-audio-1.0')
 gstvideo_dep = dependency('gstreamer-video-1.0')
 gstweb_emhttpsrc_dep = dependency('gstemhttpsrc')
+gstweb_sdl2_dep = dependency('gstsdl2')
 gstweb_canvassrc_dep = dependency('gstwebcanvassrc')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
 common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_dep, gstaudiotestsrc_dep]
