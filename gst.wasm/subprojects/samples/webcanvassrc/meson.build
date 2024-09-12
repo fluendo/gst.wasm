@@ -3,16 +3,17 @@ webcanvassrc_example_common_link_args = [
   '-sAUTO_NATIVE_LIBRARIES=1',
   '-sASYNCIFY',
 ]
-
-executable('webcanvassrc-animation-example',
-  'webcanvassrc-animation-example.c',
-  dependencies: [
+webcanvassrc_example_common_deps = [
     common_deps,
     dependency('gstsdl2'),
     dependency('gstvideoconvertscale'),
-    dependency('gstreamer-emscripten-1.0')
-  ],
-  link_with: gstwebcanvassrc_dep,
+    dependency('gstreamer-emscripten-1.0'),
+    gstweb_canvassrc_dep,
+]
+
+executable('webcanvassrc-animation-example',
+  'webcanvassrc-animation-example.c',
+  dependencies: webcanvassrc_example_common_deps,
   include_directories: include_directories('.'),
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args,
@@ -28,13 +29,7 @@ custom_target('webcanvassrc-animation-example-js',
 
 executable('webcanvassrc-webcam-example',
   'webcanvassrc-webcam-example.c',
-  dependencies: [
-    common_deps,
-    dependency('gstsdl2'),
-    dependency('gstvideoconvertscale'),
-    dependency('gstreamer-emscripten-1.0')
-  ],
-  link_with: gstwebcanvassrc_dep,
+  dependencies: webcanvassrc_example_common_deps,
   include_directories: include_directories('.'),
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args + [

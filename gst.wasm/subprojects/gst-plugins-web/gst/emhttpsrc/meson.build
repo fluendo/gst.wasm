@@ -16,3 +16,4 @@ emhttpsrc_dep = static_library('gstemhttpsrc',
   ],
 )
 
+plugins += [emhttpsrc_dep]

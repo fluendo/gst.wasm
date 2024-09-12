@@ -11,8 +11,8 @@ static struct
 } context;
 
 static void
-fakesink_handoff_cb (GstElement * object,
-    GstBuffer * buffer, GstPad * arg1, gpointer user_data)
+fakesink_handoff_cb (
+    GstElement *object, GstBuffer *buffer, GstPad *arg1, gpointer user_data)
 {
   char *zero_terminated_data;
   GstMapInfo info;
@@ -48,17 +48,17 @@ init_pipeline ()
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (emhttpsrc);
 
-  context.pipe =
-      gst_parse_launch
-      ("emhttpsrc location=\"http://localhost:3000/hello.txt\" ! fakesink name=fk signal-handoffs=true",
+  context.pipe = gst_parse_launch (
+      "emhttpsrc location=\"http://localhost:3000/hello.txt\" ! fakesink "
+      "name=fk signal-handoffs=true",
       NULL);
   g_assert (context.pipe);
 
   fakesink = gst_bin_get_by_name (GST_BIN (context.pipe), "fk");
   g_assert (fakesink);
 
-  g_signal_connect (fakesink, "handoff",
-      G_CALLBACK (fakesink_handoff_cb), NULL);
+  g_signal_connect (
+      fakesink, "handoff", G_CALLBACK (fakesink_handoff_cb), NULL);
 
   gst_object_unref (fakesink);
 }
