@@ -1,0 +1,23 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'build/**'
+      - 'gst.wasm/**'
+      - '.github/workflows/build.yaml'
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'build/**'
+      - 'gst.wasm/**'
+      - '.github/workflows/build.yaml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skip build"
