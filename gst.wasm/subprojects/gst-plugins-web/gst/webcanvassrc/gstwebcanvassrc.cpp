@@ -21,7 +21,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif
 
 #include <string.h>
@@ -35,21 +35,8 @@
 using namespace emscripten;
 
 #define GST_TYPE_WEB_CANVAS_SRC (gst_web_canvas_src_get_type ())
-G_DECLARE_FINAL_TYPE (
-    GstWebCanvasSrc, gst_web_canvas_src, GST, WEB_CANVAS_SRC, GstPushSrc)
-
-struct _GstWebCanvasSrc
-{
-  GstPushSrc element;
-
-  /*< private >*/
-  gchar *id;
-  GstCaps *caps;
-  guint n_frames;
-};
-
-GST_DEBUG_CATEGORY_STATIC (web_canvas_src_debug);
 #define GST_CAT_DEFAULT web_canvas_src_debug
+#define parent_class gst_web_canvas_src_parent_class
 
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_FPS_N 30
@@ -62,51 +49,63 @@ enum
   PROP_LAST
 };
 
+struct _GstWebCanvasSrc
+{
+  GstPushSrc element;
+
+  /*< private >*/
+  gchar *id;
+  GstCaps *caps;
+  guint n_frames;
+};
+
+G_DECLARE_FINAL_TYPE (
+    GstWebCanvasSrc, gst_web_canvas_src, GST, WEB_CANVAS_SRC, GstPushSrc)
+G_DEFINE_TYPE (GstWebCanvasSrc, gst_web_canvas_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE (
+    webcanvassrc, "webcanvassrc", GST_RANK_NONE, GST_TYPE_WEB_CANVAS_SRC);
+GST_DEBUG_CATEGORY_STATIC (web_canvas_src_debug);
+
 static GstStaticPadTemplate gst_web_canvas_src_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGBA")));
 
-#define gst_web_canvas_src_parent_class parent_class
-G_DEFINE_TYPE (GstWebCanvasSrc, gst_web_canvas_src, GST_TYPE_PUSH_SRC);
-GST_ELEMENT_REGISTER_DEFINE (
-    webcanvassrc, "webcanvassrc", GST_RANK_NONE, GST_TYPE_WEB_CANVAS_SRC);
-
 static void
-gst_web_canvas_src_init (GstWebCanvasSrc *src)
+gst_web_canvas_src_init (GstWebCanvasSrc *self)
 {
-  src->caps = NULL;
-  src->n_frames = 0;
+  self->caps = NULL;
+  self->n_frames = 0;
   /* we operate in time */
-  gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
-  gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
+  gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
+  gst_base_src_set_live (GST_BASE_SRC (self), DEFAULT_IS_LIVE);
 }
 
 static val
-gst_web_canvas_src_get_canvas (GstWebCanvasSrc *src)
+gst_web_canvas_src_get_canvas (GstWebCanvasSrc *self)
 {
   val document = val::global ("document");
   val canvas =
-      document.call<val> ("getElementById", val (std::string (src->id)));
+      document.call<val> ("getElementById", val (std::string (self->id)));
 
   if (canvas == val::null ()) {
-    GST_LOG_OBJECT (src,
+    GST_LOG_OBJECT (self,
         "Cannot retrieve canvas with id '%s'."
         "Trying to retrieve canvas from global variable '%s'.",
-        src->id, src->id);
+        self->id, self->id);
 
-    canvas = val::global (src->id);
+    canvas = val::global (self->id);
   }
 
   return canvas;
 }
 
 static GstBuffer *
-gst_web_canvas_src_buffer_from_canvas (GstWebCanvasSrc *src)
+gst_web_canvas_src_buffer_from_canvas (GstWebCanvasSrc *self)
 {
   GstBuffer *buf;
-  val canvas = gst_web_canvas_src_get_canvas (src);
+  val canvas = gst_web_canvas_src_get_canvas (self);
   if (canvas == val::null ()) {
-    GST_ERROR_OBJECT (src, "Cannot retrieve a canvas.");
+    GST_ERROR_OBJECT (self, "Cannot retrieve a canvas.");
     return NULL;
   }
 
@@ -126,7 +125,7 @@ gst_web_canvas_src_buffer_from_canvas (GstWebCanvasSrc *src)
 
   if (width * height * 4 != (int) raw_data.size ()) {
     GST_ERROR_OBJECT (
-        src, "Expected data to have size: %d.", width * height * 4);
+        self, "Expected data to have size: %d.", width * height * 4);
     return NULL;
   }
 
@@ -134,65 +133,66 @@ gst_web_canvas_src_buffer_from_canvas (GstWebCanvasSrc *src)
 
   if (buf == NULL) {
     GST_ERROR_OBJECT (
-        src, "Cannot create buffer from canvas '%s' data", src->id);
+        self, "Cannot create buffer from canvas '%s' data", self->id);
     return NULL;
   }
 
-  GST_LOG_OBJECT (src, "Created a new buffer from canvas '%s' data", src->id);
+  GST_LOG_OBJECT (
+      self, "Created a new buffer from canvas '%s' data", self->id);
   return buf;
 }
 
 static void
-gst_web_canvas_src_update_caps_from_canvas (GstWebCanvasSrc *src)
+gst_web_canvas_src_update_caps_from_canvas (GstWebCanvasSrc *self)
 {
   GstCaps *new_caps;
-  val canvas = gst_web_canvas_src_get_canvas (src);
+  val canvas = gst_web_canvas_src_get_canvas (self);
 
   new_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
       "RGBA", "framerate", GST_TYPE_FRACTION, DEFAULT_FPS_N, DEFAULT_FPS_D,
       "width", G_TYPE_INT, canvas["width"].as<int> (), "height", G_TYPE_INT,
       canvas["height"].as<int> (), nullptr);
 
-  gst_caps_replace (&src->caps, new_caps);
-  g_assert (gst_pad_set_caps (GST_BASE_SRC_PAD (src), new_caps));
+  gst_caps_replace (&self->caps, new_caps);
+  g_assert (gst_pad_set_caps (GST_BASE_SRC_PAD (self), new_caps));
 
-  GST_DEBUG_OBJECT (src, "Setting new caps: %" GST_PTR_FORMAT, new_caps);
+  GST_DEBUG_OBJECT (self, "Setting new caps: %" GST_PTR_FORMAT, new_caps);
 
   gst_caps_unref (new_caps);
 }
 
 static void
-gst_web_canvas_src_create_internal (GstWebCanvasSrc *src, GstBuffer **buffer)
+gst_web_canvas_src_create_internal (GstWebCanvasSrc *self, GstBuffer **buffer)
 {
   // TODO: Support canvas dimension changes.
-  if (!src->caps)
-    gst_web_canvas_src_update_caps_from_canvas (src);
+  if (!self->caps)
+    gst_web_canvas_src_update_caps_from_canvas (self);
 
-  *buffer = gst_web_canvas_src_buffer_from_canvas (src);
+  *buffer = gst_web_canvas_src_buffer_from_canvas (self);
 }
 
 static GstFlowReturn
 gst_web_canvas_src_create (GstPushSrc *psrc, GstBuffer **buffer)
 {
-  GstWebCanvasSrc *src;
+  GstWebCanvasSrc *self;
   GstBuffer *buf;
 
-  src = GST_WEB_CANVAS_SRC (psrc);
+  self = GST_WEB_CANVAS_SRC (psrc);
 
   emscripten_sync_run_in_main_runtime_thread (EM_FUNC_SIG_VII,
-      (void *) (gst_web_canvas_src_create_internal), src, buffer, NULL);
+      (void *) (gst_web_canvas_src_create_internal), self, buffer, NULL);
 
   if (*buffer == NULL)
     return GST_FLOW_ERROR;
 
   buf = *buffer;
   GST_BUFFER_PTS (buf) = gst_util_uint64_scale_ceil (
-      src->n_frames * GST_SECOND, DEFAULT_FPS_D, DEFAULT_FPS_N);
+      self->n_frames * GST_SECOND, DEFAULT_FPS_D, DEFAULT_FPS_N);
   GST_BUFFER_DURATION (buf) =
       gst_util_uint64_scale (GST_SECOND, DEFAULT_FPS_D, DEFAULT_FPS_N);
-  GST_BUFFER_OFFSET (buf) = src->n_frames;
+  GST_BUFFER_OFFSET (buf) = self->n_frames;
 
-  src->n_frames++;
+  self->n_frames++;
 
   return GST_FLOW_OK;
 }
@@ -200,20 +200,20 @@ gst_web_canvas_src_create (GstPushSrc *psrc, GstBuffer **buffer)
 static GstCaps *
 gst_web_canvas_src_get_caps (GstBaseSrc *bsrc, GstCaps *filter)
 {
-  GstWebCanvasSrc *src = GST_WEB_CANVAS_SRC (bsrc);
+  GstWebCanvasSrc *self = GST_WEB_CANVAS_SRC (bsrc);
   GstCaps *caps;
 
   if (filter) {
-    if (src->caps)
+    if (self->caps)
       caps = gst_caps_intersect_full (
-          filter, src->caps, GST_CAPS_INTERSECT_FIRST);
+          filter, self->caps, GST_CAPS_INTERSECT_FIRST);
     else
       caps = gst_caps_ref (filter);
   } else {
     caps = gst_caps_new_any ();
   }
 
-  GST_DEBUG_OBJECT (src, "Returning %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, caps);
   return caps;
 }
 
@@ -221,14 +221,15 @@ static GstStateChangeReturn
 gst_web_canvas_src_change_state (
     GstElement *element, GstStateChange transition)
 {
-  GstWebCanvasSrc *src = GST_WEB_CANVAS_SRC (element);
+  GstWebCanvasSrc *self = GST_WEB_CANVAS_SRC (element);
 
-  GST_DEBUG_OBJECT (src, "%d -> %d", GST_STATE_TRANSITION_CURRENT (transition),
+  GST_DEBUG_OBJECT (self, "%d -> %d",
+      GST_STATE_TRANSITION_CURRENT (transition),
       GST_STATE_TRANSITION_NEXT (transition));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      src->n_frames = 0;
+      self->n_frames = 0;
       break;
     default:
       break;
@@ -240,10 +241,10 @@ gst_web_canvas_src_change_state (
 static void
 gst_web_canvas_src_dispose (GObject *object)
 {
-  GstWebCanvasSrc *src = GST_WEB_CANVAS_SRC (object);
+  GstWebCanvasSrc *self = GST_WEB_CANVAS_SRC (object);
 
-  gst_clear_caps (&src->caps);
-  g_clear_pointer (&src->id, g_free);
+  gst_clear_caps (&self->caps);
+  g_clear_pointer (&self->id, g_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -252,11 +253,11 @@ static void
 gst_web_canvas_src_get_property (
     GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstWebCanvasSrc *src = GST_WEB_CANVAS_SRC (object);
+  GstWebCanvasSrc *self = GST_WEB_CANVAS_SRC (object);
 
   switch (prop_id) {
     case PROP_ID:
-      g_value_set_string (value, src->id);
+      g_value_set_string (value, self->id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -268,12 +269,12 @@ static void
 gst_web_canvas_src_set_property (
     GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstWebCanvasSrc *src = GST_WEB_CANVAS_SRC (object);
+  GstWebCanvasSrc *self = GST_WEB_CANVAS_SRC (object);
 
   switch (prop_id) {
     case PROP_ID:
-      g_free (src->id);
-      src->id = g_value_dup_string (value);
+      g_free (self->id);
+      self->id = g_value_dup_string (value);
       break;
     default:
       break;
