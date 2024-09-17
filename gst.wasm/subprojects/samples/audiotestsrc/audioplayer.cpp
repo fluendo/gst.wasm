@@ -1,4 +1,24 @@
-/* Copyright (C) Fluendo S.A. <support@fluendo.com> */
+/*
+ * GStreamer - gst.wasm audiotestsrc example
+ *
+ * Copyright 2024 Fluendo S.A.
+ *  @author: Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
 #include <iostream>
 #include <string>
 #include <emscripten/bind.h>
@@ -9,11 +29,11 @@
 
 using namespace emscripten;
 
+#define GST_CAT_DEFAULT (audioplayer_debug)
+GST_DEBUG_CATEGORY (audioplayer_debug);
+
 class AudioPlayer;
 static void output_sample (AudioPlayer *decoder);
-
-GST_DEBUG_CATEGORY (audioplayer_debug);
-#define GST_CAT_DEFAULT (audioplayer_debug)
 
 class AudioPlayer
 {
@@ -87,6 +107,7 @@ public:
     val audio_data_klass = val::global ("AudioData");
     if (!audio_data_klass.as<bool> ()) {
       GST_ERROR ("AudioData does not exist in JS engine.");
+      return;
     }
 
     // Convert appsink's GstSample to JS AudioData.
@@ -104,6 +125,7 @@ public:
         val::global ("Uint8Array"); // TODO. Depends on GstAudioFormatInfo.
     if (!typed_array_klass.as<bool> ()) {
       GST_ERROR ("Uint8Array does not exist in JS engine.");
+      return;
     }
 
     GstMapInfo info;
@@ -127,13 +149,13 @@ output_sample (AudioPlayer *decoder)
 {
   GstSample *sample;
 
-  GST_ERROR ("Handle sample on main thread");
+  GST_LOG ("Handle sample on main thread");
   sample = (GstSample *) g_async_queue_try_pop (decoder->queue);
   if (!sample) {
     GST_ERROR ("No sample found.");
     return;
   }
-  GST_ERROR ("Have sample of %" G_GSIZE_FORMAT " bytes",
+  GST_LOG ("Have sample of %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (gst_sample_get_buffer (sample)));
   decoder->NewSampleCb (sample);
 }

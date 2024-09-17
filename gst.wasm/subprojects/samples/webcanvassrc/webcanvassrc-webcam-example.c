@@ -23,8 +23,8 @@
 #include <emscripten.h>
 #include <gst/emscripten/gstemscripten.h>
 
-GST_DEBUG_CATEGORY_STATIC (example_dbg);
 #define GST_CAT_DEFAULT example_dbg
+GST_DEBUG_CATEGORY_STATIC (example_dbg);
 
 static GstElement *pipeline;
 
