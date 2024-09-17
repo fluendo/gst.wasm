@@ -24,7 +24,6 @@
 #include <config.h>
 #endif
 
-#include "gstsdl2elements.h"
 #include <gst/emscripten/gstemscripten.h>
 
 #include <SDL2/SDL.h>
@@ -174,33 +173,6 @@ cleanup:
   return G_SOURCE_CONTINUE;
 }
 
-static gboolean
-gst_sdl2_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
-{
-  GstSDL2Sink * self = (GstSDL2Sink *)bsink;
-  GstVideoInfo info;
-
-  GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Bad caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  /* Can't run twice for now */
-  g_assert (self->render.queue == NULL);
-  gst_emscripten_ui_attach_callback (gst_sdl2_sink_render_mainloop, self, gst_object_unref);
-  
-  GST_DEBUG_OBJECT (self, "Setting");
-  self->info = info;
-
-  GST_DEBUG ("Create rendering queue");
-  self->render.queue = g_async_queue_new_full (surface_return_to_pool);
-
-  GST_DEBUG ("done");
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_sdl2_sink_show_frame (GstVideoSink * bsink, GstBuffer * buf)
 {
@@ -249,6 +221,33 @@ gst_sdl2_sink_show_frame (GstVideoSink * bsink, GstBuffer * buf)
 
   GST_DEBUG ("Show frame done");
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_sdl2_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+{
+  GstSDL2Sink * self = (GstSDL2Sink *)bsink;
+  GstVideoInfo info;
+
+  GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (self, "Bad caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  /* Can't run twice for now */
+  g_assert (self->render.queue == NULL);
+  gst_emscripten_ui_attach_callback (gst_sdl2_sink_render_mainloop, self, gst_object_unref);
+
+  GST_DEBUG_OBJECT (self, "Setting");
+  self->info = info;
+
+  GST_DEBUG ("Create rendering queue");
+  self->render.queue = g_async_queue_new_full (surface_return_to_pool);
+
+  GST_DEBUG ("done");
+  return TRUE;
 }
 
 static gboolean
@@ -304,26 +303,6 @@ gst_sdl2_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
   return ret;
 }
 
-static void
-gst_sdl2_sink_init (GstSDL2Sink * self)
-{
-  GST_DEBUG_OBJECT (self, "init");
-
-  g_mutex_init (&self->render.lock);
-  g_cond_init (&self->render.ready);
-}
-
-static void
-gst_sdl2_sink_finalize (GObject *obj)
-{
-  GstSDL2Sink * self = (GstSDL2Sink *)obj;
-
-  GST_DEBUG_OBJECT (self, "init");
-
-  g_mutex_clear (&self->render.lock);
-  g_cond_clear (&self->render.ready);
-}
-
 static gboolean
 gst_sdl2_sink_start (GstBaseSink * bsink)
 {
@@ -356,6 +335,26 @@ gst_sdl2_sink_stop (GstBaseSink * bsink)
 
   self->render.cancelled = FALSE;
   return TRUE;
+}
+
+static void
+gst_sdl2_sink_init (GstSDL2Sink * self)
+{
+  GST_DEBUG_OBJECT (self, "init");
+
+  g_mutex_init (&self->render.lock);
+  g_cond_init (&self->render.ready);
+}
+
+static void
+gst_sdl2_sink_finalize (GObject *obj)
+{
+  GstSDL2Sink * self = (GstSDL2Sink *)obj;
+
+  GST_DEBUG_OBJECT (self, "init");
+
+  g_mutex_clear (&self->render.lock);
+  g_cond_clear (&self->render.ready);
 }
 
 static void
@@ -411,3 +410,19 @@ G_DEFINE_TYPE (GstSDL2Sink, gst_sdl2_sink, GST_TYPE_VIDEO_SINK);
 
 GST_ELEMENT_REGISTER_DEFINE (sdl2sink, "sdl2sink", GST_RANK_NONE,
     gst_sdl2_sink_get_type ());
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (sdl2sink, plugin);
+
+  return ret;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    sdl2,
+    "GStreamer SDL2",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

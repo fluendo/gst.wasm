@@ -1,5 +1,5 @@
 sources = [
-  'gstsdl2.c', 'gstsdl2sink.c'
+  'gstsdl2sink.c'
 ]
 
 configure_file(output: 'config.h', configuration: cdata)
