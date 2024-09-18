@@ -18,13 +18,13 @@ external_recipes = {
 }
 
 gst_url = 'https://github.com/fluendo/gstreamer.git'
-gst_commit = 'fluendo/gst.wasm'
+gst_commit = 'fluendo/webrtc'
 
 recipes_remotes = {
     'gstreamer-1.0': {'fluendo': gst_url },
     'gst-plugins-base-1.0': {'fluendo': gst_url },
     'gst-plugins-good-1.0': {'fluendo': gst_url },
-    'gst-plugins-bad-1.0': {'fluendo': gst_url },
+    'gst-plugins-bad-1.0': {'fluendo': 'gst_url' },
     'gst-plugins-ugly-1.0': {'fluendo': gst_url }
 }
 
