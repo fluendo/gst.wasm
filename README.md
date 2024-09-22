@@ -130,6 +130,8 @@ emrun _builddir/subprojects/openal/openal-example.html # Click to hear to a soun
 
 ## Development
 
+Refer to the [Development guide ](DEVELOPMENT.md)
+
 ### Coding style
 
 Refer to the [Coding Style guide ](CONTRIBUTING.md)
