@@ -2,10 +2,11 @@ webcanvassrc_example_common_link_args = [
   '-lembind',
   '-sAUTO_NATIVE_LIBRARIES=1',
   '-sASYNCIFY',
+  '-sUSE_SDL=2',
 ]
 webcanvassrc_example_common_deps = [
     common_deps,
-    dependency('gstsdl2'),
+    gstweb_sdl2_dep,
     dependency('gstvideoconvertscale'),
     dependency('gstreamer-emscripten-1.0'),
     gstweb_canvassrc_dep,
