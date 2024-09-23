@@ -29,7 +29,6 @@
  *   ImageBitmap
  *   OffscreenCanvas
  *   VideoFrame
- * - Support SysyemMemory?
  * - Support events, similar to what we did for gstglwindow_canvas
  * - Support video overlay interface, not for the window itself but
  *   for the render rectangle?
@@ -73,6 +72,8 @@ typedef struct _GstWebCanvasSink
 {
   GstVideoSink base;
   GstWebCanvas *canvas;
+  gint buffer_width;
+  gint buffer_height;
   gchar *id;
   val val_context;
   val val_canvas;
@@ -107,21 +108,21 @@ G_DEFINE_TYPE (GstWebCanvasSink, gst_web_canvas_sink, GST_TYPE_VIDEO_SINK);
 GST_ELEMENT_REGISTER_DEFINE (web_canvas_sink, "webcanvassink",
     GST_RANK_SECONDARY, GST_TYPE_WEB_CANVAS_SINK);
 
-static GstStaticPadTemplate static_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-        GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
-            GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME,
-            GST_WEB_MEMORY_VIDEO_FORMATS_STR)));
+static GstStaticPadTemplate static_sink_template = GST_STATIC_PAD_TEMPLATE (
+    "sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
+        GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME,
+        GST_WEB_MEMORY_VIDEO_FORMATS_STR) ";" GST_VIDEO_CAPS_MAKE ("RGBA")));
 
 static void
-gst_web_canvas_sink_draw (gpointer data)
+gst_web_canvas_sink_draw_video_frame (gpointer data)
 {
   GstWebCanvasSinkDrawData *draw_data = (GstWebCanvasSinkDrawData *) data;
   GstWebCanvasSink *self = draw_data->self;
   GstWebVideoFrame *vf;
   val video_frame;
 
-  GST_DEBUG_OBJECT (self, "About to draw %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (self, "About to draw video frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (draw_data->buffer)));
   vf = (GstWebVideoFrame *) gst_buffer_get_memory (draw_data->buffer, 0);
   video_frame = gst_web_video_frame_get_handle (vf);
@@ -131,10 +132,42 @@ gst_web_canvas_sink_draw (gpointer data)
 }
 
 static void
+gst_web_canvas_sink_draw_raw (gpointer data)
+{
+  GstWebCanvasSinkDrawData *draw_data = (GstWebCanvasSinkDrawData *) data;
+  GstWebCanvasSink *self = draw_data->self;
+  GstMapInfo map;
+  val buffer_data;
+  val image_data_data;
+  val image_data;
+  val image_bitmap;
+  val options;
+
+  GST_DEBUG_OBJECT (self, "About to draw from system memory %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (draw_data->buffer)));
+  /* destination buffer */
+  /* map the buffer into an ArrayBuffer */
+  gst_buffer_map (draw_data->buffer, &map, GST_MAP_READ);
+  buffer_data = val (typed_memory_view (map.size, map.data));
+  /* Create an ImageData */
+  image_data_data = val::global ("Uint8ClampedArray").new_ (buffer_data);
+  image_data =
+      val::global ("ImageData")
+          .new_ (image_data_data, self->buffer_width, self->buffer_height);
+  /* We create an ImageBitmap to support scaling if needed */
+  image_bitmap = val::global ("createImageBitmap") (image_data).await ();
+  self->val_context.call<void> ("drawImage", image_bitmap, 0, 0,
+      self->buffer_width, self->buffer_height, 0, 0, self->val_canvas["width"],
+      self->val_canvas["height"]);
+  gst_buffer_unmap (draw_data->buffer, &map);
+}
+
+static void
 gst_web_canvas_sink_setup (gpointer data)
 {
   GstWebCanvasSinkSetupData *setup_data = (GstWebCanvasSinkSetupData *) data;
   GstWebCanvasSink *self = setup_data->self;
+  GstVideoSink *sink = GST_VIDEO_SINK (self);
 
   /* FIXME how to handle the case of multiple canvases? */
   self->val_canvas = val::module_property ("canvas");
@@ -148,15 +181,40 @@ gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
   GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (sink);
   GstWebCanvasSinkDrawData data;
   GstWebRunner *runner;
+  GstWebRunnerCB cb;
+  GstCapsFeatures *features;
+  GstCaps *caps;
+
+  /* Check the format */
+  caps = gst_pad_get_current_caps (GST_BASE_SINK (sink)->sinkpad);
+  features = gst_caps_get_features (caps, 0);
+  /* TODO cache this on set_info */
+  if (features && gst_caps_features_contains (
+                      features, GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME)) {
+    cb = gst_web_canvas_sink_draw_video_frame;
+  } else {
+    cb = gst_web_canvas_sink_draw_raw;
+  }
+  gst_caps_unref (caps);
 
   runner = gst_web_canvas_get_runner (self->canvas);
   data.self = self;
   data.buffer = buf;
-  gst_web_runner_send_message (runner, gst_web_canvas_sink_draw, &data);
-
+  gst_web_runner_send_message (runner, cb, &data);
   gst_object_unref (GST_OBJECT (runner));
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_web_canvas_sink_set_info (
+    GstVideoSink *sink, GstCaps *caps, const GstVideoInfo *info)
+{
+  GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (sink);
+
+  self->buffer_width = info->width;
+  self->buffer_height = info->height;
+  return TRUE;
 }
 
 static gboolean
@@ -172,6 +230,8 @@ gst_web_canvas_sink_start (GstBaseSink *sink)
     GST_ERROR_OBJECT (self, "Failed requesting a WebCanvas context");
     goto done;
   }
+
+  /* TODO Get canvas size */
 
   runner = gst_web_canvas_get_runner (self->canvas);
   if (!gst_web_runner_run (runner, NULL)) {
@@ -275,7 +335,6 @@ gst_web_canvas_sink_class_init (GstWebCanvasSinkClass *klass)
   GstElementClass *element_class;
   GstBaseSinkClass *basesink_class;
   GstVideoSinkClass *videosink_class;
-  GstCaps *caps;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = gst_web_canvas_sink_set_property;
@@ -298,6 +357,7 @@ gst_web_canvas_sink_class_init (GstWebCanvasSinkClass *klass)
   basesink_class->start = gst_web_canvas_sink_start;
   videosink_class = GST_VIDEO_SINK_CLASS (klass);
   videosink_class->show_frame = gst_web_canvas_sink_show_frame;
+  videosink_class->set_info = gst_web_canvas_sink_set_info;
 
   gobject_class->finalize = gst_web_canvas_sink_finalize;
 }
