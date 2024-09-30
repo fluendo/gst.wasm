@@ -20,6 +20,7 @@ common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_
 examples = [
   'audiotestsrc',
   'emhttpsrc',
+  'gl',
   'gstlaunch',
   'openal',
   'videotestsrc',
