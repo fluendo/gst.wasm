@@ -57,6 +57,7 @@ cdata.set_quoted('PACKAGE_NAME', 'GStreamer Plugins Web')
 cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Plugins Web')
 cdata.set_quoted('GST_PACKAGE_ORIGIN', 'https://fluendo.com')
 cdata.set_quoted('GST_LICENSE', 'UNKNOWN') # TODO
+configure_file(output: 'config.h', configuration: cdata)
 
 # For subdirs to fill
 gst_libraries = []

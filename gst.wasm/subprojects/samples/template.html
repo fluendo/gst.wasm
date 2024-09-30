@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+    />
+    <style type="text/css">
+      div#log {
+        margin: 0;
+        padding: 5px;
+        font-family: monaco, "Courier New", Courier, monospace;
+        line-height: 1.3;
+        font-size: 12px;
+        background: black;
+        color: white;
+      }
+      iframe {
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script type="text/javascript">
+      var Module = {};
+
+      function onPageLoad() {
+        var page = document.getElementById("page").contentWindow;
+        hljs.highlightAll();
+        // Set the Module canvas
+        Module["canvas"] = (() => {
+          var canvas = page.document.getElementById("canvas");
+          return canvas;
+        })();
+      }
+    </script>
+    <iframe
+      id="page"
+      src="@PAGE_NAME@"
+      onload="onPageLoad()"
+      title="Page"
+      scrolling="no"
+      width="640px"
+      height="480px"
+    ></iframe>
+    <pre id="page-raw">
+      <code class="language-html">
+@PAGE_CODE@
+      </code>
+    </pre>
+    <pre id="code">
+      <code class="language-c">
+@CODE@
+      </code>
+    </pre>
+    <div id="log"></div>
+    <!-- Check https://stackoverflow.com/questions/6604192/showing-console-errors-and-alerts-in-a-div-inside-the-page -->
+    <script type="module">
+      import { AnsiUp } from "https://cdn.jsdelivr.net/gh/drudru/ansi_up/ansi_up.js";
+      var ansi_up = new AnsiUp();
+      var log = document.querySelector("#log");
+      ["log", "debug", "info", "warn", "error"].forEach(function (verb) {
+        console[verb] = (function (method, verb, log) {
+          return function () {
+            method.apply(console, arguments);
+            var msg = document.createElement("div");
+            msg.classList.add(verb);
+            var html = ansi_up.ansi_to_html(
+              Array.prototype.slice.call(arguments).join(" "),
+            );
+            msg.innerHTML = html;
+            log.appendChild(msg);
+          };
+        })(console[verb], verb, log);
+      });
+    </script>
+    <script async type="text/javascript" src="@EXECUTABLE_NAME@"></script>
+  </body>
+</html>
