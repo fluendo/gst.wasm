@@ -3,13 +3,13 @@
 
 The following is a list of provided samples:
 
-1. **emhttpsrc-example**: Downloads the data from a text file `hello.txt` shared by the http server: `http://localhost:3000/hello.txt`,
+1. **webfetchsrc-example**: Downloads the data from a text file `hello.txt` shared by the http server: `http://localhost:3000/hello.txt`,
 and prints the contents on the text output of the webpage.
 How to run this sample:
 ```
-pushd _builddir/subprojects/gst-plugins-web/samples/emhttpsrc
+pushd _builddir/subprojects/samples/webfetchsrc
 cp /var/log/kern.log hello.txt
-cp ../../../../../subprojects/gst-plugins-web/samples/emhttpsrc/bs-config.js .
+cp ../../../../subprojects/samples/webfetchsrc/bs-config.js .
 lite-server
 ```
 

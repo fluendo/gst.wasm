@@ -3,6 +3,8 @@ webcanvassrc_example_common_link_args = [
   '-sAUTO_NATIVE_LIBRARIES=1',
   '-sASYNCIFY',
   '-sUSE_SDL=2',
+  # Required by webfetchsrc, this should be brought directly by the dep
+  '-sFETCH=1',
 ]
 webcanvassrc_example_common_deps = [
     common_deps,

@@ -62,13 +62,13 @@ init_pipeline ()
   GST_DEBUG ("Init pipeline");
 
   GST_PLUGIN_STATIC_DECLARE (coreelements);
-  GST_PLUGIN_STATIC_DECLARE (emhttpsrc);
+  GST_PLUGIN_STATIC_DECLARE (web);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
-  GST_PLUGIN_STATIC_REGISTER (emhttpsrc);
+  GST_PLUGIN_STATIC_REGISTER (web);
 
   context.pipe = gst_parse_launch (
-      "emhttpsrc location=\"http://localhost:3000/hello.txt\" ! fakesink "
+      "webfetchsrc location=\"http://localhost:3000/hello.txt\" ! fakesink "
       "name=fk signal-handoffs=true",
       NULL);
   g_assert (context.pipe);
@@ -89,7 +89,7 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "HTTPsrc example");
 
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
-  gst_debug_set_threshold_from_string ("*:2,emhttpsrc:8,example:5", TRUE);
+  gst_debug_set_threshold_from_string ("*:2,webfetchsrc:8,example:5", TRUE);
 
   init_pipeline ();
   play ();
