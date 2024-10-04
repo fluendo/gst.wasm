@@ -6,10 +6,8 @@ webcanvassrc_example_common_link_args = [
 ]
 webcanvassrc_example_common_deps = [
     common_deps,
-    gstweb_sdl2_dep,
     dependency('gstvideoconvertscale'),
     dependency('gstreamer-emscripten-1.0'),
-    gstweb_canvassrc_dep,
 ]
 
 executable('webcanvassrc-animation-example',
@@ -18,6 +16,10 @@ executable('webcanvassrc-animation-example',
   include_directories: include_directories('.'),
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args,
+  link_with: [
+    gstweb_canvassrc_dep,
+    gstweb_sdl2_dep,
+  ],
   name_suffix: 'html',
   install: true,
   install_dir: install_dir,
@@ -37,6 +39,10 @@ executable('webcanvassrc-webcam-example',
     '-sEXPORTED_FUNCTIONS=_init_pipeline,_main,cwrap',
     '-lhtml5',
     '-sINITIAL_MEMORY=536870912'
+  ],
+  link_with: [
+    gstweb_canvassrc_dep,
+    gstweb_sdl2_dep,
   ],
   name_suffix: 'html',
   install: true,

@@ -5,26 +5,37 @@ project(
   meson_version : '>= 0.56.0'
 )
 
+# Libraries
 gst_dep = dependency('gstreamer-1.0')
-gstcoreelements_dep = dependency('gstcoreelements')
-gstapp_dep = dependency('gstapp')
 gstaudio_dep = dependency('gstreamer-audio-1.0')
 gstvideo_dep = dependency('gstreamer-video-1.0')
-gstweb_emhttpsrc_dep = dependency('gstemhttpsrc')
-gstweb_sdl2_dep = dependency('gstsdl2')
-gstweb_canvassrc_dep = dependency('gstwebcanvassrc')
+
+# Plugins
+gstisomp4_dep = dependency('gstisomp4')
+gstcoreelements_dep = dependency('gstcoreelements')
+gstapp_dep = dependency('gstapp')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
+
+# Common to all samples
 common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_dep, gstaudiotestsrc_dep]
+
+# Plugins relative to gst-plugins-web subproject
+gstpluginsweb = subproject('gst-plugins-web')
+gstweb_dep = gstpluginsweb.get_variable('gstweb_dep')
+gstweb_emhttpsrc_dep = gstpluginsweb.get_variable('emhttpsrc_dep')
+gstweb_sdl2_dep = gstpluginsweb.get_variable('sdl2_dep')
+gstweb_canvassrc_dep = gstpluginsweb.get_variable('gstwebcanvassrc_dep')
 
 
 examples = [
   'audiotestsrc',
+  'codecs',
   'emhttpsrc',
   'gl',
   'gstlaunch',
   'openal',
   'videotestsrc',
-  'webcanvassrc',
+  'webcanvassrc'
 ]
 
 common_link_args = [
