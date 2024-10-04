@@ -1,6 +1,8 @@
 /*
- * GStreamer
- * Copyright (C) 2024 Jorge Zapata <jzapata@fluendo.com>
+ * GStreamer - GStreamer WebCanvasSrc source
+ *
+ * Copyright 2024 Fluendo S.A.
+ *  @author: Cesar Fabian Orccon Chipana <forccon@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,29 +24,4 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-
-#include <gst/web/gstwebutils.h>
-#include <gst/web/gstwebvideoframe.h>
-
-#include "gstweb.h"
-#include "gstwebcanvassink.h"
-#include "gstwebcanvassrc.h"
-#include "codecs/gstwebcodecs.h"
-
-static gboolean
-plugin_init (GstPlugin *plugin)
-{
-  gst_web_utils_init ();
-  gst_web_video_frame_init ();
-  gst_web_codecs_init (plugin);
-
-  gst_element_register_web_canvas_sink (plugin);
-  gst_element_register_web_canvas_src (plugin);
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, web,
-    "web related elements", plugin_init, VERSION, GST_LICENSE,
-    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+GST_ELEMENT_REGISTER_DECLARE (web_canvas_src)

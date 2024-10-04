@@ -63,7 +63,7 @@ G_DECLARE_FINAL_TYPE (
     GstWebCanvasSrc, gst_web_canvas_src, GST, WEB_CANVAS_SRC, GstPushSrc)
 G_DEFINE_TYPE (GstWebCanvasSrc, gst_web_canvas_src, GST_TYPE_PUSH_SRC);
 GST_ELEMENT_REGISTER_DEFINE (
-    webcanvassrc, "webcanvassrc", GST_RANK_NONE, GST_TYPE_WEB_CANVAS_SRC);
+    web_canvas_src, "webcanvassrc", GST_RANK_NONE, GST_TYPE_WEB_CANVAS_SRC);
 GST_DEBUG_CATEGORY_STATIC (web_canvas_src_debug);
 
 static GstStaticPadTemplate gst_web_canvas_src_template =
@@ -314,16 +314,3 @@ gst_web_canvas_src_class_init (GstWebCanvasSrcClass *klass)
   gst_element_class_add_static_pad_template (
       gstelement_class, &gst_web_canvas_src_template);
 }
-
-static gboolean
-plugin_init (GstPlugin *plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (
-      web_canvas_src_debug, "webcanvassrc", 0, "WebCanvasSrc Source");
-
-  return GST_ELEMENT_REGISTER (webcanvassrc, plugin);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, webcanvassrc,
-    "Creates a test video stream", plugin_init, VERSION, GST_LICENSE,
-    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
