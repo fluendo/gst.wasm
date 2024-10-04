@@ -1,7 +1,7 @@
 From ce8239cdf49aa489487208c3e9cd25e42dc264be Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Tue, 8 Oct 2019 11:30:00 +0200
-Subject: [PATCH 01/18] Do not build tools
+Subject: [PATCH 01/20] Do not build tools
 
 We're only interested in the libraries.
 
@@ -222,11 +222,13 @@ index 3576c5e6f7d..0ccb3df905c 100644
  
  # xgettext is optional (on Windows for instance)
  if find_program('xgettext', required : get_option('nls')).found()
+-- 
+2.46.2
 
 From 5f0e32cab453b84daca00b1e4bd3fa536bc6692d Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Wed, 13 Jul 2022 09:44:36 +0200
-Subject: [PATCH 02/18] Remove GRegex pre-emptively
+Subject: [PATCH 02/20] Remove GRegex pre-emptively
 
 Unused by libvips or any of the libraries it relies on.
 
@@ -461,11 +463,13 @@ index 0ccb3df905c..c569fe56286 100644
  # Import the gvdb sources as a subproject to avoid having the copylib in-tree
  subproject('gvdb')
  gvdb_dep = dependency('gvdb')
+-- 
+2.46.2
 
 From e792db1697874816235a4e3342f64e8170eee633 Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Tue, 23 Aug 2022 10:29:57 +0200
-Subject: [PATCH 03/18] Disable NLS
+Subject: [PATCH 03/20] Disable NLS
 
 Upstream-Status: Inappropriate [disable feature]
 This patch is just for our convenience.
@@ -500,11 +504,13 @@ index fe9e79dbd96..8597f90d1de 100644
  #define NC_(Context, String) (String)
  
  #endif  /* __G_I18N_LIB_H__ */
+-- 
+2.46.2
 
 From 560a6bdeda1d3ceb9a082eea09003a62aa839199 Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Wed, 18 Sep 2019 15:00:00 +0200
-Subject: [PATCH 04/18] Emscripten doesn't always define
+Subject: [PATCH 04/20] Emscripten doesn't always define
  __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 
 See:
@@ -528,11 +534,13 @@ index c569fe56286..0d6210be2c3 100644
      # __sync_bool_compare_and_swap but doesn't define
      # __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
      glib_conf.set('__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4', true)
+-- 
+2.46.2
 
 From 7a57387cd83ce45a6a8381e2a09afcd69d49478e Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Wed, 18 Sep 2019 15:20:00 +0200
-Subject: [PATCH 05/18] posix_spawn isn't usable in WASM
+Subject: [PATCH 05/20] posix_spawn isn't usable in WASM
 
 ---
  meson.build | 2 +-
@@ -551,11 +559,13 @@ index 0d6210be2c3..a0da191d983 100644
    glib_conf.set('HAVE_POSIX_SPAWN', 1)
  endif
  
+-- 
+2.46.2
 
 From 57869b665cd80292828f32f5e5bef14f86eca35c Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Wed, 18 Sep 2019 15:40:00 +0200
-Subject: [PATCH 06/18] Network libs are not available in WASM
+Subject: [PATCH 06/20] Network libs are not available in WASM
 
 ---
  gio/meson.build | 2 +-
@@ -574,11 +584,13 @@ index 0fe76ec542a..ee51179588f 100644
    # res_query()
    res_query_test = '''#include <resolv.h>
                        int main (int argc, char ** argv) {
+-- 
+2.46.2
 
 From d658487ed8a499ee9b5d5c90cea893415ebaecf9 Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Wed, 22 Apr 2020 12:11:28 +0200
-Subject: [PATCH 07/18] Ensure separate checks are also done for Emscripten
+Subject: [PATCH 07/20] Ensure separate checks are also done for Emscripten
 
 ---
  meson.build | 8 ++++----
@@ -611,11 +623,13 @@ index a0da191d983..57828c84dcf 100644
    foreach type_name, size_compatibility : g_sizet_compatibility
      g_sizet_compatibility += { type_name: size_compatibility and
        cc.compiles(
+-- 
+2.46.2
 
 From 1e946b0d4819224f5073eac307834b42f0429948 Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Tue, 13 Apr 2021 15:30:00 +0200
-Subject: [PATCH 08/18] Use vsnpintf/snprintf/printf from musl libc
+Subject: [PATCH 08/20] Use vsnpintf/snprintf/printf from musl libc
 
 The C99 semantics of these functions is well supported in musl libc.
 
@@ -644,11 +658,13 @@ index 57828c84dcf..cd11930c9df 100644
    glib_conf.set('HAVE_C99_SNPRINTF', true)
    glib_conf.set('HAVE_C99_VSNPRINTF', true)
    glib_conf.set('HAVE_UNIX98_PRINTF', true)
+-- 
+2.46.2
 
 From 7b2fffe336813ffe9bc6cb5ce0ea43c307ae4631 Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Wed, 24 Aug 2022 21:55:32 +0200
-Subject: [PATCH 09/18] Add support for WebAssembly
+Subject: [PATCH 09/20] Add support for WebAssembly
 
 - Exclude unix specific files.
 - Add Wasm-specific platform definition.
@@ -2210,11 +2226,13 @@ index cd11930c9df..73747565df9 100644
  else
    g_module_suffix = 'so'
  endif
+-- 
+2.46.2
 
 From 80a65a0dd8d61972ecffc64613825bd4e3abf260 Mon Sep 17 00:00:00 2001
 From: Kleis Auke Wolthuizen <github@kleisauke.nl>
 Date: Fri, 20 Sep 2019 16:05:00 +0200
-Subject: [PATCH 10/18] Fix function pointer cast issues
+Subject: [PATCH 10/20] Fix function pointer cast issues
 
 It is undefined behavior in C and C++ to cast a function pointer
 to another type and call it that way. This does work in most native
@@ -3732,7 +3750,7 @@ index 60b088641bd..671baa0645c 100644
  static const char *g_osx_app_info_get_id     (GAppInfo      *appinfo);
  
  /**
-@@ -557,7 +558,8 @@
+@@ -557,7 +558,8 @@ g_osx_app_info_can_delete (GAppInfo *appinfo)
  }
  
  static void
@@ -4981,11 +4999,13 @@ index e386b50dff5..f3096a939bf 100644
    }; \
    g_type_module_add_interface (type_module, g_define_type_id, TYPE_IFACE, &g_implement_interface_info); \
  }
+-- 
+2.46.2
 
-From 1ff66f1bf78223e6d476b1357a9282811bb167eb Mon Sep 17 00:00:00 2001
+From 33971e88a6e76da18673699e6193337f0cc6b1ed Mon Sep 17 00:00:00 2001
 From: Jorge Zapata <jorgeluis.zapata@gmail.com>
 Date: Sat, 18 Mar 2023 22:03:21 +0100
-Subject: [PATCH 11/18] Revert "Remove GRegex pre-emptively"
+Subject: [PATCH 11/20] Revert "Remove GRegex pre-emptively"
 
 This reverts commit 5f0e32cab453b84daca00b1e4bd3fa536bc6692d.
 ---
@@ -5217,11 +5237,48 @@ index 73747565df9..d97e797963c 100644
  # Import the gvdb sources as a subproject to avoid having the copylib in-tree
  subproject('gvdb')
  gvdb_dep = dependency('gvdb')
+-- 
+2.46.2
 
-From 31171ffa4002237f927dd28039d42cf94ab20cc0 Mon Sep 17 00:00:00 2001
+From 84157dd3771a84643f0339358d489bf99e109005 Mon Sep 17 00:00:00 2001
+From: Jorge Zapata <jorgeluis.zapata@gmail.com>
+Date: Sun, 28 Apr 2024 19:45:06 +0200
+Subject: [PATCH 12/20] A g_error is a fatal error when run, remove it
+
+---
+ glib/gwakeup.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/glib/gwakeup.c b/glib/gwakeup.c
+index a1efa057d39..40c2be02d33 100644
+--- a/glib/gwakeup.c
++++ b/glib/gwakeup.c
+@@ -147,7 +147,6 @@ GWakeup *
+ g_wakeup_new (void)
+ {
+ #ifdef G_PLATFORM_WASM
+-  g_error ("g_wakeup_new is no-op on WebAssembly");
+   return NULL;
+ #else
+   GError *error = NULL;
+@@ -261,9 +260,7 @@ g_wakeup_acknowledge (GWakeup *wakeup)
+ void
+ g_wakeup_signal (GWakeup *wakeup)
+ {
+-#ifdef G_PLATFORM_WASM
+-  g_error ("g_wakeup_signal is no-op on WebAssembly");
+-#else
++#ifndef G_PLATFORM_WASM
+   int res;
+ 
+   if (wakeup->fds[1] == -1)
+-- 
+2.46.2
+
+From c195e615a8e930c9b243cedf32ce4279bf73f342 Mon Sep 17 00:00:00 2001
 From: Jorge Zapata <jorgeluis.zapata@gmail.com>
 Date: Thu, 13 Apr 2023 19:48:45 +0200
-Subject: [PATCH 12/18] Wrap _full functions castings
+Subject: [PATCH 13/20] Wrap _full functions castings
 
 ---
  glib/garray.c    | 4 ++--
@@ -5285,11 +5342,13 @@ index a98a5e5604c..8daa91174b5 100644
    'guniprop.c',
    'gutf8.c',
    'gunibreak.c',
+-- 
+2.46.2
 
-From 07fa32b81fc0946cb642f115335507329a3378ce Mon Sep 17 00:00:00 2001
+From e12fcf39b6f26fdc5a5a698765a66fe5191d4784 Mon Sep 17 00:00:00 2001
 From: Jorge Zapata <jorgeluis.zapata@gmail.com>
 Date: Thu, 25 May 2023 18:58:52 +0200
-Subject: [PATCH 13/18] Add missing file
+Subject: [PATCH 14/20] Add missing file
 
 ---
  glib/gtypes.c | 14 ++++++++++++++
@@ -5316,11 +5375,13 @@ index 00000000000..fde56af93e9
 +{
 +  return ((GCompareFunc)user_data)(a, b);
 +} 
+-- 
+2.46.2
 
-From aa1bea1a4405f3eaf03e85f68c8ee6d26eed11c1 Mon Sep 17 00:00:00 2001
+From 7b6450c8ca8f57740131cfbd32cfcfeb76ea2aca Mon Sep 17 00:00:00 2001
 From: Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
 Date: Mon, 26 Jun 2023 17:56:59 +0200
-Subject: [PATCH 14/18] tmp: gslist: leak instead of crashing
+Subject: [PATCH 15/20] tmp: gslist: leak instead of crashing
 
 ---
  glib/gslist.c | 3 ++-
@@ -5340,11 +5401,55 @@ index 7d4051c244a..850782e8c5c 100644
    g_slist_free (list);
  }
  
+-- 
+2.46.2
 
-From feb12ad4a06732314f70b80a45c979e762640a8d Mon Sep 17 00:00:00 2001
+From 044843ceba43be9e3f61cd971f921a3b10d823aa Mon Sep 17 00:00:00 2001
+From: Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
+Date: Thu, 13 Jun 2024 17:54:45 +0200
+Subject: [PATCH 16/20] asyncqueue: fix unref function support by emscripten
+
+---
+ glib/gasyncqueue.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/glib/gasyncqueue.c b/glib/gasyncqueue.c
+index 0518763a65a..bdf83378def 100644
+--- a/glib/gasyncqueue.c
++++ b/glib/gasyncqueue.c
+@@ -210,6 +210,16 @@ g_async_queue_unref_and_unlock (GAsyncQueue *queue)
+   g_async_queue_unref (queue);
+ }
+ 
++static void
++g_async_queue_free_nofify (gpointer data, gpointer user_data)
++{
++  GAsyncQueue *queue = (GAsyncQueue *)user_data;
++
++  g_return_if_fail (queue != NULL);
++  
++  queue->item_free_func (data);
++}
++
+ /**
+  * g_async_queue_unref:
+  * @queue: a #GAsyncQueue.
+@@ -232,7 +242,7 @@ g_async_queue_unref (GAsyncQueue *queue)
+       g_mutex_clear (&queue->mutex);
+       g_cond_clear (&queue->cond);
+       if (queue->item_free_func)
+-        g_queue_foreach (&queue->queue, (GFunc) queue->item_free_func, NULL);
++        g_queue_foreach (&queue->queue, g_async_queue_free_nofify, queue);
+       g_queue_clear (&queue->queue);
+       g_free (queue);
+     }
+-- 
+2.46.2
+
+From 15409aa1d2837b0d4c87e65334bc70cec96f3e76 Mon Sep 17 00:00:00 2001
 From: Jorge Zapata <jorgeluis.zapata@gmail.com>
 Date: Sun, 28 Apr 2024 19:43:20 +0200
-Subject: [PATCH 15/18] Differentiate wasm from emscripten
+Subject: [PATCH 17/20] Differentiate wasm from emscripten
 
 Emscripten provides the libc and libcxx implementation along
 with other virtualization under a JS environment.
@@ -5366,44 +5471,13 @@ index d97e797963c..b5f62039e07 100644
  else
    glib_os = '#define G_OS_UNIX'
  endif
+-- 
+2.46.2
 
-From a9b01672aace9ccac1e9092bfa344476d9c16428 Mon Sep 17 00:00:00 2001
-From: Jorge Zapata <jorgeluis.zapata@gmail.com>
-Date: Sun, 28 Apr 2024 19:45:06 +0200
-Subject: [PATCH 16/18] A g_error is a fatal error when run, remove it
-
----
- glib/gwakeup.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/glib/gwakeup.c b/glib/gwakeup.c
-index a1efa057d39..40c2be02d33 100644
---- a/glib/gwakeup.c
-+++ b/glib/gwakeup.c
-@@ -147,7 +147,6 @@ GWakeup *
- g_wakeup_new (void)
- {
- #ifdef G_PLATFORM_WASM
--  g_error ("g_wakeup_new is no-op on WebAssembly");
-   return NULL;
- #else
-   GError *error = NULL;
-@@ -261,9 +260,7 @@ g_wakeup_acknowledge (GWakeup *wakeup)
- void
- g_wakeup_signal (GWakeup *wakeup)
- {
--#ifdef G_PLATFORM_WASM
--  g_error ("g_wakeup_signal is no-op on WebAssembly");
--#else
-+#ifndef G_PLATFORM_WASM
-   int res;
- 
-   if (wakeup->fds[1] == -1)
-
-From 6f415f963b9c9306736bc175682c226d76726422 Mon Sep 17 00:00:00 2001
+From bd785b2293e562ca7535e933394de8117e037c1d Mon Sep 17 00:00:00 2001
 From: Jorge Zapata <jorgeluis.zapata@gmail.com>
 Date: Sun, 28 Apr 2024 19:46:20 +0200
-Subject: [PATCH 17/18] Be able to pass the canvas to the thread creation
+Subject: [PATCH 18/20] Be able to pass the canvas to the thread creation
 
 When a thread is created, emscripten can share main's thread
 canvases. We can not do it after the thread is created because
@@ -5597,11 +5671,13 @@ index 9c847e03981..a5b7d22628a 100644
                                  GThreadFunc proxy,
                                  GThreadFunc func,
                                  gpointer data,
+-- 
+2.46.2
 
-From 6f6064e882fd3d5ea764bc4dcdd532d6ad98a191 Mon Sep 17 00:00:00 2001
+From 42979a5a48de5ab8607540fa7725ff27a505c924 Mon Sep 17 00:00:00 2001
 From: Jorge Zapata <jorgeluis.zapata@gmail.com>
 Date: Sun, 28 Apr 2024 19:49:17 +0200
-Subject: [PATCH 18/18] Initial main loop support
+Subject: [PATCH 19/20] Initial main loop support
 
 ---
  glib/gmain.c | 32 ++++++++++++++++++++++++++++++++
@@ -5680,3 +5756,33 @@ index d28f89e0ce6..61f84e4df9a 100644
  }
  
  /**
+-- 
+2.46.2
+
+From 8cb76e81e19c5856ac037e925c3bcd48b1ecaac7 Mon Sep 17 00:00:00 2001
+From: Jorge Zapata <jorgeluis.zapata@gmail.com>
+Date: Wed, 2 Oct 2024 13:36:03 +0200
+Subject: [PATCH 20/20] garray: Fix function signature by proxying
+
+---
+ glib/garray.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/glib/garray.c b/glib/garray.c
+index 9aaba702b73..321ce6a8a1c 100644
+--- a/glib/garray.c
++++ b/glib/garray.c
+@@ -2500,8 +2500,8 @@ g_ptr_array_sort (GPtrArray    *array,
+     g_qsort_with_data (array->pdata,
+                        array->len,
+                        sizeof (gpointer),
+-                       (GCompareDataFunc)compare_func,
+-                       NULL);
++                       g_compare_func_to_compare_data_func,
++                       compare_func);
+ }
+ 
+ /* Please keep this doc-comment in sync with
+-- 
+2.46.2
+
