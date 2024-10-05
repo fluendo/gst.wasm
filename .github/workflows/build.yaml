@@ -55,7 +55,7 @@ jobs:
       - name: Prepate artifact to pages
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          find ./build/gst.wasm_web_wasm32/dist/web_wasm32/share/gst.wasm/samples/ -name "*example.html" -exec sed -i 's#</head>#<script src="../enable-threads.js"></script></head>#g' {}  \;
+          find ./build/gst.wasm_web_wasm32/dist/web_wasm32/share/gst.wasm/samples/ -name "*example*.html" -print -exec sed -i 's#</head>#<script src="../enable-threads.js"></script></head>#g' {}  \;
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/configure-pages@v5
