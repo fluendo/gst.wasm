@@ -3,6 +3,7 @@ sources = [
   'gstwebcanvassink.cpp',
   'gstwebcanvassrc.cpp',
   'gstwebfetchsrc.c',
+  'gstwebstreamsrc.c',
   'codecs/gstwebcodecs.cpp',
   'codecs/gstwebcodecsvideodecoder.cpp'
 ]
@@ -27,6 +28,7 @@ gstweb_dep = static_library('gstweb',
       '-lembind',
       '-sAUTO_NATIVE_LIBRARIES=1',
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
+      '-sEXPORTED_FUNCTIONS=gst_web_stream_src_chunk,gst_web_stream_src_eos',
       '-g3',
   ],
 )
