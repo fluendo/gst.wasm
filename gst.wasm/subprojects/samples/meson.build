@@ -24,8 +24,6 @@ gstpluginsweb = subproject('gst-plugins-web')
 gstweb_dep = gstpluginsweb.get_variable('gstweb_dep')
 gstweb_emhttpsrc_dep = gstpluginsweb.get_variable('emhttpsrc_dep')
 gstweb_sdl2_dep = gstpluginsweb.get_variable('sdl2_dep')
-gstweb_canvassrc_dep = gstpluginsweb.get_variable('gstwebcanvassrc_dep')
-
 
 examples = [
   'audiotestsrc',
