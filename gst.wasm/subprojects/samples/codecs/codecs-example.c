@@ -44,7 +44,7 @@ static void
 init_pipeline ()
 {
   pipeline = gst_parse_launch (
-      "webfetchsrc "
+      "webstreamsrc "
       "location=\"https://commondatastorage.googleapis.com/"
       "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
       "qtdemux ! "
