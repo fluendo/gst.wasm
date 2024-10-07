@@ -56,7 +56,7 @@ init_pipeline ()
   // ! qtdemux ! webcodecsviddech264sw ! glimagesink sync=false", NULL);
   pipeline =
       gst_parse_launch ("emhttpsrc "
-                        "location=\"http://commondatastorage.googleapis.com/"
+                        "location=\"https://commondatastorage.googleapis.com/"
                         "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
                         "qtdemux ! webcodecsviddech264sw ! webcanvassink",
           NULL);
