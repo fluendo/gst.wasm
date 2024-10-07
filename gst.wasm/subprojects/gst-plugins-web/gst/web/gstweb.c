@@ -29,6 +29,7 @@
 
 #include "gstweb.h"
 #include "gstwebfetchsrc.h"
+#include "gstwebstreamsrc.h"
 #include "gstwebcanvassink.h"
 #include "gstwebcanvassrc.h"
 #include "codecs/gstwebcodecs.h"
@@ -43,6 +44,7 @@ plugin_init (GstPlugin *plugin)
   gst_element_register_web_canvas_sink (plugin);
   gst_element_register_web_canvas_src (plugin);
   gst_element_register_web_fetch_src (plugin);
+  gst_element_register_web_stream_src (plugin);
   return TRUE;
 }
 
