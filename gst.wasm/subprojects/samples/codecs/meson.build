@@ -13,14 +13,13 @@ executable(executable_name,
     ],
     link_with: [
       gstweb_dep,
-      gstweb_emhttpsrc_dep
     ],
     link_args: common_link_args + [
       '-lembind',
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
-      # Required by emhttpsrc, this should be brought directly by the dep
+      # Required by webfetchsrc, this should be brought directly by the dep
       '-sFETCH=1',
       '-g3',
       '-lhtml5',

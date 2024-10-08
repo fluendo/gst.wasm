@@ -1,5 +1,5 @@
 sources = [
-  'emhttpsrc-example.c'
+  'webfetchsrc-example.c'
 ]
 
 executable('index',
@@ -12,9 +12,12 @@ executable('index',
   link_args: [
       '-sPTHREAD_POOL_SIZE=4',
       '-sFETCH=1',
+      # Required by webcanvassink, this should be brought directly by the dep
+      '-lembind',
+      '-sASYNCIFY',
   ],
   link_with: [
-    gstweb_emhttpsrc_dep
+    gstweb_dep
   ],
   name_suffix: 'html'
 )

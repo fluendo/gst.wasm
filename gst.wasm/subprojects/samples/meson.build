@@ -22,18 +22,17 @@ common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_
 # Plugins relative to gst-plugins-web subproject
 gstpluginsweb = subproject('gst-plugins-web')
 gstweb_dep = gstpluginsweb.get_variable('gstweb_dep')
-gstweb_emhttpsrc_dep = gstpluginsweb.get_variable('emhttpsrc_dep')
 gstweb_sdl2_dep = gstpluginsweb.get_variable('sdl2_dep')
 
 examples = [
   'audiotestsrc',
   'codecs',
-  'emhttpsrc',
   'gl',
   'gstlaunch',
   'openal',
   'videotestsrc',
-  'webcanvassrc'
+  'webcanvassrc',
+  'webfetchsrc',
 ]
 
 common_link_args = [

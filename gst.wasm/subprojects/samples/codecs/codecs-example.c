@@ -32,31 +32,29 @@ register_elements ()
   GST_PLUGIN_STATIC_DECLARE (coreelements);
   GST_PLUGIN_STATIC_DECLARE (web);
   GST_PLUGIN_STATIC_DECLARE (opengl);
-  GST_PLUGIN_STATIC_DECLARE (emhttpsrc);
   GST_PLUGIN_STATIC_DECLARE (isomp4);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (web);
   GST_PLUGIN_STATIC_REGISTER (opengl);
-  GST_PLUGIN_STATIC_REGISTER (emhttpsrc);
   GST_PLUGIN_STATIC_REGISTER (isomp4);
 }
 
 static void
 init_pipeline ()
 {
-  // pipeline = gst_parse_launch ("emhttpsrc
+  // pipeline = gst_parse_launch ("webfetchsrc
   // location=\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
   // ! qtdemux ! webcodecsviddech264sw ! fakesink sync=true", NULL); pipeline =
-  // gst_parse_launch ("emhttpsrc
+  // gst_parse_launch ("webfetchsrc
   // location=\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
   // ! qtdemux ! webcodecsviddech264sw ! sdl2sink", NULL); pipeline =
-  // gst_parse_launch ("emhttpsrc
+  // gst_parse_launch ("webfetchsrc
   // location=\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
   // ! qtdemux ! webcodecsviddech264sw ! glimagesink sync=false", NULL);
   pipeline =
-      gst_parse_launch ("emhttpsrc "
-                        "location=\"https://commondatastorage.googleapis.com/"
+      gst_parse_launch ("webfetchsrc "
+                        "location=\"http://commondatastorage.googleapis.com/"
                         "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
                         "qtdemux ! webcodecsviddech264sw ! webcanvassink",
           NULL);
