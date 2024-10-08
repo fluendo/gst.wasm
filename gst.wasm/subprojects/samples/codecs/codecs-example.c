@@ -44,17 +44,17 @@ static void
 init_pipeline ()
 {
   // pipeline = gst_parse_launch ("webfetchsrc
-  // location=\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
+  // location=\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
   // ! qtdemux ! webcodecsviddech264sw ! fakesink sync=true", NULL); pipeline =
   // gst_parse_launch ("webfetchsrc
-  // location=\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
+  // location=\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
   // ! qtdemux ! webcodecsviddech264sw ! sdl2sink", NULL); pipeline =
   // gst_parse_launch ("webfetchsrc
-  // location=\"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
+  // location=\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
   // ! qtdemux ! webcodecsviddech264sw ! glimagesink sync=false", NULL);
   pipeline =
       gst_parse_launch ("webfetchsrc "
-                        "location=\"http://commondatastorage.googleapis.com/"
+                        "location=\"https://commondatastorage.googleapis.com/"
                         "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
                         "qtdemux ! webcodecsviddech264sw ! webcanvassink",
           NULL);
