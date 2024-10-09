@@ -43,21 +43,13 @@ register_elements ()
 static void
 init_pipeline ()
 {
-  // pipeline = gst_parse_launch ("webfetchsrc
-  // location=\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
-  // ! qtdemux ! webcodecsviddech264sw ! fakesink sync=true", NULL); pipeline =
-  // gst_parse_launch ("webfetchsrc
-  // location=\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
-  // ! qtdemux ! webcodecsviddech264sw ! sdl2sink", NULL); pipeline =
-  // gst_parse_launch ("webfetchsrc
-  // location=\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\"
-  // ! qtdemux ! webcodecsviddech264sw ! glimagesink sync=false", NULL);
-  pipeline =
-      gst_parse_launch ("webfetchsrc "
-                        "location=\"https://commondatastorage.googleapis.com/"
-                        "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
-                        "qtdemux ! webcodecsviddech264sw ! webcanvassink",
-          NULL);
+  pipeline = gst_parse_launch (
+      "webfetchsrc "
+      "location=\"https://commondatastorage.googleapis.com/"
+      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+      "qtdemux ! "
+      "webcodecsviddech264sw ! webcanvassink",
+      NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
@@ -68,9 +60,8 @@ main (int argc, char **argv)
   gst_init (NULL, NULL);
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
-  // gst_debug_set_threshold_from_string ("example:5, webcodecs*:3,
-  // GST_CONTEXT:5, webutils:5, videodecoder*:5", FALSE);
-  gst_debug_set_threshold_from_string ("example:5, webcodecs*:3", FALSE);
+  gst_debug_set_threshold_from_string (
+      "example:5, webcodecs*:3, videodecoder*:3", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
