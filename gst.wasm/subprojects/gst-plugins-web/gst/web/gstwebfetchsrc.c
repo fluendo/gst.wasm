@@ -185,9 +185,10 @@ gst_web_fetch_src_parse_content_size_field (
   return ret;
 }
 
+/* Called with the GST_OBJECT_LOCK taken */
 static GstBuffer *
 gst_web_fetch_src_fetch_range (
-    WebFetchSrc *self, gsize range_start, gsize range_end)
+    WebFetchSrc *self, gchar *uri, gsize range_start, gsize range_end)
 {
   gchar range_field[256];
   gchar *headers[] = { "Range", range_field, NULL };
@@ -203,7 +204,7 @@ gst_web_fetch_src_fetch_range (
   };
 
   g_return_val_if_fail (range_start < range_end, NULL);
-  g_return_val_if_fail (self->uri != NULL, NULL);
+  g_return_val_if_fail (uri != NULL, NULL);
 
   if (self->resource_size != 0 && range_end > self->resource_size) {
     range_end = self->resource_size;
@@ -219,13 +220,14 @@ gst_web_fetch_src_fetch_range (
 
   GST_DEBUG_OBJECT (self, "Requesting range '%s'", range_field);
 
+  GST_OBJECT_UNLOCK (self);
   do {
     emscripten_fetch_attr_init (&attr);
     strcpy (attr.requestMethod, "GET");
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY |
                       EMSCRIPTEN_FETCH_SYNCHRONOUS | EMSCRIPTEN_FETCH_REPLACE;
     attr.requestHeaders = (const char *const *) headers;
-    fetch = emscripten_fetch (&attr, self->uri);
+    fetch = emscripten_fetch (&attr, uri);
 
     switch (fetch->status) {
       case GST_WEB_FETCH_SRC_HTTP_OK:
@@ -242,6 +244,7 @@ gst_web_fetch_src_fetch_range (
             g_memdup2 (fetch->data, fetch->numBytes), fetch->numBytes);
         request_again = FALSE;
 
+        GST_OBJECT_LOCK (self);
         if (self->resource_size == 0) {
           self->resource_size =
               gst_web_fetch_src_parse_content_size_field (self, fetch);
@@ -255,6 +258,7 @@ gst_web_fetch_src_fetch_range (
             || fetch->numBytes != range_end - range_start) {
           self->in_eos = TRUE;
         }
+        GST_OBJECT_UNLOCK (self);
         break;
       case GST_WEB_FETCH_SRC_HTTP_RANGE_NOT_SATISFIABLE:
         if (request_again) {
@@ -273,7 +277,9 @@ gst_web_fetch_src_fetch_range (
             range_field);
         g_clear_pointer (&fetch, emscripten_fetch_close);
         request_again = TRUE;
+        GST_OBJECT_LOCK (self);
         self->in_eos = TRUE;
+        GST_OBJECT_UNLOCK (self);
         break;
       default:
         GST_ERROR_OBJECT (
@@ -284,8 +290,11 @@ gst_web_fetch_src_fetch_range (
   } while (request_again);
 
   emscripten_fetch_close (fetch);
+
+  GST_OBJECT_LOCK (self);
   if (self->in_eos)
     GST_DEBUG_OBJECT (self, "EOS");
+  GST_OBJECT_UNLOCK (self);
 
   return ret;
 }
@@ -294,23 +303,34 @@ static GstFlowReturn
 gst_web_fetch_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 {
   WebFetchSrc *self = GST_WEB_FETCH_SRC (psrc);
-
-  if (G_UNLIKELY (self->in_eos))
-    return GST_FLOW_EOS;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gchar *uri;
 
   GST_OBJECT_LOCK (self);
-  *outbuf = gst_web_fetch_src_fetch_range (
-      self, self->download_offset, self->download_offset + CHUNK_SIZE);
+  if (G_UNLIKELY (self->in_eos)) {
+    ret = GST_FLOW_EOS;
+    goto done;
+  }
 
+  /* We don't want the download to happen while blocking the streaming thread
+   */
+  GST_PAD_STREAM_UNLOCK (GST_BASE_SRC (self)->srcpad);
+  /* Simple workaround to avoid replacing uri and not having it locked */
+  uri = g_strdup (self->uri);
+  *outbuf = gst_web_fetch_src_fetch_range (
+      self, uri, self->download_offset, self->download_offset + CHUNK_SIZE);
+  g_free (uri);
+
+  GST_PAD_STREAM_LOCK (GST_BASE_SRC (self)->srcpad);
   if (G_UNLIKELY (*outbuf == NULL)) {
-    GST_OBJECT_UNLOCK (self);
-    return self->in_eos ? GST_FLOW_EOS : GST_FLOW_ERROR;
+    ret = self->in_eos ? GST_FLOW_EOS : GST_FLOW_ERROR;
   }
 
   self->download_offset += gst_buffer_get_size (*outbuf);
-  GST_OBJECT_UNLOCK (self);
 
-  return GST_FLOW_OK;
+done:
+  GST_OBJECT_UNLOCK (self);
+  return ret;
 }
 
 static GstStateChangeReturn
