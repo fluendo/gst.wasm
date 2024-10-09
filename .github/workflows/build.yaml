@@ -32,6 +32,7 @@ jobs:
       - name: Clone cerbero
         run: |
           git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
+          git config --global protocol.file.allow always
       - name: Bootstrap
         run: |
           ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap

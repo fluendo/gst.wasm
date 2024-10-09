@@ -23,10 +23,9 @@ GLIB_CONFIG_UNVERSAL='''\
 
 class Recipe(recipe.Recipe):
     name = 'glib'
-    version = '2.76.0'
-    stype = SourceType.TARBALL
-    url = 'gnome://'
-    tarball_checksum = '525bb703b807142e1aee5ccf222c344e8064b21c0c45677ef594e587874c6797'
+    version = "2.76.0"
+    remotes = {"origin": "https://github.com/fluendo/glib.git"}
+    commit = "origin/gst.wasm"
     licenses = [License.LGPLv2Plus]
     btype = BuildType.MESON
     meson_options = {'libmount': 'disabled', 'dtrace': 'false'}
@@ -247,7 +246,7 @@ class Recipe(recipe.Recipe):
             self._set_gio_flags(path1, path2, use_old_uri_scheme)
 
         elif self.config.target_platform == Platform.WEB:
-            self.patches += ["glib/emscripten.patch"]
+            self.patches += ["glib/0001-Update-gitmodules-with-GitHub-URL.patch"]
             self.meson_options["nls"] = "disabled"
 
         if self.config.platform in [Platform.DARWIN, Platform.IOS]:
