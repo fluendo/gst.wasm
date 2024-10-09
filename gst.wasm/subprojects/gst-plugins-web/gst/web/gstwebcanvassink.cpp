@@ -102,6 +102,9 @@ enum
   PROP_LAST
 };
 
+#define GST_CAT_DEFAULT gst_web_canvas_sink_debug_category
+GST_DEBUG_CATEGORY_STATIC (gst_web_canvas_sink_debug_category);
+
 #define gst_web_canvas_sink_parent_class parent_class
 G_DEFINE_TYPE (GstWebCanvasSink, gst_web_canvas_sink, GST_TYPE_VIDEO_SINK);
 
@@ -167,7 +170,6 @@ gst_web_canvas_sink_setup (gpointer data)
 {
   GstWebCanvasSinkSetupData *setup_data = (GstWebCanvasSinkSetupData *) data;
   GstWebCanvasSink *self = setup_data->self;
-  GstVideoSink *sink = GST_VIDEO_SINK (self);
 
   /* FIXME how to handle the case of multiple canvases? */
   self->val_canvas = val::module_property ("canvas");
@@ -184,6 +186,9 @@ gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
   GstWebRunnerCB cb;
   GstCapsFeatures *features;
   GstCaps *caps;
+
+  GST_DEBUG_OBJECT (self, "show frame, pts = %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
   /* Check the format */
   caps = gst_pad_get_current_caps (GST_BASE_SINK (sink)->sinkpad);
@@ -203,6 +208,8 @@ gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
   gst_web_runner_send_message (runner, cb, &data);
   gst_object_unref (GST_OBJECT (runner));
 
+  GST_DEBUG_OBJECT (self, "show frame done, pts = %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
   return GST_FLOW_OK;
 }
 
@@ -360,4 +367,7 @@ gst_web_canvas_sink_class_init (GstWebCanvasSinkClass *klass)
   videosink_class->set_info = gst_web_canvas_sink_set_info;
 
   gobject_class->finalize = gst_web_canvas_sink_finalize;
+
+  GST_DEBUG_CATEGORY_INIT (gst_web_canvas_sink_debug_category, "webcanvassink",
+      0, "Web Canvas Sink");
 }
