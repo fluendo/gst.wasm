@@ -1,0 +1,26 @@
+From 9a2d95dc1b4c08ddf3763a34ca853cbc685ef5f7 Mon Sep 17 00:00:00 2001
+From: Ruben Gonzalez <rgonzalez@fluendo.com>
+Date: Wed, 9 Oct 2024 12:25:40 -0400
+Subject: [PATCH] Update .gitmodules with GitHub URL
+
+---
+ .gitmodules | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.gitmodules b/.gitmodules
+index 749950b93..e07474617 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -1,5 +1,5 @@
+ [submodule "subprojects/gvdb"]
+-	path = subprojects/gvdb
+-	url = ../../GNOME/gvdb.git
+-	branch = 0854af0fdb6d527a8d1999835ac2c5059976c210
+-	shallow = true
++    path = subprojects/gvdb
++    url = https://github.com/GNOME/gvdb.git
++    branch = 0854af0fdb6d527a8d1999835ac2c5059976c210
++    shallow = true
+-- 
+2.46.2
+
