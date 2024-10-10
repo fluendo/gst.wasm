@@ -48,7 +48,7 @@ enum
   PROP_MAX
 };
 
-typedef struct _WebFetchSrc
+typedef struct _GstWebFetchSrc
 {
   GstPushSrc element;
 
@@ -57,11 +57,11 @@ typedef struct _WebFetchSrc
   gsize download_offset;
   gsize download_end;
   gsize resource_size;
-} WebFetchSrc;
+} GstWebFetchSrc;
 
 G_DECLARE_FINAL_TYPE (
-    WebFetchSrc, gst_web_fetch_src, GST, WEB_FETCH_SRC, GstPushSrc)
-G_DEFINE_TYPE_WITH_CODE (WebFetchSrc, gst_web_fetch_src, GST_TYPE_PUSH_SRC,
+    GstWebFetchSrc, gst_web_fetch_src, GST, WEB_FETCH_SRC, GstPushSrc)
+G_DEFINE_TYPE_WITH_CODE (GstWebFetchSrc, gst_web_fetch_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (
         GST_TYPE_URI_HANDLER, gst_web_fetch_src_uri_handler_init));
 GST_ELEMENT_REGISTER_DEFINE (
@@ -86,7 +86,7 @@ static gboolean
 gst_web_fetch_src_urihandler_set_uri (
     GstURIHandler *handler, const gchar *uri, GError **error)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (handler);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (handler);
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (uri != NULL, FALSE);
@@ -109,7 +109,7 @@ static gchar *
 gst_web_fetch_src_urihandler_get_uri (GstURIHandler *handler)
 {
   gchar *ret;
-  WebFetchSrc *self;
+  GstWebFetchSrc *self;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
   self = GST_WEB_FETCH_SRC (handler);
@@ -133,13 +133,13 @@ gst_web_fetch_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 }
 
 static void
-gst_web_fetch_src_init (WebFetchSrc *src)
+gst_web_fetch_src_init (GstWebFetchSrc *src)
 {
 }
 
 static gsize
 gst_web_fetch_src_parse_content_size_field (
-    WebFetchSrc *self, emscripten_fetch_t *fetch)
+    GstWebFetchSrc *self, emscripten_fetch_t *fetch)
 {
   gsize length, ret = 0;
 
@@ -188,7 +188,7 @@ gst_web_fetch_src_parse_content_size_field (
 /* Called with the GST_OBJECT_LOCK taken */
 static GstBuffer *
 gst_web_fetch_src_fetch_range (
-    WebFetchSrc *self, gchar *uri, gsize range_start, gsize range_end)
+    GstWebFetchSrc *self, gchar *uri, gsize range_start, gsize range_end)
 {
   gchar range_field[256];
   gchar *headers[] = { "Range", range_field, NULL };
@@ -302,7 +302,7 @@ gst_web_fetch_src_fetch_range (
 static GstFlowReturn
 gst_web_fetch_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (psrc);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (psrc);
   GstFlowReturn ret = GST_FLOW_OK;
   gchar *uri;
 
@@ -337,7 +337,7 @@ static GstStateChangeReturn
 gst_web_fetch_src_change_state (GstElement *element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (element);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -372,7 +372,7 @@ gst_web_fetch_src_change_state (GstElement *element, GstStateChange transition)
 static gboolean
 gst_web_fetch_src_get_size (GstBaseSrc *bsrc, guint64 *size)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (bsrc);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (bsrc);
   gboolean ret = FALSE;
 
   GST_OBJECT_LOCK (self);
@@ -397,7 +397,7 @@ gst_web_fetch_src_is_seekable (GstBaseSrc *bsrc)
 static gboolean
 gst_web_fetch_src_do_seek (GstBaseSrc *bsrc, GstSegment *segment)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (bsrc);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (bsrc);
 
   g_return_val_if_fail (gst_web_fetch_src_is_seekable (bsrc), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (segment->start), FALSE);
@@ -420,7 +420,7 @@ static void
 gst_web_fetch_src_set_property (
     GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (object);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -437,7 +437,7 @@ static void
 gst_web_fetch_src_get_property (
     GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (object);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -453,7 +453,7 @@ gst_web_fetch_src_get_property (
 static void
 gst_web_fetch_src_finalize (GObject *obj)
 {
-  WebFetchSrc *self = GST_WEB_FETCH_SRC (obj);
+  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (obj);
 
   g_free (self->uri);
 
@@ -461,7 +461,7 @@ gst_web_fetch_src_finalize (GObject *obj)
 }
 
 static void
-gst_web_fetch_src_class_init (WebFetchSrcClass *klass)
+gst_web_fetch_src_class_init (GstWebFetchSrcClass *klass)
 {
   static GstStaticPadTemplate srcpadtemplate = GST_STATIC_PAD_TEMPLATE (
       "src", GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
