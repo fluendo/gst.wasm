@@ -4,7 +4,7 @@ cpp = 'em++'
 ld = 'wasm-ld'
 ar = 'emar'
 ranlib = 'emranlib'
-pkgconfig = ['emconfigure', 'pkg-config']
+pkg-config = ['emconfigure', 'env', 'PKG_CONFIG_PATH=@DIRNAME@/../build/gst.wasm_web_wasm32/dist/web_wasm32/lib/gstreamer-1.0/pkgconfig:@DIRNAME@/../build/gst.wasm_web_wasm32/dist/web_wasm32/lib/pkgconfig', 'pkg-config']
 exe_wrapper = 'node'
 
 # https://docs.gtk.org/glib/cross-compiling.html#cross-properties
@@ -24,6 +24,7 @@ has_function_pthread_setattr_default_np = false
 [built-in options]
 c_thread_count = 0
 cpp_thread_count = 0
+default_library = 'static'
 
 [host_machine]
 system = 'emscripten'
