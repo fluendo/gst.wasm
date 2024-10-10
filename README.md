@@ -54,6 +54,7 @@ The [current status](https://github.com/GNOME/glib/compare/2.76.0...fluendo:gst.
 * ⏳ `wasm-2.76.0-wasm-vs-emscripten` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-wasm-vs-emscripten)
 * ⏳ `wasm-2.76.0-canvas-in-thread` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-canvas-in-thread)
 * ⏳ `wasm-2.76.0-main-loop-support` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-main-loop-support)
+* ⏳ `wasm-2.76.0-garray-fixes` [(Branch link)](https://github.com/fluendo/glib/tree/wasm-2.76.0-garray-fixes)
 <!-- END guw glib.toml markdown -->
 
 
@@ -68,6 +69,7 @@ The [current status](https://github.com/fluendo/gstreamer/compare/main...fluendo
 * ⏳ `wasm-main-test`: Enable unit tests for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-test)
 * ⏳ `wasm-main-openal`: Add emscripten support OpenAL to play audio [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-openal)
 * ⏳ `wasm-main-gl-support`: Add emscripten OpenGL backend [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-gl-support)
+* ⏳ `wasm-main-videodec` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-videodec)
 * ⏳ `wasm-main-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-wip)
 <!-- END guw gstreamer.toml markdown -->
 
@@ -77,12 +79,12 @@ We use the fork at [Fluendo](https://github.com/fluendo/cerbero) in the [gst.was
 The [current status](https://github.com/fluendo/cerbero/compare/main...fluendo:cerbero:gst.wasm) is grouped in the next cumulative branches:
 <!-- START guw cerbero.toml markdown -->
 * 🟢 `tests`: Bring back tests [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1471)
-* 🔄 `tests2`: Update more tests. Second round [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1477)
-* ⏳ `tests3`: Tests update final round [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1482)
+* 🟢 `tests2`: Update more tests. Second round [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1477)
+* 🔄 `tests3`: Tests update final round [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1482)
 * ⏳ `local_source`: New type of source that allows you to build a recipe without fetching or copying sources [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1483)
 * ⏳ `packaging`: Enable installation using pip with a git-https repository [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1484)
 * ⏳ `emscripten`: Add support for building for wasm target with emscripten toolchain [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten)
-* ⏳ `emscripten-gl`: Add support for building with Emscripten GL backend [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-gl)
+* ⏳ `emscripten-gl`: Add OpenGL support in gst-plugins-base through new Emscripten based WebGL backend [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-gl)
 <!-- END guw cerbero.toml markdown -->
 
 
