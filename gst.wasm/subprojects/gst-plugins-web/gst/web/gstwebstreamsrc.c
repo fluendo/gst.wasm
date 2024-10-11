@@ -148,40 +148,42 @@ gst_web_stream_src_error (void *thiz, const char *msg)
   GST_OBJECT_UNLOCK (self);
 }
 
+// clang-format off
 EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
-  const fetchUrl = UTF8ToString (url);
+      const fetchUrl = UTF8ToString (url);
 
-  // Fetch data using the Streams API
-    fetch(fetchUrl)
-        .then(response => response.body)
-        .then(rs => {
-    const reader = rs.getReader ();
+      // Fetch data using the Streams API
+      fetch(fetchUrl)
+          .then(response => response.body)
+          .then(rs => {
+                const reader = rs.getReader ();
 
-              return new ReadableStream({
-                    async start(controller) {
-                      while (true) {
-                        const { done, value } = await reader.read();
+                return new ReadableStream({
+                      async start(controller) {
+                        while (true) {
+                          const { done, value } = await reader.read();
                         
-                        // When no more data needs to be consumed, break the reading
-                        if (done) {
-      gst_web_stream_src_eos (thiz);
-      break;
-                        }
+                          // When no more data needs to be consumed, break the reading
+                          if (done) {
+                            gst_web_stream_src_eos (thiz);
+                            break;
+                          }
 
-                        gst_web_stream_src_chunk(thiz, value, value.length);
-              // TODO: quit the loop if the plugin is stopping
+                          gst_web_stream_src_chunk(thiz, value, value.length);
+                          // TODO: quit the loop if the plugin is stopping
+                        }
+                        reader.releaseLock();
                       }
-                      reader.releaseLock();
-                    }
-})
-})
-        // Create a new response out of the stream
-        .then(rs => new Response(rs))
-        .then(response => response.blob())
-        .catch(fetchError => {
-  gst_web_stream_src_error (thiz, fetchError);
-        });
-});
+                    })
+                    })
+          // Create a new response out of the stream
+          .then(rs => new Response(rs))
+          .then(response => response.blob())
+          .catch(fetchError => {
+                gst_web_stream_src_error (thiz, fetchError);
+              });
+    });
+// clang-format on
 
 static guint
 gst_web_stream_src_urihandler_get_type (GType type)
@@ -289,8 +291,8 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
     gchar *err = self->fetch_error;
     self->fetch_error = NULL;
     GST_OBJECT_UNLOCK (self);
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
-        ("Fetch failed: %s", err), (NULL));
+    GST_ELEMENT_ERROR (
+        self, RESOURCE, FAILED, ("Fetch failed: %s", err), (NULL));
     g_free (err);
     return GST_FLOW_ERROR;
   }
