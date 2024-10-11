@@ -48,48 +48,114 @@ enum
   PROP_MAX
 };
 
-typedef struct _WebStreamSrc
+typedef struct _GstWebStreamSrc
 {
   GstPushSrc element;
 
   gchar *uri;
   gboolean in_eos;
-  gsize download_offset;
-  gsize download_end;
-  gsize resource_size;
-} WebStreamSrc;
+  gchar *fetch_error;
+  GQueue *q;
+  gsize queue_max_size;
+  gsize accumulated_data_size;
+  GCond qcond;
+  GThread *fetch_thread;
+} GstWebStreamSrc;
 
 G_DECLARE_FINAL_TYPE (
-    WebStreamSrc, gst_web_stream_src, GST, WEB_STREAM_SRC, GstPushSrc)
-G_DEFINE_TYPE_WITH_CODE (WebStreamSrc, gst_web_stream_src, GST_TYPE_PUSH_SRC,
+    GstWebStreamSrc, gst_web_stream_src, GST, WEB_STREAM_SRC, GstPushSrc)
+G_DEFINE_TYPE_WITH_CODE (GstWebStreamSrc, gst_web_stream_src,
+    GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (
         GST_TYPE_URI_HANDLER, gst_web_stream_src_uri_handler_init));
-GST_ELEMENT_REGISTER_DEFINE (
-    web_stream_src, "webstreamsrc", GST_RANK_SECONDARY, GST_TYPE_WEB_STREAM_SRC);
+GST_ELEMENT_REGISTER_DEFINE (web_stream_src, "webstreamsrc",
+    GST_RANK_SECONDARY, GST_TYPE_WEB_STREAM_SRC);
 GST_DEBUG_CATEGORY_STATIC (gst_web_stream_src_debug);
 
-void gst_web_stream_src_chunk (void *thiz, uint8_t* chunk, size_t length) {
-  WebStreamSrc *self = (WebStreamSrc *)thiz;
-  
-  GST_DEBUG_OBJECT (self, "Received chunk of size: %zu\n", length);
+void
+gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
+{
+  GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
+
+  GST_DEBUG_OBJECT (self, "Received chunk of size: %zu", length);
+
+  GST_OBJECT_LOCK (self);
+  while (self->accumulated_data_size + length > self->queue_max_size &&
+         GST_STATE_NEXT (self) >= GST_STATE_PAUSED) {
+    /* In case of que queue max size is less then the amount accumulated
+     * there's no way out: to prevent from this we will have to extend the
+     * queue max size. */
+    if (length > self->queue_max_size) {
+      GST_WARNING_OBJECT (self,
+          "Will have to extend the queue max size to %" G_GSIZE_FORMAT,
+          length);
+      self->queue_max_size = length;
+    }
+
+    GST_DEBUG_OBJECT (self,
+        "Not enough space in the queue:"
+        "(%" G_GSIZE_FORMAT ") --> (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT
+        ") bytes."
+        " Sleeping..",
+        length, self->accumulated_data_size, self->queue_max_size);
+    g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
+  }
+
+  if (GST_STATE_NEXT (self) < GST_STATE_PAUSED) {
+    GST_DEBUG_OBJECT (self, "Element is stopping, stop fetching");
+    // TODO: need to return something to quit the JS loop
+    goto done;
+  }
+
+  self->accumulated_data_size += length;
+  g_queue_push_tail (
+      self->q, gst_buffer_new_wrapped (g_memdup2 (chunk, length), length));
+
+  GST_DEBUG_OBJECT (self,
+      "Pushed buffer of size %" G_GSIZE_FORMAT
+      " to the queue. Now it's of (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT
+      ") bytes",
+      length, self->accumulated_data_size, self->queue_max_size);
+
+done:
+  g_cond_signal (&self->qcond);
+  GST_OBJECT_UNLOCK (self);
 }
 
-void gst_web_stream_src_eos (void *thiz) {
-  WebStreamSrc *self = (WebStreamSrc *)thiz;
+void
+gst_web_stream_src_eos (void *thiz)
+{
+  GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
 
   GST_DEBUG_OBJECT (self, "EOS");
+  GST_OBJECT_LOCK (self);
+  self->in_eos = TRUE;
+  g_cond_signal (&self->qcond);
+  GST_OBJECT_UNLOCK (self);
 }
 
-//void gst_web_stream_fetch (void *thiz, const char* url);
+void
+gst_web_stream_src_error (void *thiz, const char *msg)
+{
+  GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
+
+  GST_ERROR_OBJECT (self, "Download failed: %s", msg);
+  GST_OBJECT_LOCK (self);
+
+  g_free (self->fetch_error);
+  self->fetch_error = g_strdup (msg);
+  g_cond_signal (&self->qcond);
+  GST_OBJECT_UNLOCK (self);
+}
 
 EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
-    const fetchUrl = UTF8ToString(url);
-    
-    // Fetch data using the Streams API
+  const fetchUrl = UTF8ToString (url);
+
+  // Fetch data using the Streams API
     fetch(fetchUrl)
         .then(response => response.body)
         .then(rs => {
-              const reader = rs.getReader();
+    const reader = rs.getReader ();
 
               return new ReadableStream({
                     async start(controller) {
@@ -98,20 +164,23 @@ EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
                         
                         // When no more data needs to be consumed, break the reading
                         if (done) {
-                          gst_web_stream_src_eos(thiz);
-                          break;
+      gst_web_stream_src_eos (thiz);
+      break;
                         }
 
                         gst_web_stream_src_chunk(thiz, value, value.length);
+              // TODO: quit the loop if the plugin is stopping
                       }
                       reader.releaseLock();
                     }
-                  })
-            })
+})
+})
         // Create a new response out of the stream
         .then(rs => new Response(rs))
         .then(response => response.blob())
-        .catch(console.error);
+        .catch(fetchError => {
+  gst_web_stream_src_error (thiz, fetchError);
+        });
 });
 
 static guint
@@ -132,7 +201,7 @@ static gboolean
 gst_web_stream_src_urihandler_set_uri (
     GstURIHandler *handler, const gchar *uri, GError **error)
 {
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (handler);
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (handler);
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (uri != NULL, FALSE);
@@ -155,7 +224,7 @@ static gchar *
 gst_web_stream_src_urihandler_get_uri (GstURIHandler *handler)
 {
   gchar *ret;
-  WebStreamSrc *self;
+  GstWebStreamSrc *self;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
   self = GST_WEB_STREAM_SRC (handler);
@@ -179,42 +248,73 @@ gst_web_stream_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 }
 
 static void
-gst_web_stream_src_init (WebStreamSrc *src)
+gst_web_stream_src_init (GstWebStreamSrc *src)
 {
+  g_cond_init (&src->qcond);
+  src->q = g_queue_new ();
+}
+
+static gpointer
+gst_web_stream_fetch_thread (gpointer data)
+{
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (data);
+
+  gst_web_stream_fetch (self, self->uri);
+  return NULL;
 }
 
 static GstFlowReturn
 gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 {
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (psrc);
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (psrc);
 
   if (G_UNLIKELY (self->in_eos))
     return GST_FLOW_EOS;
 
   GST_OBJECT_LOCK (self);
 
-  // FIXME
-  gst_web_stream_fetch (psrc, self->uri);
-  
-  /* *outbuf = gst_web_stream_src_fetch_range ( */
-  /*     self, self->download_offset, self->download_offset + CHUNK_SIZE); */
+  if (!self->fetch_thread) {
+    gchar *thr_name =
+        g_strdup_printf ("%s_fetch_thread", GST_OBJECT_NAME (self));
+    self->fetch_thread =
+        g_thread_new (thr_name, gst_web_stream_fetch_thread, self);
+  }
 
+  while (g_queue_get_length (self->q) == 0) {
+    GST_DEBUG_OBJECT (self, "Queue is empty, wait for a buffer");
+    g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
+  }
+
+  if (self->fetch_error) {
+    gchar *err = self->fetch_error;
+    self->fetch_error = NULL;
+    GST_OBJECT_UNLOCK (self);
+    GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+        ("Fetch failed: %s", err), (NULL));
+    g_free (err);
+    return GST_FLOW_ERROR;
+  }
+
+  *outbuf = (GstBuffer *) g_queue_pop_head (self->q);
   if (G_UNLIKELY (*outbuf == NULL)) {
     GST_OBJECT_UNLOCK (self);
     return self->in_eos ? GST_FLOW_EOS : GST_FLOW_ERROR;
   }
 
-  self->download_offset += gst_buffer_get_size (*outbuf);
+  self->accumulated_data_size -= gst_buffer_get_size (*outbuf);
+
+  /* self->download_offset += gst_buffer_get_size (*outbuf); */
   GST_OBJECT_UNLOCK (self);
 
   return GST_FLOW_OK;
 }
 
 static GstStateChangeReturn
-gst_web_stream_src_change_state (GstElement *element, GstStateChange transition)
+gst_web_stream_src_change_state (
+    GstElement *element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (element);
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -233,10 +333,10 @@ gst_web_stream_src_change_state (GstElement *element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (self);
-      self->download_offset = 0;
-      self->download_end = 0;
-      self->resource_size = 0;
+      g_cond_signal (&self->qcond);
+      g_thread_join (self->fetch_thread);
       self->in_eos = FALSE;
+      g_queue_clear_full (self->q, (GDestroyNotify) gst_buffer_unref);
       GST_OBJECT_UNLOCK (self);
       break;
     default:
@@ -247,57 +347,16 @@ gst_web_stream_src_change_state (GstElement *element, GstStateChange transition)
 }
 
 static gboolean
-gst_web_stream_src_get_size (GstBaseSrc *bsrc, guint64 *size)
-{
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (bsrc);
-  gboolean ret = FALSE;
-
-  GST_OBJECT_LOCK (self);
-  if (self->resource_size == 0)
-    goto done;
-
-  *size = self->resource_size;
-
-  ret = TRUE;
-done:
-  GST_OBJECT_UNLOCK (self);
-
-  return ret;
-}
-
-static gboolean
 gst_web_stream_src_is_seekable (GstBaseSrc *bsrc)
 {
-  return TRUE;
-}
-
-static gboolean
-gst_web_stream_src_do_seek (GstBaseSrc *bsrc, GstSegment *segment)
-{
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (bsrc);
-
-  g_return_val_if_fail (gst_web_stream_src_is_seekable (bsrc), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (segment->start), FALSE);
-
-  if (segment->format != GST_FORMAT_BYTES) {
-    GST_ERROR_OBJECT (self, "Only bytes format is supported for seeking");
-    return FALSE;
-  }
-
-  GST_OBJECT_LOCK (self);
-  self->download_offset = segment->start;
-  self->download_end =
-      GST_CLOCK_TIME_IS_VALID (segment->stop) ? segment->stop : 0;
-  GST_OBJECT_UNLOCK (self);
-
-  return TRUE;
+  return FALSE;
 }
 
 static void
 gst_web_stream_src_set_property (
     GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (object);
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -314,7 +373,7 @@ static void
 gst_web_stream_src_get_property (
     GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (object);
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -330,15 +389,17 @@ gst_web_stream_src_get_property (
 static void
 gst_web_stream_src_finalize (GObject *obj)
 {
-  WebStreamSrc *self = GST_WEB_STREAM_SRC (obj);
+  GstWebStreamSrc *self = GST_WEB_STREAM_SRC (obj);
 
   g_free (self->uri);
+  g_cond_clear (&self->qcond);
+  g_queue_free (self->q);
 
   G_OBJECT_CLASS (gst_web_stream_src_parent_class)->finalize (obj);
 }
 
 static void
-gst_web_stream_src_class_init (WebStreamSrcClass *klass)
+gst_web_stream_src_class_init (GstWebStreamSrcClass *klass)
 {
   static GstStaticPadTemplate srcpadtemplate = GST_STATIC_PAD_TEMPLATE (
       "src", GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
@@ -356,8 +417,6 @@ gst_web_stream_src_class_init (WebStreamSrcClass *klass)
   pushsrc_class->create = gst_web_stream_src_create;
 
   basesrc_class->is_seekable = gst_web_stream_src_is_seekable;
-  basesrc_class->get_size = gst_web_stream_src_get_size;
-  basesrc_class->do_seek = gst_web_stream_src_do_seek;
 
   gst_element_class_add_pad_template (
       element_class, gst_static_pad_template_get (&srcpadtemplate));
@@ -372,6 +431,7 @@ gst_web_stream_src_class_init (WebStreamSrcClass *klass)
 
   gst_element_class_set_static_metadata (element_class,
       "HTTP Client Source using Web Streams API", "Source/Network",
-      "Receiver data as a client over a network via HTTP using Web Streams API",
+      "Receiver data as a client over a network via HTTP using Web Streams "
+      "API",
       "Alexander Slobodeniuk <aslobodeniuk@fluendo.com>");
 }
