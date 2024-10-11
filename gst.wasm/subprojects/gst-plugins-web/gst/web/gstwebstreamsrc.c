@@ -72,10 +72,15 @@ GST_ELEMENT_REGISTER_DEFINE (web_stream_src, "webstreamsrc",
     GST_RANK_SECONDARY, GST_TYPE_WEB_STREAM_SRC);
 GST_DEBUG_CATEGORY_STATIC (gst_web_stream_src_debug);
 
-void
+int
 gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
 {
   GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
+  enum
+  {
+    GST_WEB_STREAM_STOP = 0,
+    GST_WEB_STREAM_CONTINUE = 1
+  } ret = GST_WEB_STREAM_CONTINUE;
 
   GST_DEBUG_OBJECT (self, "Received chunk of size: %zu", length);
 
@@ -103,7 +108,7 @@ gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
 
   if (GST_STATE_NEXT (self) < GST_STATE_PAUSED) {
     GST_DEBUG_OBJECT (self, "Element is stopping, stop fetching");
-    // TODO: need to return something to quit the JS loop
+    ret = GST_WEB_STREAM_STOP;
     goto done;
   }
 
@@ -120,6 +125,7 @@ gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
 done:
   g_cond_signal (&self->qcond);
   GST_OBJECT_UNLOCK (self);
+  return ret;
 }
 
 void
@@ -160,7 +166,8 @@ EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
 
                 return new ReadableStream({
                       async start(controller) {
-                        while (true) {
+                        var cont = 1;
+                        while (cont == 1) {
                           const { done, value } = await reader.read();
                         
                           // When no more data needs to be consumed, break the reading
@@ -169,8 +176,7 @@ EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
                             break;
                           }
 
-                          gst_web_stream_src_chunk(thiz, value, value.length);
-                          // TODO: quit the loop if the plugin is stopping
+                          cont = gst_web_stream_src_chunk(thiz, value, value.length);
                         }
                         reader.releaseLock();
                       }
