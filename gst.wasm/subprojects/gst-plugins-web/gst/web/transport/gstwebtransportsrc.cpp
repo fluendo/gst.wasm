@@ -151,16 +151,20 @@ static GstStaticPadTemplate gst_web_transport_src_datagram_template =
     GST_STATIC_PAD_TEMPLATE (
         "datagram_%u", GST_PAD_SRC, GST_PAD_SOMETIMES, GST_STATIC_CAPS_ANY);
 
-#if 0
-static void pthreads_check2 (void)
+static void
+pthreads_check2 (void)
 {
-  EM_ASM({
-    addEventListener("message", (e) => {
-      console.error("Message received from parent:");
-      console.error(e);
-    });
-  });
+  EM_ASM (
+      {
+        addEventListener (
+            "message", (e) = > {
+              console.error ("Message received from parent:");
+              console.error (e);
+            });
+      },
+      100);
 
+#if 0
   MAIN_THREAD_EM_ASM({
     var worker = PThread.pthreads[$0];
     worker.addEventListener("message", (e) => {
@@ -173,8 +177,8 @@ static void pthreads_check2 (void)
   EM_ASM({
     postMessage ({cmd: "Hello", d: "foo"});
   });
-}
 #endif
+}
 
 /* FIXME This should belong to a generic lib, for now, we place it here until
  * more elements actually use this
@@ -206,7 +210,7 @@ gst_web_transport_src_register_main_thread_events (void)
             /* Transfer it to the corresponding worker */
           }
         });
-  })
+  });
 }
 
 /* FIXME This should belong to a generic lib, for now, we place it here until
@@ -217,49 +221,93 @@ gst_web_transport_src_register_events (void)
 {
   /* Just register our own message event handler to support the 'transferred'
    * event */
+  EM_ASM ({
+    addEventListener (
+        "message", (e) = > {
+          console.error ("Message received from parent:");
+          console.error (e);
+          let msgData = e.data;
+          let cmd = msgData["cmd"];
+          let data = msgData["data"];
+          if (cmd && cmd == "transferToWorker") {
+          }
+        });
+  });
+}
+
+typedef enum _GstWebTransportSrcStreamType
+{
+  GST_WEB_TRANSPORT_SRC_STREAM_TYPE_UNI,
+  GST_WEB_TRANSPORT_SRC_STREAM_TYPE_BIDI,
+  GST_WEB_TRANSPORT_SRC_STREAM_TYPE_DATAGRAM,
+} GstWebTransportSrcStreamType;
+
+/* Create a new pad and store the stream */
+static void
+gst_web_transport_src_add_stream (
+    GstWebTransportSrc *self, GstWebTransportSrcStreamType type, gint num)
+{
+  GST_ERROR ("Add stream received");
+  GST_ERROR_OBJECT (self, "Here 1");
+  /* In case a pad is linked, create the underlying stream element */
+}
+
+EMSCRIPTEN_BINDINGS (gst_web_transport_src)
+{
+  function (
+      "gst_web_transport_src_add_stream", &gst_web_transport_src_add_stream);
+}
+
+static void
+gst_web_transport_src_wait_streams (GstWebTransportSrc *self)
+{
+  EM_ASM (({
+    let t = $0;
+    let uds = t.incomingUnidirectionalStreams;
+    let bds = t.incomingBidirectionalStreams;
+    let streamNumbers = [ 0, 0 ];
+    let streamReaders = [ uds.getReader (), bds.getReader () ];
+    let streamPromises = [];
+    streamReaders.forEach ((r) = > streamPromises.push (r.read ()));
+    while (true) {
+      const promiseAnyIndexed = pp =
+          > Promise.any (pp.map ((p, i) = > p.then (res = > [ res, i ])));
+      const[res, i] = await promiseAnyIndexed (streamReaders);
+      /* Increment the number of streams for that particular type */
+      if (res["done"])
+        streamPromises[i] = Promise.reject ();
+      else
+        streamPromises[i] = streamReaders[i].read ();
+      gst_web_transport_src_add_stream ($1, i, streamNumbers[i]);
+      streamNumbers[i]++;
+      //   return Emval.toHandle(var);
+      //   val::take_ownership(emval);
+      /* Transfer the stream to the new children's stream thread */
+      console.error (
+          "Found new incoming stream for: " + i + " and done? " + res["done"]);
+    }
+  }),
+      self->transport.as_handle (), reinterpret_cast<int> (self));
 }
 
 static gpointer
-gst_web_transport_src_process (GstWebTransportSrc *src)
+gst_web_transport_src_process (GstWebTransportSrc *self)
 {
-  gint nstreams = 0;
   val wtclass;
-  val wt;
-  val uni;
-  val reader;
 
   wtclass = val::global ("WebTransport");
   if (!wtclass.as<bool> ()) {
     GST_ERROR ("No global WebTransport");
-    return FALSE;
+    return NULL;
   }
-
-  gst_web_transport_src_register_events ();
-  /* Check for every incoming stream */
-  /* Call our C function for the type of stream and the idx */
 
   self->transport = wtclass.new_ (std::string (self->uri));
   self->transport["ready"].await ();
-  uni = self->transport["incomingBidirectionalStreams"];
-  reader = uni.call<val> ("getReader");
-  while (TRUE) {
-    GST_ERROR_OBJECT (self, "About to read");
-    val ret = reader.call<val> ("read").await ();
-    GST_ERROR_OBJECT (self, "ret: %d", ret["done"].as<bool> ());
-    if (ret["done"].as<bool> ()) {
-      break;
-    }
-    nstreams++;
-    GST_ERROR_OBJECT (
-        self, "Found new incoming Unidrectional Stream: %d", nstreams);
-    // value is an instance of WebTransportReceiveStream
-  }
 
-  // Get the number of streams, unidirectional, bidirectional and datagrams
-  /* Create the corresponding pad for each stream found */
-  /* In case a pad is linked, create the underlying stream element */
+  gst_web_transport_src_register_events ();
+  gst_web_transport_src_wait_streams (self);
   GST_ERROR ("start");
-  return TRUE;
+  return NULL;
 }
 
 static gboolean
@@ -274,8 +322,10 @@ gst_web_transport_src_start (GstWebTransportSrc *src)
    */
   self->process = g_thread_new (
       "wt-process", (GThreadFunc) gst_web_transport_src_process, self);
+#if 0
   while (!self->priv->created)
     g_cond_wait (&self->priv->create_cond, &self->priv->create_lock);
+#endif
 
   return TRUE;
 }
