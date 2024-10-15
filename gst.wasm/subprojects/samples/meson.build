@@ -33,6 +33,7 @@ examples = [
   'videotestsrc',
   'webcanvassrc',
   'webfetchsrc',
+  'webtransportsrc',
 ]
 
 common_link_args = [

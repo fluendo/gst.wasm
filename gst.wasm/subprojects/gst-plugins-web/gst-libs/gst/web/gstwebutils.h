@@ -23,6 +23,9 @@
 
 #include "gstwebcanvas.h"
 
+#define GST_WEB_UTILS_MESSAGE_PROPOSE_OBJECT_NAME "GstWebProposeObjectMessage"
+#define GST_WEB_UTILS_MESSAGE_REQUEST_OBJECT_NAME "GstWebRequestObjectMessage"
+
 G_BEGIN_DECLS
 
 void gst_web_utils_init (void);
@@ -37,6 +40,13 @@ gboolean gst_web_utils_element_handle_context_query (
     GstElement *element, GstQuery *query, GstWebCanvas *canvas);
 gboolean gst_web_utils_element_set_context (
     GstElement *element, GstContext *context, GstWebCanvas **canvas);
+void gst_web_utils_js_register_on_message (void);
+void gst_web_utils_js_unregister_on_message (void);
+void gst_web_utils_element_process_request_object (
+    GstElement *e, GstMessage *msg, guintptr object);
+
+GstMessage *gst_web_utils_message_new_request_object (GstElement *src,
+    const gchar *cb_name, const gchar *object_name, gpointer user_data);
 
 G_END_DECLS
 
