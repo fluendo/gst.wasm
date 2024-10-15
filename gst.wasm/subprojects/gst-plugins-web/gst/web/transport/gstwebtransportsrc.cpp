@@ -151,20 +151,21 @@ static GstStaticPadTemplate gst_web_transport_src_datagram_template =
     GST_STATIC_PAD_TEMPLATE (
         "datagram_%u", GST_PAD_SRC, GST_PAD_SOMETIMES, GST_STATIC_CAPS_ANY);
 
+#if 0
 static void
 pthreads_check2 (void)
 {
+  /* clang-format off */
   EM_ASM (
       {
         addEventListener (
-            "message", (e) = > {
+            "message", (e) => {
               console.error ("Message received from parent:");
               console.error (e);
             });
       },
       100);
 
-#if 0
   MAIN_THREAD_EM_ASM({
     var worker = PThread.pthreads[$0];
     worker.addEventListener("message", (e) => {
@@ -177,8 +178,9 @@ pthreads_check2 (void)
   EM_ASM({
     postMessage ({cmd: "Hello", d: "foo"});
   });
-#endif
+  /* clang-format on */
 }
+#endif
 
 /* FIXME This should belong to a generic lib, for now, we place it here until
  * more elements actually use this
@@ -191,9 +193,10 @@ gst_web_transport_src_register_main_thread_events (void)
    * TODO later instead of fetching the pthread id, use the actual GThread
    * pointer and keep a list similar to what Emscripten does for pthreads
    */
+  /* clang-format off */
   MAIN_THREAD_EM_ASM ({
     self.addEventListener (
-        "message", (e) = > {
+        "message", (e) => {
           console.error ("Message received on the main thread");
           console.error (e);
           let msgData = e.data;
@@ -201,7 +204,7 @@ gst_web_transport_src_register_main_thread_events (void)
           let data = msgData["data"];
           if (cmd && cmd == "transferToWorker") {
             /* The data is in the form of:
-             * to: tid (Thread id to transfer the objec to), object: object
+             * to: tid (Thread id to transfer the object to), object: object
              * (The transferable object)
              */
 
@@ -211,6 +214,7 @@ gst_web_transport_src_register_main_thread_events (void)
           }
         });
   });
+  /* clang-format on */
 }
 
 /* FIXME This should belong to a generic lib, for now, we place it here until
@@ -221,9 +225,10 @@ gst_web_transport_src_register_events (void)
 {
   /* Just register our own message event handler to support the 'transferred'
    * event */
+  /* clang-format off */
   EM_ASM ({
     addEventListener (
-        "message", (e) = > {
+        "message", (e) => {
           console.error ("Message received from parent:");
           console.error (e);
           let msgData = e.data;
@@ -233,6 +238,7 @@ gst_web_transport_src_register_events (void)
           }
         });
   });
+  /* clang-format on */
 }
 
 typedef enum _GstWebTransportSrcStreamType
@@ -243,13 +249,20 @@ typedef enum _GstWebTransportSrcStreamType
 } GstWebTransportSrcStreamType;
 
 /* Create a new pad and store the stream */
+/* We use basic types to avoid the 'cannot call xxx due to unbound types' */
 static void
 gst_web_transport_src_add_stream (
-    GstWebTransportSrc *self, GstWebTransportSrcStreamType type, gint num)
+    gint self_ptr, gint type_int, gint num, val stream)
 {
+  GstWebTransportSrc *self = reinterpret_cast<GstWebTransportSrc *> (self_ptr);
+  GstWebTransportSrcStreamType type =
+      static_cast<GstWebTransportSrcStreamType> (type_int);
+
   GST_ERROR ("Add stream received");
   GST_ERROR_OBJECT (self, "Here 1");
   /* In case a pad is linked, create the underlying stream element */
+  /* Store the object for later usage */
+  //   val::take_ownership(emval);
 }
 
 EMSCRIPTEN_BINDINGS (gst_web_transport_src)
@@ -261,33 +274,40 @@ EMSCRIPTEN_BINDINGS (gst_web_transport_src)
 static void
 gst_web_transport_src_wait_streams (GstWebTransportSrc *self)
 {
+  /* clang-format off */
   EM_ASM (({
-    let t = $0;
-    let uds = t.incomingUnidirectionalStreams;
-    let bds = t.incomingBidirectionalStreams;
-    let streamNumbers = [ 0, 0 ];
-    let streamReaders = [ uds.getReader (), bds.getReader () ];
-    let streamPromises = [];
-    streamReaders.forEach ((r) = > streamPromises.push (r.read ()));
-    while (true) {
-      const promiseAnyIndexed = pp =
-          > Promise.any (pp.map ((p, i) = > p.then (res = > [ res, i ])));
-      const[res, i] = await promiseAnyIndexed (streamReaders);
-      /* Increment the number of streams for that particular type */
-      if (res["done"])
-        streamPromises[i] = Promise.reject ();
-      else
-        streamPromises[i] = streamReaders[i].read ();
-      gst_web_transport_src_add_stream ($1, i, streamNumbers[i]);
-      streamNumbers[i]++;
-      //   return Emval.toHandle(var);
-      //   val::take_ownership(emval);
-      /* Transfer the stream to the new children's stream thread */
-      console.error (
-          "Found new incoming stream for: " + i + " and done? " + res["done"]);
-    }
-  }),
-      self->transport.as_handle (), reinterpret_cast<int> (self));
+    /* We handle it through Asyncify as explained in
+     * https://github.com/emscripten-core/emscripten/issues/8991
+     * This requires the -sASINCIFY
+     */
+    Asyncify.handleAsync(async () => {
+      let t = Emval.toValue($0);
+      let uds = t.incomingUnidirectionalStreams;
+      let bds = t.incomingBidirectionalStreams;
+      let streamNumbers = [ 0, 0 ];
+      let streamReaders = [ uds.getReader (), bds.getReader () ];
+      let streamPromises = [];
+      streamReaders.forEach ((r) => streamPromises.push (r.read ()));
+      while (true) {
+        const promiseAnyIndexed = pp => Promise.any (pp.map ((p, i) => p.then (res => [ res, i ])));
+        let res, i;
+        try {
+          [res, i] = await promiseAnyIndexed (streamPromises);
+        } catch (error) {
+          break;
+        }
+        /* Increment the number of streams for that particular type */
+        if (res['done'])
+          streamPromises[i] = Promise.reject ();
+        else
+          streamPromises[i] = streamReaders[i].read ();
+        /* Transfer the stream to the new children's stream thread */
+        Module.gst_web_transport_src_add_stream ($1, i, streamNumbers[i], Emval.toHandle(res["value"]));
+        streamNumbers[i]++;
+      }
+    });
+  }), self->transport.as_handle (), reinterpret_cast<int> (self));
+  /* clang-format on */
 }
 
 static gpointer
@@ -304,9 +324,10 @@ gst_web_transport_src_process (GstWebTransportSrc *self)
   self->transport = wtclass.new_ (std::string (self->uri));
   self->transport["ready"].await ();
 
+  GST_ERROR ("Process");
   gst_web_transport_src_register_events ();
   gst_web_transport_src_wait_streams (self);
-  GST_ERROR ("start");
+  GST_ERROR ("Process done");
   return NULL;
 }
 
