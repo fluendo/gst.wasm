@@ -48,7 +48,8 @@ init_pipeline ()
       "location=\"https://commondatastorage.googleapis.com/"
       "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
       "qtdemux ! "
-      "webcodecsviddech264sw ! webcanvassink",
+      // "webcodecsviddech264sw ! webdownload ! video/x-raw(memory:WebVideoFrame) ! webcanvassink",
+      "webcodecsviddech264sw ! webdownload ! video/x-raw,format=RGBA ! fakesink",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
@@ -61,7 +62,8 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
-      "example:5, webcodecs*:3, videodecoder*:3", FALSE);
+      "example:5, webcodecs*:3, videodecoder*:0, webcodecsviddec:0, webdownload:6, basetransform:6", FALSE);
+      // "webdownload:6, basetransform:4, GST_PADS:6", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
