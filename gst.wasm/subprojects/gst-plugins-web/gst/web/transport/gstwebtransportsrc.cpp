@@ -56,6 +56,8 @@ typedef struct _GstWebTransportSrc
   GstBin base;
   gchar *uri;
   val transport;
+  std::unordered_map<std::string, val> streams;
+
   GThread *process;
   GError *process_err;
 } GstWebTransportSrc;
@@ -248,6 +250,20 @@ typedef enum _GstWebTransportSrcStreamType
   GST_WEB_TRANSPORT_SRC_STREAM_TYPE_DATAGRAM,
 } GstWebTransportSrcStreamType;
 
+const gchar *gst_web_transport_src_stream_names[] = { "unidi", "bidi",
+  "datagram" };
+
+static void
+gst_web_transport_src_stream_linked (
+    GstPad *self, GstPad *peer, gpointer user_data)
+{
+  GST_ERROR ("Pad linked");
+  /* Now we can safely create the underlying element
+   * sync the status
+   * and link the pads accordingly
+   */
+}
+
 /* Create a new pad and store the stream */
 /* We use basic types to avoid the 'cannot call xxx due to unbound types' */
 static void
@@ -255,14 +271,23 @@ gst_web_transport_src_add_stream (
     gint self_ptr, gint type_int, gint num, val stream)
 {
   GstWebTransportSrc *self = reinterpret_cast<GstWebTransportSrc *> (self_ptr);
-  GstWebTransportSrcStreamType type =
-      static_cast<GstWebTransportSrcStreamType> (type_int);
+  GstPad *pad;
 
-  GST_ERROR ("Add stream received");
-  GST_ERROR_OBJECT (self, "Here 1");
+  GST_ERROR_OBJECT (self, "Received stream");
+  std::string stream_name = gst_web_transport_src_stream_names[type_int];
+  stream_name.append ("_");
+  stream_name.append (std::to_string (num));
+
+  GST_ERROR_OBJECT (self, "Stream %s received", stream_name.c_str ());
+  self->streams.insert ({ stream_name, stream });
   /* In case a pad is linked, create the underlying stream element */
   /* Store the object for later usage */
   //   val::take_ownership(emval);
+  GST_ERROR_OBJECT (self, "Stream added");
+  pad = gst_ghost_pad_new_no_target (stream_name.c_str (), GST_PAD_SRC);
+  g_signal_connect (
+      pad, "linked", (GCallback) gst_web_transport_src_stream_linked, NULL);
+  gst_element_add_pad (GST_ELEMENT (self), pad);
 }
 
 EMSCRIPTEN_BINDINGS (gst_web_transport_src)
@@ -302,7 +327,11 @@ gst_web_transport_src_wait_streams (GstWebTransportSrc *self)
         else
           streamPromises[i] = streamReaders[i].read ();
         /* Transfer the stream to the new children's stream thread */
-        Module.gst_web_transport_src_add_stream ($1, i, streamNumbers[i], Emval.toHandle(res["value"]));
+        console.error(res["value"]);
+        //handle = Emval.toHandle(res["value"]);
+        //console.error(handle);
+        //Module.gst_web_transport_src_add_stream ($1, i, streamNumbers[i], handle);
+        Module.gst_web_transport_src_add_stream ($1, i, streamNumbers[i], res["value"]);
         streamNumbers[i]++;
       }
     });
@@ -439,8 +468,10 @@ gst_web_transport_src_finalize (GObject *obj)
 }
 
 static void
-gst_web_transport_src_init (GstWebTransportSrc *src)
+gst_web_transport_src_init (GstWebTransportSrc *self)
 {
+  self->streams = std::unordered_map<std::string, val> ();
+
   /* FIXME for now */
   gst_web_transport_src_register_main_thread_events ();
 }

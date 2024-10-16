@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 
 GST_ELEMENT_REGISTER_DECLARE (web_transport_src)
 
+GstElement *gst_web_transport_stream_src_new (void);
+
 G_END_DECLS
 
 #endif /* __GST_WEB_TRANSPORT_SRC_H__ */
