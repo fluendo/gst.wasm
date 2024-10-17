@@ -25,6 +25,9 @@
 
 G_BEGIN_DECLS
 
+typedef void (GstWebUtilsMessageRequestObjectCb) (
+    guintptr obj, guintptr user_data);
+
 void gst_web_utils_init (void);
 
 void gst_web_utils_context_set_web_canvas (
@@ -37,6 +40,12 @@ gboolean gst_web_utils_element_handle_context_query (
     GstElement *element, GstQuery *query, GstWebCanvas *canvas);
 gboolean gst_web_utils_element_set_context (
     GstElement *element, GstContext *context, GstWebCanvas **canvas);
+void gst_web_utils_js_register_on_message (void);
+void gst_web_utils_js_unregister_on_message (void);
+
+GstMessage *gst_web_utils_message_new_request_object (GstElement *src,
+    GstWebUtilsMessageRequestObjectCb cb, const gchar *object_name,
+    gpointer user_data);
 
 G_END_DECLS
 

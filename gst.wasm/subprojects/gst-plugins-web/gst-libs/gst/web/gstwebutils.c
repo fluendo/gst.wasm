@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <emscripten.h>
 
 #include "gstwebcanvas.h"
 #include "gstwebutils.h"
@@ -373,4 +374,61 @@ gst_web_utils_element_set_context (
   }
 
   return FALSE;
+}
+
+/* clang-format off */
+EM_JS (void, gst_web_utils_handle_message, (val e), {
+  console.error ("Message received from parent:");
+  console.error (e);
+  let msgData = e.data;
+  let cmd = msgData["cmd"];
+  let data = msgData["data"];
+  if (cmd && cmd == "transferedObject") {
+    cb_name = data["cb"];
+    cb_user_data = data["user_data"];
+    obj = data["obj"];
+    cb = Module[cb_name];
+    cb (data, cb_user_data);
+  }
+});
+/* clang-format on */
+
+void
+gst_web_utils_js_register_on_message (void)
+{
+  /* Just register our own message event handler to support the 'transferred'
+   * event */
+  /* clang-format off */
+  EM_ASM ({
+    addEventListener ("message", gst_web_utils_handle_message);
+  });
+  /* clang-format on */
+}
+
+void
+gst_web_utils_js_unregister_on_message (void)
+{
+  /* Just register our own message event handler to support the 'transferred'
+   * event */
+  /* clang-format off */
+  EM_ASM ({
+    removeEventListener ("message", gst_web_uitls_handle_message);
+  });
+  /* clang-format on */
+}
+
+GstMessage *
+gst_web_utils_message_new_request_object (GstElement *src,
+    GstWebUtilsMessageRequestObjectCb cb, const gchar *object_name,
+    gpointer user_data)
+{
+  GstMessage *ret;
+  GstStructure *s;
+
+  s = gst_structure_new ("GstWebRequestObjectMessage", "object-name",
+      G_TYPE_STRING, object_name, "tid", G_TYPE_INT, pthread_self (),
+      "callback", G_TYPE_POINTER, cb, "user-data", G_TYPE_POINTER, user_data,
+      NULL);
+  ret = gst_message_new_element (GST_OBJECT_CAST (src), s);
+  return ret;
 }

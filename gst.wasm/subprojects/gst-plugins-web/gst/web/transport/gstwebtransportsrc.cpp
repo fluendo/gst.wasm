@@ -38,18 +38,8 @@
 using namespace emscripten;
 
 #define GST_TYPE_WEB_TRANSPORT_SRC (gst_web_transport_src_get_type ())
-#define GST_WEB_TRANSPORT_SRC(obj)                                            \
-  (G_TYPE_CHECK_INSTANCE_CAST (                                               \
-      (obj), GST_TYPE_WEB_TRANSPORT_SRC, GstWebTransportSrc))
-#define GST_WEB_TRANSPORT_SRC_CLASS(klass)                                    \
-  (G_TYPE_CHECK_CLASS_CAST (                                                  \
-      (klass), GST_TYPE_WEB_TRANSPORT_SRC, GstWebTransportSrcClass))
-#define GST_IS_WEB_TRANSPORT_SRC(obj)                                         \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WEB_TRANSPORT_SRC))
-#define GST_IS_WEB_TRANSPORT_SRC_CLASS(klass)                                 \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_WEB_TRANSPORT_SRC))
-
 #define parent_class gst_web_transport_src_parent_class
+#define GST_CAT_DEFAULT gst_web_transport_src_debug
 
 typedef struct _GstWebTransportSrc
 {
@@ -69,11 +59,10 @@ enum
   PROP_MAX
 };
 
-#define GST_CAT_DEFAULT gst_web_transport_src_debug
 GST_DEBUG_CATEGORY_STATIC (gst_web_transport_src_debug);
 
 G_DECLARE_FINAL_TYPE (
-    GstWebTransportSrc, gst_web_transport_src, GST, WEB_FETCH_SRC, GstBin)
+    GstWebTransportSrc, gst_web_transport_src, GST, WEB_TRANSPORT_SRC, GstBin)
 
 static GstURIType
 gst_web_transport_src_urihandler_get_type (GType type)
@@ -219,30 +208,6 @@ gst_web_transport_src_register_main_thread_events (void)
   /* clang-format on */
 }
 
-/* FIXME This should belong to a generic lib, for now, we place it here until
- * more elements actually use this
- */
-static void
-gst_web_transport_src_register_events (void)
-{
-  /* Just register our own message event handler to support the 'transferred'
-   * event */
-  /* clang-format off */
-  EM_ASM ({
-    addEventListener (
-        "message", (e) => {
-          console.error ("Message received from parent:");
-          console.error (e);
-          let msgData = e.data;
-          let cmd = msgData["cmd"];
-          let data = msgData["data"];
-          if (cmd && cmd == "transferToWorker") {
-          }
-        });
-  });
-  /* clang-format on */
-}
-
 typedef enum _GstWebTransportSrcStreamType
 {
   GST_WEB_TRANSPORT_SRC_STREAM_TYPE_UNI,
@@ -253,15 +218,28 @@ typedef enum _GstWebTransportSrcStreamType
 const gchar *gst_web_transport_src_stream_names[] = { "unidi", "bidi",
   "datagram" };
 
+static gboolean
+gst_web_transport_src_stream_link (
+    GstElement *element, GstPad *pad, gpointer user_data)
+{
+  GstGhostPad *ghost = GST_GHOST_PAD (user_data);
+  gst_ghost_pad_set_target (ghost, pad);
+  return FALSE;
+}
+
 static void
 gst_web_transport_src_stream_linked (
-    GstPad *self, GstPad *peer, gpointer user_data)
+    GstPad *pad, GstPad *peer, gpointer user_data)
 {
+  GstWebTransportSrc *self = GST_WEB_TRANSPORT_SRC (user_data);
+  GstElement *src;
+
   GST_ERROR ("Pad linked");
-  /* Now we can safely create the underlying element
-   * sync the status
-   * and link the pads accordingly
-   */
+  src = gst_web_transport_stream_src_new ();
+  gst_bin_add (GST_BIN (self), src);
+  gst_element_foreach_src_pad (src, gst_web_transport_src_stream_link, pad);
+  gst_element_sync_state_with_parent (src);
+  GST_ERROR ("Pad linked done");
 }
 
 /* Create a new pad and store the stream */
@@ -280,13 +258,10 @@ gst_web_transport_src_add_stream (
 
   GST_ERROR_OBJECT (self, "Stream %s received", stream_name.c_str ());
   self->streams.insert ({ stream_name, stream });
-  /* In case a pad is linked, create the underlying stream element */
-  /* Store the object for later usage */
-  //   val::take_ownership(emval);
   GST_ERROR_OBJECT (self, "Stream added");
   pad = gst_ghost_pad_new_no_target (stream_name.c_str (), GST_PAD_SRC);
   g_signal_connect (
-      pad, "linked", (GCallback) gst_web_transport_src_stream_linked, NULL);
+      pad, "linked", (GCallback) gst_web_transport_src_stream_linked, self);
   gst_element_add_pad (GST_ELEMENT (self), pad);
 }
 
@@ -327,10 +302,6 @@ gst_web_transport_src_wait_streams (GstWebTransportSrc *self)
         else
           streamPromises[i] = streamReaders[i].read ();
         /* Transfer the stream to the new children's stream thread */
-        console.error(res["value"]);
-        //handle = Emval.toHandle(res["value"]);
-        //console.error(handle);
-        //Module.gst_web_transport_src_add_stream ($1, i, streamNumbers[i], handle);
         Module.gst_web_transport_src_add_stream ($1, i, streamNumbers[i], res["value"]);
         streamNumbers[i]++;
       }
@@ -354,7 +325,6 @@ gst_web_transport_src_process (GstWebTransportSrc *self)
   self->transport["ready"].await ();
 
   GST_ERROR ("Process");
-  gst_web_transport_src_register_events ();
   gst_web_transport_src_wait_streams (self);
   GST_ERROR ("Process done");
   return NULL;
@@ -387,6 +357,15 @@ gst_web_transport_src_stop (GstWebTransportSrc *src)
 
   GST_INFO_OBJECT (self, "joining thread");
   /* TODO */
+}
+
+static void
+gst_web_transport_src_handle_message (GstBin *bin, GstMessage *message)
+{
+  /* Process the request js object message */
+  /* In case the requested object corresponds to us postMessage the object */
+  /* Get it from the unordered map, remove it from the unordered map */
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 static GstStateChangeReturn
@@ -464,7 +443,7 @@ gst_web_transport_src_finalize (GObject *obj)
 
   g_free (self->uri);
 
-  G_OBJECT_CLASS (gst_web_transport_src_parent_class)->finalize (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
@@ -481,9 +460,12 @@ gst_web_transport_src_class_init (GstWebTransportSrcClass *klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
+  GstBinClass *bin_class = (GstBinClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_web_transport_src_debug, "webtransportsrc", 0,
       "HTTP/3 WebTransport Source");
+
+  bin_class->handle_message = gst_web_transport_src_handle_message;
 
   element_class->change_state = gst_web_transport_src_change_state;
 
