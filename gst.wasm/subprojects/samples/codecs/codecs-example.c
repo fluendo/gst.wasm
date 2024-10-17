@@ -33,25 +33,40 @@ register_elements ()
   GST_PLUGIN_STATIC_DECLARE (web);
   GST_PLUGIN_STATIC_DECLARE (opengl);
   GST_PLUGIN_STATIC_DECLARE (isomp4);
+  GST_PLUGIN_STATIC_DECLARE (sdl2);
+  GST_PLUGIN_STATIC_DECLARE (debugutilsbad);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (web);
   GST_PLUGIN_STATIC_REGISTER (opengl);
   GST_PLUGIN_STATIC_REGISTER (isomp4);
+  GST_PLUGIN_STATIC_REGISTER (sdl2);
+  GST_PLUGIN_STATIC_REGISTER (debugutilsbad);
+
 }
 
 static void
 init_pipeline ()
 {
-  pipeline = gst_parse_launch (
-      "webfetchsrc "
-      "location=\"https://commondatastorage.googleapis.com/"
-      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
-      "qtdemux ! "
-      // "webcodecsviddech264sw ! webdownload ! video/x-raw(memory:WebVideoFrame) ! webcanvassink",
-      "webcodecsviddech264sw ! webdownload ! video/x-raw,format=RGBA ! fakesink",
-      NULL);
+  pipeline =
+      gst_parse_launch ("webfetchsrc "
+                        "location=\"https://commondatastorage.googleapis.com/"
+                        "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+                        "qtdemux ! "
+                        // "webcodecsviddech264sw ! webdownload !
+                        // video/x-raw(memory:WebVideoFrame) ! webcanvassink",
+                        "webcodecsviddech264sw ! webdownload ! "
+                        // "video/x-raw ! fakesink",
+                        // "video/x-raw(memory:WebVideoFrame) ! fakesink silent=false",
+                        "video/x-raw ! checksumsink",
+
+          NULL);
+
+  g_signal_connect (pipeline, "deep-notify",
+      G_CALLBACK (gst_object_default_deep_notify), NULL);
+
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
 }
 
 int
@@ -59,13 +74,16 @@ main (int argc, char **argv)
 {
   gst_debug_set_default_threshold (1);
   gst_init (NULL, NULL);
+  gst_emscripten_init ();
+
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
-      "example:5, webcodecs*:3, videodecoder*:0, webcodecsviddec:0, webdownload:6, basetransform:6", FALSE);
-      // "webdownload:6, basetransform:4, GST_PADS:6", FALSE);
+      "example:5, webcodecs*:3, videodecoder*:0, webcodecsviddec:0, "
+      "webdownload:5, basetransform:0,sdl2sink:6",
+      FALSE);
+  // "webdownload:6, basetransform:4, GST_PADS:6", FALSE);
 
-  gst_emscripten_init ();
   GST_INFO ("Registering elements");
   register_elements ();
 

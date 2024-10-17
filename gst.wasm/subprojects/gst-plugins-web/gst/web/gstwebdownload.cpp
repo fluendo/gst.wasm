@@ -41,9 +41,11 @@ using namespace emscripten;
 #define GST_CAT_DEFAULT web_download_debug
 #define parent_class gst_web_download_parent_class
 
-#define DEFAULT_STATIC_CAPS \
-    GST_VIDEO_CAPS_MAKE (GST_WEB_MEMORY_VIDEO_FORMATS_STR) ";" \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME, GST_WEB_MEMORY_VIDEO_FORMATS_STR)
+#define DEFAULT_STATIC_CAPS                                                   \
+  GST_VIDEO_CAPS_MAKE (GST_WEB_MEMORY_VIDEO_FORMATS_STR)                      \
+  ";" GST_VIDEO_CAPS_MAKE_WITH_FEATURES (                                     \
+      GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME,                                \
+      GST_WEB_MEMORY_VIDEO_FORMATS_STR)
 
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_FPS_N 30
@@ -65,6 +67,7 @@ struct _GstWebDownload
   gchar *id;
   GstCaps *caps;
   guint n_frames;
+  GstVideoInfo vinfo;
 };
 
 G_DECLARE_FINAL_TYPE (
@@ -75,22 +78,18 @@ GST_ELEMENT_REGISTER_DEFINE (
 GST_DEBUG_CATEGORY_STATIC (web_download_debug);
 
 static GstStaticPadTemplate gst_web_download_sink_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (DEFAULT_STATIC_CAPS));
+    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+        GST_STATIC_CAPS (DEFAULT_STATIC_CAPS));
 
 static GstStaticPadTemplate gst_web_download_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (DEFAULT_STATIC_CAPS));
+    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+        GST_STATIC_CAPS (DEFAULT_STATIC_CAPS));
 
 static void
 gst_web_download_init (GstWebDownload *self)
 {
-  gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (self),
-      TRUE);
+  GST_DEBUG_OBJECT (self, "Init webdownload");
+  gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (self), TRUE);
 }
 
 static val
@@ -211,7 +210,7 @@ gst_web_download_create (GstBaseTransform *psrc, GstBuffer **buffer)
 }
 
 static gboolean
-gst_web_download_transform_start (GstBaseTransform * bt)
+gst_web_download_transform_start (GstBaseTransform *bt)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
 
@@ -225,39 +224,36 @@ gst_web_download_transform_start (GstBaseTransform * bt)
 }
 
 static gboolean
-gst_web_download_transform_stop (GstBaseTransform * bt)
+gst_web_download_transform_stop (GstBaseTransform *bt)
 {
   return TRUE;
 }
 
-
 static GstCaps *
-gst_web_download_transform_caps (GstBaseTransform * bt,
-    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+gst_web_download_transform_caps (GstBaseTransform *bt,
+    GstPadDirection direction, GstCaps *caps, GstCaps *filter)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
 
   GstCaps *tmp, *res;
 
-  GST_DEBUG_OBJECT (self, "Caps: %" GST_PTR_FORMAT ". Direction: %d", caps, (int) direction);
-  GST_DEBUG_OBJECT (self, "Filter: %" GST_PTR_FORMAT ". Direction: %d", filter, (int) direction);
-
+  GST_DEBUG_OBJECT (
+      self, "Caps: %" GST_PTR_FORMAT ". Direction: %d", caps, (int) direction);
+  GST_DEBUG_OBJECT (self, "Filter: %" GST_PTR_FORMAT ". Direction: %d", filter,
+      (int) direction);
 
   if (direction == GST_PAD_SRC) {
-    GstCaps *sys_caps, *video_frame_caps;
-
-    sys_caps = gst_caps_copy (caps);
-    gst_caps_set_features_simple (sys_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
-    video_frame_caps = gst_caps_copy (caps);
-    gst_caps_set_features_simple (video_frame_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME));
-
-    tmp = gst_caps_merge (video_frame_caps, sys_caps);
+    tmp = gst_caps_copy (caps);
+    gst_caps_set_features_simple (
+        tmp, gst_caps_features_from_string (
+                              GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME));
+    tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
   } else {
     tmp = gst_caps_copy (caps);
-    // gst_caps_set_features_simple (tmp,
-    //   gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
+    gst_caps_set_features_simple (
+        tmp, gst_caps_features_from_string (
+                              GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
+    tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
   }
 
   if (filter) {
@@ -267,15 +263,84 @@ gst_web_download_transform_caps (GstBaseTransform * bt,
     res = tmp;
   }
 
+  GST_DEBUG_OBJECT (self,
+      "Transformed caps to %" GST_PTR_FORMAT ". Direction: %d", res,
+      (int) direction);
 
-  GST_DEBUG_OBJECT (self, "Transformed caps to %" GST_PTR_FORMAT ". Direction: %d", res, (int) direction);
-  
   return res;
 }
 
+typedef struct _GstWebDownloadOutputBufferInternalData
+{
+  GstWebDownload *self;
+  GstBuffer *inbuf;
+  GstBuffer *outbuf;
+} GstWebDownloadOutputBufferInternalData;
+
+static void
+gst_web_codecs_video_prepare_output_buffer_internal (gpointer data)
+{
+  GstWebDownloadOutputBufferInternalData *idata =
+      (GstWebDownloadOutputBufferInternalData *) data;
+  GstWebDownload *self = idata->self;
+  GstWebVideoFrame *video_frame_memory;
+  GstMapInfo map;
+  val video_frame, buf_data_view, options;
+  gsize allocation_size;
+  GstBuffer *outbuf;
+  const char *video_frame_format;
+
+  video_frame_memory = (GstWebVideoFrame *) gst_buffer_get_memory (
+      idata->inbuf, 0);
+  video_frame = gst_web_video_frame_get_handle (video_frame_memory);
+  video_frame_format = gst_web_utils_convert_video_format (
+      GST_VIDEO_INFO_FORMAT (&self->vinfo));
+
+  if (video_frame_format == NULL)
+    return;
+
+  options = val::object ();
+  options.set ("format", video_frame_format);
+
+  // Prepare buffer and copy VideoFrame;
+  outbuf = gst_buffer_new_allocate (NULL, self->vinfo.size, NULL);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  buf_data_view = val (typed_memory_view (map.size, map.data));
+  video_frame.call<val> ("copyTo", buf_data_view, options).await ();
+  gst_buffer_unmap (outbuf , &map);
+
+  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (idata->inbuf);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (idata->inbuf);
+  idata->outbuf = outbuf;
+}
+
+static GstFlowReturn
+gst_web_download_prepare_output_buffer (GstBaseTransform * bt,
+    GstBuffer * inbuf, GstBuffer ** outbuf)
+{
+  GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
+  GstWebDownloadOutputBufferInternalData idata = {
+      .self = self, .inbuf = inbuf, .outbuf = NULL};
+  GstWebRunner *runner;
+
+  if (gst_base_transform_is_passthrough (bt)) {
+    *outbuf = inbuf;
+    return GST_FLOW_OK;
+  }
+
+  runner = gst_web_canvas_get_runner (self->canvas);
+  gst_web_runner_send_message (
+      runner, gst_web_codecs_video_prepare_output_buffer_internal, &idata);
+  gst_object_unref (GST_OBJECT (runner));
+
+  *outbuf = idata.outbuf;
+
+  return GST_FLOW_OK;
+}
+
 static gboolean
-gst_web_download_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
-    GstCaps * out_caps)
+gst_web_download_set_caps (
+    GstBaseTransform *bt, GstCaps *in_caps, GstCaps *out_caps)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
   GstCapsFeatures *features = NULL;
@@ -283,24 +348,27 @@ gst_web_download_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   GST_DEBUG_OBJECT (self, "in_caps: %" GST_PTR_FORMAT, in_caps);
   GST_DEBUG_OBJECT (self, "out_caps: %" GST_PTR_FORMAT, out_caps);
 
+  gst_video_info_from_caps (&self->vinfo, out_caps);
+
   // features = gst_caps_get_features (out_caps, 0);
 
-  // if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME)) {
+  // if (gst_caps_features_contains (features,
+  // GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME)) {
   // }
 
   return TRUE;
 }
 
 static GstFlowReturn
-gst_web_download_transform (GstBaseTransform * bt,
-    GstBuffer * inbuf, GstBuffer * outbuf)
+gst_web_download_transform (
+    GstBaseTransform *bt, GstBuffer *inbuf, GstBuffer *outbuf)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
 
-  GST_DEBUG_OBJECT (self, "IS PASSTRHOUGH: %d", gst_base_transform_is_passthrough (bt));
+  GST_DEBUG_OBJECT (
+      self, "IS PASSTRHOUGH: %d", gst_base_transform_is_passthrough (bt));
   return GST_FLOW_OK;
 }
-
 
 // static GstCaps *
 // gst_web_download_get_caps (GstBaseSrc *bsrc, GstCaps *filter)
@@ -323,8 +391,7 @@ gst_web_download_transform (GstBaseTransform * bt,
 // }
 
 static void
-gst_web_download_set_context (
-    GstElement *element, GstContext *context)
+gst_web_download_set_context (GstElement *element, GstContext *context)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (element);
 
@@ -332,8 +399,7 @@ gst_web_download_set_context (
 }
 
 static GstStateChangeReturn
-gst_web_download_change_state (
-    GstElement *element, GstStateChange transition)
+gst_web_download_change_state (GstElement *element, GstStateChange transition)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (element);
 
@@ -412,8 +478,9 @@ gst_web_download_class_init (GstWebDownloadClass *klass)
   gstbasetransform_class->transform_caps = gst_web_download_transform_caps;
   gstbasetransform_class->set_caps = gst_web_download_set_caps;
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
-
   gstbasetransform_class->transform = gst_web_download_transform;
+  gstbasetransform_class->prepare_output_buffer =
+      gst_web_download_prepare_output_buffer;
 
   // gstbasetransform_class->create = gst_web_download_create;
   // gstbasesrc_class->get_caps = gst_web_download_get_caps;
@@ -434,11 +501,11 @@ gst_web_download_class_init (GstWebDownloadClass *klass)
       "Consumes data from an canvas DOM HTML element.",
       "Fluendo S.A. <engineering@fluendo.com>");
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_web_download_src_pad_template);
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_web_download_sink_pad_template);
+  gst_element_class_add_static_pad_template (
+      gstelement_class, &gst_web_download_src_pad_template);
+  gst_element_class_add_static_pad_template (
+      gstelement_class, &gst_web_download_sink_pad_template);
 
-  GST_DEBUG_CATEGORY_INIT (web_download_debug,
-      "webdownload", 0, "WebCodecs Video Decoder");
+  GST_DEBUG_CATEGORY_INIT (
+      web_download_debug, "webdownload", 0, "WebCodecs Video Decoder");
 }

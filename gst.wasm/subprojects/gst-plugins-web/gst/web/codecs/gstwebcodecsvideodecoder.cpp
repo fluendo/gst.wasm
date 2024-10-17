@@ -135,8 +135,8 @@ gst_web_codecs_video_decoder_get_format (
     GST_ERROR_OBJECT (self, "Unsupported format %s", vf_format);
     goto done;
   }
-  self->output_format = g_strdup ("RGBA"); // g_strdup (vf_format);
-  format = GST_VIDEO_FORMAT_RGBA;          // FIXME, for now
+  self->output_format = g_strdup ("I420"); // g_strdup (vf_format);
+  format = GST_VIDEO_FORMAT_I420;          // FIXME, for now
   // self->output_format = g_strdup (vf_format);
   width = video_frame["displayWidth"].as<int> ();
   height = video_frame["displayHeight"].as<int> ();
@@ -163,7 +163,7 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
   GstFlowReturn flow;
   val vf_timestamp;
 
-  GST_INFO_OBJECT (self, "VideoFrame Received");
+  GST_LOG_OBJECT (self, "VideoFrame Received");
   g_mutex_lock (&self->dequeue_lock);
   self->has_video_frame = TRUE;
   g_cond_signal (&self->dequeue_cond);
@@ -187,11 +187,11 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
 #if 0
   flow = gst_video_decoder_allocate_output_frame (dec, frame);
 
-  GST_ERROR_OBJECT (self, "Output caps are %" GST_PTR_FORMAT,
+  GST_LOG_OBJECT (self, "Output caps are %" GST_PTR_FORMAT,
       self->output_state->allocation_caps);
 
   if (flow != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Flow error: %d", flow);
+    GST_LOG_OBJECT (self, "Flow error: %d", flow);
     goto done;
   }
 
@@ -218,7 +218,7 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
   flow = gst_video_decoder_finish_frame (dec, frame);
   frame = NULL;
   if (flow != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Flow error: %d", flow);
+    GST_LOG_OBJECT (self, "Flow error: %d", flow);
     goto done;
   }
 
@@ -249,7 +249,7 @@ gst_web_codecs_video_decoder_on_dequeue (val event)
 
   dequeue_size = self->decoder["decodeQueueSize"].as<int> ();
 
-  GST_INFO_OBJECT (
+  GST_LOG_OBJECT (
       self, "Dequeue received with current size %d", dequeue_size);
   g_mutex_lock (&self->dequeue_lock);
   self->dequeue_size = dequeue_size;
@@ -372,6 +372,7 @@ static gboolean
 gst_web_codecs_video_decoder_negotiate (GstVideoDecoder *decoder)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
+  GST_INFO_OBJECT (self, "negotiate");
 
   /* If we don't know the output format yet, skip this */
   if (!self->need_negotiation)
