@@ -43,6 +43,7 @@ fakesink_handoff_cb (
   zero_terminated_data[info.size] = 0;
   memcpy (zero_terminated_data, info.data, info.size);
 
+  GST_ERROR ("size %d: %s", info.size, zero_terminated_data);
   g_print ("%s\n", zero_terminated_data);
 
   g_free (zero_terminated_data);
@@ -68,7 +69,7 @@ init_pipeline ()
   GST_PLUGIN_STATIC_REGISTER (web);
 
   context.pipe = gst_parse_launch (
-      "webstreamsrc location=\"http://localhost:3000/hello.txt\" ! fakesink "
+      "webstreamsrc location=\"http://localhost:6931/hello.txt\" ! fakesink "
       "name=fk signal-handoffs=true",
       NULL);
   g_assert (context.pipe);

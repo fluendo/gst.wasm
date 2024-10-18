@@ -59,8 +59,8 @@ typedef struct _GstWebStreamSrc
   gboolean in_eos;
   gchar *fetch_error;
   GQueue *q;
-  gsize queue_max_size;
-  gsize accumulated_data_size;
+  guint queue_max_size;
+  guint accumulated_data_size;
   GCond qcond;
   GThread *fetch_thread;
 } GstWebStreamSrc;
@@ -75,41 +75,50 @@ GST_ELEMENT_REGISTER_DEFINE (web_stream_src, "webstreamsrc",
     GST_RANK_SECONDARY, GST_TYPE_WEB_STREAM_SRC);
 GST_DEBUG_CATEGORY_STATIC (gst_web_stream_src_debug);
 
+static GByteArray
+gst_web_stream_copy_from_js (val data)
+{
+   GByteArray ret;
+
+   ret.len = data["length"].as<gsize>();
+   ret.data = (guint8*)g_malloc (ret.len);
+
+   (val::global("HEAPU8").call<val>("subarray", (guintptr)ret.data,
+				    (guintptr)ret.data + ret.len))
+      .call<void> ("set", data);
+
+   return ret;
+}
+
 int
 gst_web_stream_src_chunk (guintptr thiz, val chunk)
 {
   GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
-  gsize length = chunk["length"].as<gsize>();
-  gchar *mem = (gchar*)g_malloc (length);
-  val memoryView = val::global("Uint8Array").new_(reinterpret_cast<uintptr_t>(mem), length);
-  memoryView.call<void>("set", chunk);
+  GByteArray map = gst_web_stream_copy_from_js (chunk);
+  
   enum
   {
     GST_WEB_STREAM_STOP = 0,
     GST_WEB_STREAM_CONTINUE = 1
   } ret = GST_WEB_STREAM_CONTINUE;
 
-  GST_DEBUG_OBJECT (self, "Received chunk of size: %zu", length);
+  GST_DEBUG_OBJECT (self, "Received chunk of size: %u", map.len);
 
   GST_OBJECT_LOCK (self);
-  while (self->accumulated_data_size + length > self->queue_max_size &&
+  while (self->accumulated_data_size + map.len > self->queue_max_size &&
          GST_STATE_NEXT (self) >= GST_STATE_PAUSED) {
     /* In case of que queue max size is less then the amount accumulated
      * there's no way out: to prevent from this we will have to extend the
      * queue max size. */
-    if (length > self->queue_max_size) {
-      GST_WARNING_OBJECT (self,
-          "Will have to extend the queue max size to %" G_GSIZE_FORMAT,
-          length);
-      self->queue_max_size = length;
+    if (map.len > self->queue_max_size) {
+      GST_WARNING_OBJECT (self, "Will have to extend the queue max size to %u", map.len);
+      self->queue_max_size = map.len;
     }
 
     GST_DEBUG_OBJECT (self,
-        "Not enough space in the queue:"
-        "(%" G_GSIZE_FORMAT ") --> (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT
-        ") bytes."
+        "Not enough space in the queue: (%u) --> (%u/%u) bytes."
         " Sleeping..",
-        length, self->accumulated_data_size, self->queue_max_size);
+        map.len, self->accumulated_data_size, self->queue_max_size);
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
 
@@ -119,22 +128,20 @@ gst_web_stream_src_chunk (guintptr thiz, val chunk)
     goto done;
   }
 
-  self->accumulated_data_size += length;
+  self->accumulated_data_size += map.len;
   
   g_queue_push_tail (
-     self->q, gst_buffer_new_wrapped (mem, length));
-  mem = NULL;
+     self->q, gst_buffer_new_wrapped (map.data, map.len));
+  map.data = NULL;
 
   GST_DEBUG_OBJECT (self,
-      "Pushed buffer of size %" G_GSIZE_FORMAT
-      " to the queue. Now it's of (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT
-      ") bytes",
-      length, self->accumulated_data_size, self->queue_max_size);
+      "Pushed buffer of size %u to the queue. Now it's of (%u/%u) bytes",
+      map.len, self->accumulated_data_size, self->queue_max_size);
 
 done:
   g_cond_signal (&self->qcond);
   GST_OBJECT_UNLOCK (self);
-  g_free (mem);
+  g_free (map.data);
   return ret;
 }
 
@@ -204,7 +211,6 @@ EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url), {
           .then(rs => new Response(rs))
           .then(response => response.blob())
           .catch(fetchError => {
-		console.log (fetchError);
                 Module.gst_web_stream_src_error (thiz, fetchError.toString());
               });
     });
@@ -279,6 +285,7 @@ gst_web_stream_src_init (GstWebStreamSrc *src)
 {
   g_cond_init (&src->qcond);
   src->q = g_queue_new ();
+  src->queue_max_size = 1024 * 1024;
 }
 
 static gpointer
@@ -308,7 +315,7 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
         g_thread_new (thr_name, gst_web_stream_fetch_thread, self);
   }
 
-  while (g_queue_get_length (self->q) == 0 && NULL == self->fetch_error) {
+  while (self->accumulated_data_size == 0 && NULL == self->fetch_error) {
     GST_DEBUG_OBJECT (self, "Queue is empty, wait for a buffer");
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
@@ -330,10 +337,10 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
   }
 
   self->accumulated_data_size -= gst_buffer_get_size (*outbuf);
-
-  /* self->download_offset += gst_buffer_get_size (*outbuf); */
   GST_OBJECT_UNLOCK (self);
 
+  GST_DEBUG_OBJECT (self, "Buffer of size %" G_GSIZE_FORMAT " ready",
+		    gst_buffer_get_size (*outbuf));
   return GST_FLOW_OK;
 }
 
