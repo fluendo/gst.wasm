@@ -24,10 +24,13 @@
 #include <config.h>
 #endif
 
+#include <emscripten/bind.h>
 #include <emscripten.h>
 #include <gst/base/gstpushsrc.h>
 #include <stdio.h>
 #include <string.h>
+
+using namespace emscripten;
 
 static void gst_web_stream_src_uri_handler_init (
     gpointer g_iface, gpointer iface_data);
@@ -73,9 +76,13 @@ GST_ELEMENT_REGISTER_DEFINE (web_stream_src, "webstreamsrc",
 GST_DEBUG_CATEGORY_STATIC (gst_web_stream_src_debug);
 
 int
-gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
+gst_web_stream_src_chunk (guintptr thiz, val chunk)
 {
   GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
+  gsize length = chunk["length"].as<gsize>();
+  gchar *mem = (gchar*)g_malloc (length);
+  val memoryView = val::global("Uint8Array").new_(reinterpret_cast<uintptr_t>(mem), length);
+  memoryView.call<void>("set", chunk);
   enum
   {
     GST_WEB_STREAM_STOP = 0,
@@ -106,15 +113,17 @@ gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
 
-  if (GST_STATE_NEXT (self) < GST_STATE_PAUSED) {
+  if (0 && GST_STATE_NEXT (self) < GST_STATE_PAUSED && GST_STATE (self) >= GST_STATE_PAUSED) {
     GST_DEBUG_OBJECT (self, "Element is stopping, stop fetching");
     ret = GST_WEB_STREAM_STOP;
     goto done;
   }
 
   self->accumulated_data_size += length;
+  
   g_queue_push_tail (
-      self->q, gst_buffer_new_wrapped (g_memdup2 (chunk, length), length));
+     self->q, gst_buffer_new_wrapped (mem, length));
+  mem = NULL;
 
   GST_DEBUG_OBJECT (self,
       "Pushed buffer of size %" G_GSIZE_FORMAT
@@ -125,6 +134,7 @@ gst_web_stream_src_chunk (void *thiz, uint8_t *chunk, size_t length)
 done:
   g_cond_signal (&self->qcond);
   GST_OBJECT_UNLOCK (self);
+  g_free (mem);
   return ret;
 }
 
@@ -154,9 +164,16 @@ gst_web_stream_src_error (void *thiz, const char *msg)
   GST_OBJECT_UNLOCK (self);
 }
 
+EMSCRIPTEN_BINDINGS (gst_web_stream_src) {
+//  function ("gst_web_stream_src_error", &gst_web_stream_src_error);
+//  function (
+//      "gst_web_stream_src_eos", &gst_web_stream_src_eos);
+  function ("gst_web_stream_src_chunk", &gst_web_stream_src_chunk);
+}
+
 // clang-format off
-EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
-      const fetchUrl = UTF8ToString (url);
+EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url), {
+     const fetchUrl = UTF8ToString (url);
 
       // Fetch data using the Streams API
       fetch(fetchUrl)
@@ -171,12 +188,12 @@ EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
                           const { done, value } = await reader.read();
                         
                           // When no more data needs to be consumed, break the reading
-                          if (done) {
-                            gst_web_stream_src_eos (thiz);
-                            break;
+                          cont = Module.gst_web_stream_src_chunk(thiz, value);
+			  if (done) {
+			     //Module.gst_web_stream_src_eos (thiz);
+			     //                            gst_web_stream_src_eos (thiz);
+			     break;
                           }
-
-                          cont = gst_web_stream_src_chunk(thiz, value, value.length);
                         }
                         reader.releaseLock();
                       }
@@ -186,12 +203,13 @@ EM_JS(void, gst_web_stream_fetch, (void *thiz, const char* url), {
           .then(rs => new Response(rs))
           .then(response => response.blob())
           .catch(fetchError => {
-                gst_web_stream_src_error (thiz, fetchError);
+		console.log (fetchError)
+                //Module.gst_web_stream_src_error (thiz, fetchError);
               });
     });
 // clang-format on
 
-static guint
+static GstURIType
 gst_web_stream_src_urihandler_get_type (GType type)
 {
   return GST_URI_SRC;
@@ -267,7 +285,8 @@ gst_web_stream_fetch_thread (gpointer data)
 {
   GstWebStreamSrc *self = GST_WEB_STREAM_SRC (data);
 
-  gst_web_stream_fetch (self, self->uri);
+  GST_INFO_OBJECT (self, "Start fetching %s", self->uri);
+  gst_web_stream_fetch ((guintptr)self, self->uri);
   return NULL;
 }
 
@@ -435,7 +454,8 @@ gst_web_stream_src_class_init (GstWebStreamSrcClass *klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location", "URI of resource to read",
-          PROP_LOCATION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+			   PROP_LOCATION_DEFAULT,
+			   GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "HTTP Client Source using Web Streams API", "Source/Network",
