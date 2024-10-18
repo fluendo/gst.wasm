@@ -139,7 +139,7 @@ done:
 }
 
 void
-gst_web_stream_src_eos (void *thiz)
+gst_web_stream_src_eos (guintptr thiz)
 {
   GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
 
@@ -151,9 +151,11 @@ gst_web_stream_src_eos (void *thiz)
 }
 
 void
-gst_web_stream_src_error (void *thiz, const char *msg)
+gst_web_stream_src_error (guintptr thiz, val vmsg)
 {
   GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
+  std::string stds = vmsg.as<std::string>();
+  const char* msg = stds.c_str();
 
   GST_ERROR_OBJECT (self, "Download failed: %s", msg);
   GST_OBJECT_LOCK (self);
@@ -165,9 +167,8 @@ gst_web_stream_src_error (void *thiz, const char *msg)
 }
 
 EMSCRIPTEN_BINDINGS (gst_web_stream_src) {
-//  function ("gst_web_stream_src_error", &gst_web_stream_src_error);
-//  function (
-//      "gst_web_stream_src_eos", &gst_web_stream_src_eos);
+  function ("gst_web_stream_src_error", &gst_web_stream_src_error);
+  function ("gst_web_stream_src_eos", &gst_web_stream_src_eos);
   function ("gst_web_stream_src_chunk", &gst_web_stream_src_chunk);
 }
 
@@ -186,14 +187,14 @@ EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url), {
                         var cont = 1;
                         while (cont == 1) {
                           const { done, value } = await reader.read();
+
+			  if (done) {
+			     Module.gst_web_stream_src_eos (thiz);
+			     break;
+                          }
                         
                           // When no more data needs to be consumed, break the reading
                           cont = Module.gst_web_stream_src_chunk(thiz, value);
-			  if (done) {
-			     //Module.gst_web_stream_src_eos (thiz);
-			     //                            gst_web_stream_src_eos (thiz);
-			     break;
-                          }
                         }
                         reader.releaseLock();
                       }
@@ -203,8 +204,8 @@ EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url), {
           .then(rs => new Response(rs))
           .then(response => response.blob())
           .catch(fetchError => {
-		console.log (fetchError)
-                //Module.gst_web_stream_src_error (thiz, fetchError);
+		console.log (fetchError);
+                Module.gst_web_stream_src_error (thiz, fetchError.toString());
               });
     });
 // clang-format on
@@ -307,11 +308,11 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
         g_thread_new (thr_name, gst_web_stream_fetch_thread, self);
   }
 
-  while (g_queue_get_length (self->q) == 0) {
+  while (g_queue_get_length (self->q) == 0 && NULL == self->fetch_error) {
     GST_DEBUG_OBJECT (self, "Queue is empty, wait for a buffer");
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
-
+  
   if (self->fetch_error) {
     gchar *err = self->fetch_error;
     self->fetch_error = NULL;
