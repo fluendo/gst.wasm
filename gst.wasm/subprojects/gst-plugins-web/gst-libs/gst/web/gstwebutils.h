@@ -21,6 +21,7 @@
 #ifndef __GST_WEB_UTILS_H__
 #define __GST_WEB_UTILS_H__
 
+#include <gst/video/video.h>
 #include "gstwebcanvas.h"
 
 G_BEGIN_DECLS
@@ -37,6 +38,9 @@ gboolean gst_web_utils_element_handle_context_query (
     GstElement *element, GstQuery *query, GstWebCanvas *canvas);
 gboolean gst_web_utils_element_set_context (
     GstElement *element, GstContext *context, GstWebCanvas **canvas);
+GstVideoFormat gst_web_utils_convert_video_frame_format (
+    const char *vf_format);
+const char *gst_web_utils_convert_video_format (GstVideoFormat format);
 
 G_END_DECLS
 
