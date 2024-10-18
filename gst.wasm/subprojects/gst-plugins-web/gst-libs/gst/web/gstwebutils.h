@@ -21,6 +21,7 @@
 #ifndef __GST_WEB_UTILS_H__
 #define __GST_WEB_UTILS_H__
 
+#include <gst/video/video.h>
 #include "gstwebcanvas.h"
 
 #define GST_WEB_UTILS_MESSAGE_PROPOSE_OBJECT_NAME "GstWebProposeObjectMessage"
@@ -44,9 +45,11 @@ void gst_web_utils_js_register_on_message (void);
 void gst_web_utils_js_unregister_on_message (void);
 void gst_web_utils_element_process_request_object (
     GstElement *e, GstMessage *msg, guintptr object);
-
 GstMessage *gst_web_utils_message_new_request_object (GstElement *src,
     const gchar *cb_name, const gchar *object_name, gpointer user_data);
+GstVideoFormat gst_web_utils_video_format_from_web_format (
+    const char *vf_format);
+const char *gst_web_utils_video_format_to_web_format (GstVideoFormat format);
 
 G_END_DECLS
 

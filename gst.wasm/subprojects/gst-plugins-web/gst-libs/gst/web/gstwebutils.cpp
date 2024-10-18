@@ -569,3 +569,76 @@ EMSCRIPTEN_BINDINGS (gst_web_transport_src)
   function ("gst_web_utils_js_worker_transfer_object",
       &gst_web_utils_js_worker_transfer_object);
 }
+
+GstVideoFormat
+gst_web_utils_video_format_from_web_format (const char *vf_format)
+{
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+
+  // TODO: gst_video_format_from_string?
+
+  if (!g_strcmp0 (vf_format, "I420")) {
+    format = GST_VIDEO_FORMAT_I420;
+  } else if (!g_strcmp0 (vf_format, "I420A")) {
+    format = GST_VIDEO_FORMAT_A420;
+  } else if (!g_strcmp0 (vf_format, "I422")) {
+    format = GST_VIDEO_FORMAT_Y42B;
+  } else if (!g_strcmp0 (vf_format, "I444")) {
+    format = GST_VIDEO_FORMAT_Y444;
+  } else if (!g_strcmp0 (vf_format, "NV12")) {
+    format = GST_VIDEO_FORMAT_NV12;
+  } else if (!g_strcmp0 (vf_format, "RGBA")) {
+    format = GST_VIDEO_FORMAT_RGBA;
+  } else if (!g_strcmp0 (vf_format, "RGBX")) {
+    format = GST_VIDEO_FORMAT_RGBx;
+  } else if (!g_strcmp0 (vf_format, "BGRA")) {
+    format = GST_VIDEO_FORMAT_BGRA;
+  } else if (!g_strcmp0 (vf_format, "BGRX")) {
+    format = GST_VIDEO_FORMAT_BGRx;
+  } else {
+    GST_ERROR ("Unsupported format %s", vf_format);
+  }
+
+  return format;
+}
+
+const char *
+gst_web_utils_video_format_to_web_format (GstVideoFormat format)
+{
+  const char *vf_format = NULL;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+      vf_format = "I420";
+      break;
+    case GST_VIDEO_FORMAT_A420:
+      vf_format = "I420A";
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      vf_format = "I422";
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      vf_format = "I444";
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      vf_format = "NV12";
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      vf_format = "RGBA";
+      break;
+    case GST_VIDEO_FORMAT_RGBx:
+      vf_format = "RGBX";
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      vf_format = "BGRA";
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      vf_format = "BGRX";
+      break;
+    default:
+      GST_ERROR ("Unsupported GstVideoFormat: %d", format);
+      break;
+  }
+
+  return vf_format;
+}
