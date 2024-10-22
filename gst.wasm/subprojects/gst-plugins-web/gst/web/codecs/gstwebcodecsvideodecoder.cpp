@@ -173,8 +173,8 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
   frame = gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
   GST_DEBUG_OBJECT (self,
       "queued frame %" GST_TIME_FORMAT " decoded frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_TIME_AS_MSECONDS (frame->pts)),
-      GST_TIME_ARGS (video_frame["timestamp"].as<int> ()));
+      GST_TIME_ARGS (frame->pts),
+      GST_TIME_ARGS (GST_MSECOND * video_frame["timestamp"].as<int> ()));
 
   /* Configure the output */
   if (!self->output_state) {
