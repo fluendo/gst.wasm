@@ -15,6 +15,7 @@ executable('index',
       # Required by webcanvassink, this should be brought directly by the dep
       '-lembind',
       '-sASYNCIFY',
+      '-lhtml5'
   ],
   link_with: [
     gstweb_dep
