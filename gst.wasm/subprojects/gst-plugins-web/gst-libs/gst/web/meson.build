@@ -1,5 +1,7 @@
 gstweb_sources = [
   'gstwebrunner.c',
+  'gstwebtask.c',
+  'gstwebtaskpool.c',
   'gstwebvideoframe.cpp',
   'gstwebutils.c',
   'gstwebcanvas.c'
