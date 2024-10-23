@@ -17,3 +17,11 @@ lite-server
 which draws an animation.
 
 3. **webcanvasrsc-webcam-example**: This example shows the webcanvasrsc element getting data from the webcam video frames drawn on an offscreen canvas.
+
+4. **webstreamsrc-example**: Downloads the data from a text file `hello.txt` shared by the http server: `http://localhost:6931/hello.txt`,
+and prints the contents on the text output of the webpage.
+How to run this sample:
+```
+cp /var/log/kern.log _builddir/subprojects/samples/webstreamsrc/hello.txt
+emrun _builddir/subprojects/samples/webstreamsrc/webstreamsrc-example.html
+```
