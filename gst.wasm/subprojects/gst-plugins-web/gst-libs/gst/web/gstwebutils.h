@@ -22,9 +22,14 @@
 #define __GST_WEB_UTILS_H__
 
 #include <gst/video/video.h>
+#include <emscripten/html5.h>
 #include "gstwebcanvas.h"
 
 G_BEGIN_DECLS
+
+typedef EMSCRIPTEN_RESULT (*GstWebUtilsMouseCb) (const char *target,
+    void *userData, EM_BOOL useCapture, em_mouse_callback_func callback,
+    pthread_t targetThread);
 
 void gst_web_utils_init (void);
 
