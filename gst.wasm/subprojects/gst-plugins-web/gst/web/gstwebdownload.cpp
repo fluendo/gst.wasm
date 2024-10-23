@@ -31,7 +31,6 @@
 #include <gst/video/gstvideometa.h>
 #include <emscripten.h>
 #include <emscripten/bind.h>
-#include <emscripten/threading.h>
 #include <gst/web/gstwebutils.h>
 #include <gst/web/gstwebvideoframe.h>
 #include "gstweb.h"
@@ -95,6 +94,10 @@ gst_web_download_transform_start (GstBaseTransform *bt)
 static gboolean
 gst_web_download_transform_stop (GstBaseTransform *bt)
 {
+  GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
+
+  g_clear_pointer (&self->canvas, gst_object_unref);
+
   return TRUE;
 }
 
@@ -233,16 +236,6 @@ gst_web_download_set_context (GstElement *element, GstContext *context)
 }
 
 static void
-gst_web_download_finalize (GObject *object)
-{
-  GstWebDownload *self = GST_WEB_DOWNLOAD (object);
-
-  g_clear_pointer (&self->canvas, gst_object_unref);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
 gst_web_download_class_init (GstWebDownloadClass *klass)
 {
   GstBaseTransformClass *gstbasetransform_class;
@@ -262,7 +255,6 @@ gst_web_download_class_init (GstWebDownloadClass *klass)
   gstbasetransform_class->prepare_output_buffer =
       gst_web_download_prepare_output_buffer;
   gstelement_class->set_context = gst_web_download_set_context;
-  gobject_class->finalize = gst_web_download_finalize;
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Web Canvas Download", "Filter/Video",

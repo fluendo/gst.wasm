@@ -9,14 +9,10 @@ executable(executable_name,
       common_deps,
       gstisomp4_dep,
       dependency('gstreamer-emscripten-1.0'),
-      dependency('gstopengl'),
-      dependency('gstvideoconvertscale'),
       dependency('gstdebugutilsbad'),
-
     ],
     link_with: [
       gstweb_dep,
-      gstweb_sdl2_dep,
     ],
     link_args: common_link_args + [
       '-lembind',
@@ -27,8 +23,6 @@ executable(executable_name,
       '-sFETCH=1',
       '-g3',
       '-lhtml5',
-      '-lGL',
-      '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
     ],
     c_args: [
       '-g3',
