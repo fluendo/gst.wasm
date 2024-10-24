@@ -98,10 +98,11 @@ We keep on sync all the samples found at [samples](gst.wasm/subprojects/samples)
 
 #### Prepare environment
 
-To build an environment, you can use [steps from CI](.github/workflows/gst.wasm-build.yaml):
+To build an environment, you can use [steps from CI](.github/workflows/build.yaml):
 
 ```
 git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
+git config --global protocol.file.allow always
 ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap
 ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
 ```
