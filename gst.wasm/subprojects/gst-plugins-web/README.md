@@ -17,3 +17,6 @@ lite-server
 which draws an animation.
 
 3. **webcanvasrsc-webcam-example**: This example shows the webcanvasrsc element getting data from the webcam video frames drawn on an offscreen canvas.
+
+4. **webstreamsrc-example**: Downloads the data from a file `webstreamsrc-example.js` shared by the http server: `http://localhost:6931/webstreamsrc-example.js`,
+and prints the contents on the text output of the webpage.
