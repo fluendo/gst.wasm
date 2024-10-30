@@ -179,6 +179,10 @@ gst_web_video_frame_allocator_free (GstAllocator *allocator, GstMemory *memory)
   /* FIXME can be async */
   gst_web_runner_send_message (
       self->priv->runner, gst_web_video_frame_close, &close_data);
+
+  gst_object_unref (self->priv->runner);
+  self->priv->video_frame = val::undefined ();
+  g_free (self->priv);
 }
 
 static void
