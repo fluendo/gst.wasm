@@ -132,6 +132,7 @@ gst_web_canvas_sink_draw_video_frame (gpointer data)
   self->val_context.call<void> ("drawImage", video_frame, 0, 0,
       video_frame["displayWidth"], video_frame["displayHeight"], 0, 0,
       self->val_canvas["width"], self->val_canvas["height"]);
+  gst_memory_unref (GST_MEMORY_CAST (vf));
 }
 
 static void
