@@ -71,11 +71,8 @@ struct _GstWebCodecsVideoDecoder
   gboolean need_negotiation;
 
   emscripten::val decoder;
-  /* The size of the output frames pending to be dequeued */
+  /* Amount of the output frames pending to be dequeued */
   gint dequeue_size;
-  /* In case we receive a VideoFrame, in order to allow the
-   * blocked stream lock to continue despite the dequeue size */
-  gboolean has_video_frame;
   GMutex dequeue_lock;
   GCond dequeue_cond;
 };

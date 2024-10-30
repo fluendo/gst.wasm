@@ -51,6 +51,8 @@
 
 using namespace emscripten;
 
+#define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 32
+
 #define GST_WEB_CODECS_VIDEO_DECODER_FROM_JS                                  \
   reinterpret_cast<GstWebCodecsVideoDecoder *> (                              \
       val::module_property ("self").as<int> ())
@@ -164,10 +166,6 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
   val vf_timestamp;
 
   GST_INFO_OBJECT (self, "VideoFrame Received");
-  g_mutex_lock (&self->dequeue_lock);
-  self->has_video_frame = TRUE;
-  g_cond_signal (&self->dequeue_cond);
-  g_mutex_unlock (&self->dequeue_lock);
 
   GST_VIDEO_DECODER_STREAM_LOCK (self);
   frame = gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
@@ -225,11 +223,6 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
 done:
   if (frame)
     gst_video_codec_frame_unref (frame);
-
-  g_mutex_lock (&self->dequeue_lock);
-  self->has_video_frame = FALSE;
-  g_cond_signal (&self->dequeue_cond);
-  g_mutex_unlock (&self->dequeue_lock);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (self);
 }
@@ -409,15 +402,16 @@ gst_web_codecs_video_decoder_handle_frame (
   GST_DEBUG_OBJECT (decoder, "Handling frame");
   /* Wait until there is nothing pending to be to dequeued or there is a buffer
    */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
   g_mutex_lock (&self->dequeue_lock);
-  while (self->dequeue_size && !self->has_video_frame) {
-    GST_INFO_OBJECT (self,
-        "Waiting until everything is dequeued, pending: %d, has_video_frame: "
-        "%d",
-        self->dequeue_size, self->has_video_frame);
+  while (self->dequeue_size >= GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE) {
+    GST_DEBUG_OBJECT (self, "Reached queue limit [%d/%d], waiting for dequeue",
+        self->dequeue_size, GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE);
     g_cond_wait (&self->dequeue_cond, &self->dequeue_lock);
   }
+  self->dequeue_size++;
   g_mutex_unlock (&self->dequeue_lock);
+  GST_VIDEO_DECODER_STREAM_LOCK (self);
 
   /* We are ready to process data */
   GST_DEBUG_OBJECT (self, "Ready to process more data");
