@@ -23,9 +23,14 @@
 #endif
 
 #include <gst/gst.h>
+#include <emscripten.h>
+#include <emscripten/bind.h>
+#include <emscripten/val.h>
 
 #include "gstwebcanvas.h"
 #include "gstwebutils.h"
+
+using namespace emscripten;
 
 GST_DEBUG_CATEGORY_STATIC (web_utils_debug);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -50,8 +55,8 @@ gst_web_utils_element_canvas_found (GstElement *element, GstWebCanvas *canvas)
 static gboolean
 gst_web_utils_pad_query (const GValue *item, GValue *value, gpointer user_data)
 {
-  GstPad *pad = g_value_get_object (item);
-  GstQuery *query = user_data;
+  GstPad *pad = (GstPad *) g_value_get_object (item);
+  GstQuery *query = (GstQuery *) user_data;
   gboolean res;
 
   res = gst_pad_peer_query (pad, query);
@@ -212,7 +217,7 @@ gst_web_utils_context_set_web_canvas (
 
   s = gst_context_writable_structure (context);
   gst_structure_set (
-      s, GST_WEB_CANVAS_CONTEXT_TYPE, GST_TYPE_WEB_CANVAS, canvas, NULL);
+      s, GST_WEB_CANVAS_CONTEXT_TYPE, GST_TYPE_WEB_CANVAS, canvas, nullptr);
 }
 
 /**
@@ -235,7 +240,7 @@ gst_web_utils_context_get_web_canvas (
 
   s = gst_context_get_structure (context);
   ret = gst_structure_get (
-      s, GST_WEB_CANVAS_CONTEXT_TYPE, GST_TYPE_WEB_CANVAS, canvas, NULL);
+      s, GST_WEB_CANVAS_CONTEXT_TYPE, GST_TYPE_WEB_CANVAS, canvas, nullptr);
 
   GST_CAT_LOG (GST_CAT_CONTEXT, "got GstWebCanvas(%p) from context(%p)",
       *canvas, context);
@@ -271,24 +276,25 @@ gst_web_utils_element_ensure_canvas (
    *     type.
    */
   canvas = *canvas_ptr;
-  if (gst_web_utils_element_canvas_found (element, canvas))
+  if (gst_web_utils_element_canvas_found (GST_ELEMENT_CAST (element), canvas))
     goto done;
 
   /* As this call will trigger a QUERY or an EVENT, the canvas will
    * be set to a variable pointed by canvas_ptr and everything will be
    * fine
    */
-  gst_web_utils_element_query_canvas (element);
+  gst_web_utils_element_query_canvas (GST_ELEMENT_CAST (element));
 
   /* Neighbour found and it updated the canvas */
-  if (gst_web_utils_element_canvas_found (element, *canvas_ptr))
+  if (gst_web_utils_element_canvas_found (
+          GST_ELEMENT_CAST (element), *canvas_ptr))
     goto done;
 
   /* If no neighbor, or application not interested, use system default */
   canvas = gst_web_canvas_new (canvas_name);
   *canvas_ptr = canvas;
 
-  gst_web_utils_element_propagate_canvas (element, canvas);
+  gst_web_utils_element_propagate_canvas (GST_ELEMENT_CAST (element), canvas);
 
 done:
   return *canvas_ptr != NULL;
@@ -373,4 +379,170 @@ gst_web_utils_element_set_context (
   }
 
   return FALSE;
+}
+
+/* clang-format off */
+EM_JS (void, gst_web_utils_js_worker_handle_message, (val e), {
+  let msgData = e.data;
+  let cmd = msgData["gst_cmd"];
+  let data = msgData["data"];
+  if (cmd && cmd == "transferObject") {
+    cb_name = data["cb_name"];
+    cb_user_data = data["user_data"];
+    obj = data["object"];
+    obj_name = data["object_name"];
+    sender_tid = data["sender_tid"];
+    cb = Module[cb_name];
+    cb (sender_tid, obj_name, obj, cb_user_data);
+  }
+});
+
+EM_JS (void, gst_web_utils_js_main_thread_handle_message, (val e), {
+  let msgData = e.data;
+  let cmd = msgData["gst_cmd"];
+  let data = msgData["data"];
+  if (cmd && cmd == "transferObject") {
+    /* In this moment, the object is transfered to the main thread
+     * Send it to the corresponding worker
+     * TODO handle transferring to the main thread
+     */
+    var worker = PThread.pthreads[data["tid"]];
+    var object = data["object"];
+    worker.postMessage({
+      gst_cmd: "transferObject",
+      data: {
+        cb_name: data["cb_name"],
+        object_name: data["object_name"],
+        object: object,
+        user_data: data["user_data"],
+        tid: data["tid"],
+        sender_tid: data["sender_tid"]
+      }
+    }, [object]);
+  }
+});
+
+EM_JS (void, gst_web_utils_js_worker_transfer_object, (val cb_name, val object_name, val object, gint user_data, gint tid, gint sender_tid), {
+  postMessage({
+    gst_cmd: "transferObject",
+    data: {
+      cb_name: cb_name,
+      object_name: object_name,
+      object: object,
+      user_data: user_data,
+      tid: tid,
+      sender_tid: sender_tid
+    }
+  }, [object]);
+});
+/* clang-format on */
+
+void
+gst_web_utils_js_register_on_message (void)
+{
+  /* Just register our own message event handler to support the 'transferred'
+   * event
+   */
+
+  /* clang-format off */
+  /* We register the function on the worker when a message comes from the main thread */
+  EM_ASM ({
+    addEventListener ("message", gst_web_utils_js_worker_handle_message);
+  });
+  /* And another event listener when the mssages comes from the worker */
+  /* TODO later instead of fetching the pthread id, use the actual GThread
+   * pointer and keep a list similar to what Emscripten does for pthreads
+   */
+  MAIN_THREAD_EM_ASM ({
+    var worker = PThread.pthreads[$0];
+    worker.addEventListener ("message", gst_web_utils_js_main_thread_handle_message);
+  }, pthread_self());
+  /* clang-format on */
+}
+
+void
+gst_web_utils_js_unregister_on_message (void)
+{
+  /* Just unregister our handlers registered on
+   * gst_web_utils_js_register_on_message */
+  /* clang-format off */
+  EM_ASM ({
+    removeEventListener ("message", gst_web_utils_js_worker_handle_message);
+  });
+  /* TODO later instead of fetching the pthread id, use the actual GThread
+   * pointer and keep a list similar to what Emscripten does for pthreads
+   */
+  MAIN_THREAD_EM_ASM ({
+    var worker = PThread.pthreads[$0];
+    worker.removeEventListener ("message", gst_web_utils_js_main_thread_handle_message);
+  }, pthread_self());
+  /* clang-format on */
+}
+
+GstMessage *
+gst_web_utils_message_new_request_object (GstElement *src,
+    const gchar *cb_name, const gchar *object_name, gpointer user_data)
+{
+  GstMessage *ret;
+  GstStructure *s;
+
+  /* TODO later instead of fetching the pthread id, use the actual GThread
+   * pointer and keep a list similar to what Emscripten does for pthreads
+   */
+  s = gst_structure_new (GST_WEB_UTILS_MESSAGE_REQUEST_OBJECT_NAME,
+      "callback-name", G_TYPE_STRING, cb_name, "object-name", G_TYPE_STRING,
+      object_name, "user-data", G_TYPE_POINTER, user_data, "tid", G_TYPE_INT,
+      pthread_self (), nullptr);
+  ret = gst_message_new_element (GST_OBJECT_CAST (src), s);
+  return ret;
+}
+
+void
+gst_web_utils_element_process_request_object (
+    GstElement *e, GstMessage *msg, guintptr object)
+{
+  const GstStructure *s = gst_message_get_structure (msg);
+  const gchar *object_name;
+  const gchar *cb_name;
+  gint tid;
+  guintptr user_data;
+
+  g_return_if_fail (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT);
+  g_return_if_fail (!g_strcmp0 (
+      gst_structure_get_name (s), GST_WEB_UTILS_MESSAGE_REQUEST_OBJECT_NAME));
+
+  gst_structure_get (s, "callback-name", G_TYPE_STRING, &cb_name,
+      "object-name", G_TYPE_STRING, &object_name, "user-data", G_TYPE_POINTER,
+      &user_data, "tid", G_TYPE_INT, &tid, nullptr);
+
+  GST_DEBUG_OBJECT (
+      e, "Transferring object to %s", GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
+  EM_ASM (
+      {
+        gst_web_utils_js_worker_transfer_object (Emval.toValue ($0),
+            Emval.toValue ($1), Emval.toValue ($2), $3, $4, $5);
+      },
+      val::u8string (cb_name).as_handle (),
+      val::u8string (object_name).as_handle (), object, user_data, tid,
+      pthread_self ());
+  GST_DEBUG_OBJECT (e, "Transfered object to %s done",
+      GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
+}
+
+GstMessage *
+gst_web_utils_message_new_propose_object (GstElement *src, gchar *object_name)
+{
+  GstMessage *ret;
+  GstStructure *s;
+
+  s = gst_structure_new (GST_WEB_UTILS_MESSAGE_PROPOSE_OBJECT_NAME,
+      "object-name", G_TYPE_STRING, object_name, nullptr);
+  ret = gst_message_new_element (GST_OBJECT_CAST (src), s);
+  return ret;
+}
+
+EMSCRIPTEN_BINDINGS (gst_web_transport_src)
+{
+  function ("gst_web_utils_js_worker_transfer_object",
+      &gst_web_utils_js_worker_transfer_object);
 }

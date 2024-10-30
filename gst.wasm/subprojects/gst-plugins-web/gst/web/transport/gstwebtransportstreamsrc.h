@@ -18,38 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_WEB_TRANSPORT_STREAM_SRC_H__
+#define __GST_WEB_TRANSPORT_STREAM_SRC_H__
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
+G_BEGIN_DECLS
 
-#include <gst/web/gstwebutils.h>
-#include <gst/web/gstwebvideoframe.h>
+GstElement *gst_web_transport_stream_src_new (const gchar *name);
 
-#include "gstweb.h"
-#include "gstwebfetchsrc.h"
-#include "gstwebstreamsrc.h"
-#include "gstwebcanvassink.h"
-#include "gstwebcanvassrc.h"
-#include "codecs/gstwebcodecs.h"
-#include "transport/gstwebtransportsrc.h"
+G_END_DECLS
 
-static gboolean
-plugin_init (GstPlugin *plugin)
-{
-  gst_web_utils_init ();
-  gst_web_video_frame_init ();
-  gst_web_codecs_init (plugin);
-
-  gst_element_register_web_canvas_sink (plugin);
-  gst_element_register_web_canvas_src (plugin);
-  gst_element_register_web_fetch_src (plugin);
-  gst_element_register_web_stream_src (plugin);
-  gst_element_register_web_transport_src (plugin);
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, web,
-    "web related elements", plugin_init, VERSION, GST_LICENSE,
-    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif /* __GST_WEB_TRANSPORT_STREAM_SRC_H__ */

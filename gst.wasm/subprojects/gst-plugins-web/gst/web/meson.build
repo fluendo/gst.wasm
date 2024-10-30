@@ -5,7 +5,9 @@ sources = [
   'gstwebfetchsrc.c',
   'gstwebstreamsrc.cpp',
   'codecs/gstwebcodecs.cpp',
-  'codecs/gstwebcodecsvideodecoder.cpp'
+  'codecs/gstwebcodecsvideodecoder.cpp',
+  'transport/gstwebtransportsrc.cpp',
+  'transport/gstwebtransportstreamsrc.cpp'
 ]
 
 # Codecs deps

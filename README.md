@@ -70,6 +70,7 @@ The [current status](https://github.com/fluendo/gstreamer/compare/main...fluendo
 * ⏳ `wasm-main-openal`: Add emscripten support OpenAL to play audio [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-openal)
 * ⏳ `wasm-main-gl-support`: Add emscripten OpenGL backend [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-gl-support)
 * ⏳ `wasm-main-videodec` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-videodec)
+* ⏳ `wasm-main-webtransport` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-webtransport)
 * ⏳ `wasm-main-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-wip)
 <!-- END guw gstreamer.toml markdown -->
 
