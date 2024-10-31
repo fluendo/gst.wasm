@@ -313,4 +313,7 @@ gst_web_canvas_src_class_init (GstWebCanvasSrcClass *klass)
 
   gst_element_class_add_static_pad_template (
       gstelement_class, &gst_web_canvas_src_template);
+
+  GST_DEBUG_CATEGORY_INIT (web_canvas_src_debug, "webcanvassrc",
+      0, "Web Canvas Source");
 }
