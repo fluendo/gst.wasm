@@ -272,15 +272,20 @@ gst_web_codecs_video_decoder_decode (gpointer data)
   val chunkclass = val::global ("EncodedVideoChunk");
   val options = val::object ();
 
-  GST_DEBUG_OBJECT (self, "Decoding");
+  GST_DEBUG_OBJECT (self,
+      "Decoding frame at %" GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
+
   /* TODO use 'transfer' option in case we provide an allocator to avoid
    * the copy. For that, we need to create the memory in JS and give the
    * ownership to it.
    */
-  options.set (
-      "timestamp", static_cast<int> (GST_TIME_AS_MSECONDS (frame->pts)));
-  options.set (
-      "duration", static_cast<int> (GST_TIME_AS_MSECONDS (frame->duration)));
+  if (GST_CLOCK_TIME_IS_VALID (frame->pts))
+    options.set (
+        "timestamp", static_cast<int> (GST_TIME_AS_MSECONDS (frame->pts)));
+  if (GST_CLOCK_TIME_IS_VALID (frame->duration))
+    options.set (
+        "duration", static_cast<int> (GST_TIME_AS_MSECONDS (frame->duration)));
   options.set (
       "type", GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) ? "key" : "delta");
   gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
@@ -613,6 +618,7 @@ static void
 gst_web_codecs_video_decoder_init (
     GstWebCodecsVideoDecoder *self, GstWebCodecsVideoDecoderClass g_class)
 {
+  gst_video_decoder_set_needs_sync_point (GST_VIDEO_DECODER (self), TRUE);
   g_mutex_init (&self->dequeue_lock);
   g_cond_init (&self->dequeue_cond);
 }
