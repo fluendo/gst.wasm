@@ -53,11 +53,6 @@ G_DEFINE_TYPE (
 GST_DEBUG_CATEGORY_STATIC (gst_web_transport_stream_src_debug);
 
 static void
-gst_web_transport_stream_src_init (GstWebTransportStreamSrc *src)
-{
-}
-
-static void
 gst_web_transport_stream_resume_streaming_thread (
     GstElement *e, gpointer user_data)
 {
@@ -139,6 +134,13 @@ gst_web_transport_stream_src_finalize (GObject *obj)
 }
 
 static void
+gst_web_transport_stream_src_init (GstWebTransportStreamSrc *src)
+{
+  /* configure basesrc to be a live source */
+  gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
+}
+
+static void
 gst_web_transport_stream_src_class_init (GstWebTransportStreamSrcClass *klass)
 {
 
@@ -169,9 +171,8 @@ gst_web_transport_stream_src_new (const gchar *name)
 {
   GstWebTransportStreamSrc *self;
 
-  /* TODO use a property for the name */
   self = GST_WEB_TRANSPORT_STREAM_SRC (
-      g_object_new (GST_TYPE_WEB_TRANSPORT_STREAM_SRC, NULL));
+      g_object_new (GST_TYPE_WEB_TRANSPORT_STREAM_SRC, "name", name, NULL));
   self->name = g_strdup (name);
   return GST_ELEMENT_CAST (self);
 }
