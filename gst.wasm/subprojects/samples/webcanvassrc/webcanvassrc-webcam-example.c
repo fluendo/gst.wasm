@@ -35,13 +35,11 @@ register_elements ()
   GST_PLUGIN_STATIC_DECLARE (web);
   GST_PLUGIN_STATIC_DECLARE (sdl2);
   GST_PLUGIN_STATIC_DECLARE (videoconvertscale);
-  GST_PLUGIN_STATIC_DECLARE (coreelements);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (web);
   GST_PLUGIN_STATIC_REGISTER (sdl2);
   GST_PLUGIN_STATIC_REGISTER (videoconvertscale);
-  GST_PLUGIN_STATIC_REGISTER (coreelements);
 }
 
 void
