@@ -541,6 +541,28 @@ gst_web_utils_message_new_propose_object (GstElement *src, gchar *object_name)
   return ret;
 }
 
+GByteArray
+gst_web_utils_copy_data_from_js (const val &data)
+{
+  GByteArray ret;
+
+  ret.len = data["length"].as<gsize> ();
+  ret.data = (guint8 *) g_malloc (ret.len);
+
+  (val::global ("HEAPU8").call<val> (
+       "subarray", (guintptr) ret.data, (guintptr) ret.data + ret.len))
+      .call<void> ("set", data);
+
+  return ret;
+}
+
+GstBuffer *
+gst_web_utils_js_array_to_buffer (const val &data)
+{
+  GByteArray map = gst_web_utils_copy_data_from_js (data);
+  return gst_buffer_new_wrapped (map.data, map.len);
+}
+
 EMSCRIPTEN_BINDINGS (gst_web_transport_src)
 {
   function ("gst_web_utils_js_worker_transfer_object",
