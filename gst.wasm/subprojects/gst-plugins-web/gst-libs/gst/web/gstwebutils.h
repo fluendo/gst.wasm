@@ -50,4 +50,11 @@ GstMessage *gst_web_utils_message_new_request_object (GstElement *src,
 
 G_END_DECLS
 
+#ifdef __cplusplus
+#include <emscripten/val.h>
+
+GByteArray gst_web_utils_copy_data_from_js (const emscripten::val &data);
+GstBuffer *gst_web_utils_js_array_to_buffer (const emscripten::val &data);
+#endif
+
 #endif

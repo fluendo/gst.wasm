@@ -29,6 +29,7 @@
 #include <gst/base/gstpushsrc.h>
 #include <stdio.h>
 #include <string.h>
+#include <gst/web/gstwebutils.h>
 
 using namespace emscripten;
 
@@ -121,26 +122,12 @@ gst_web_stream_src_do_seek (GstBaseSrc *bsrc, GstSegment *segment)
   return TRUE;
 }
 
-static GByteArray
-gst_web_stream_copy_from_js (val data)
-{
-  GByteArray ret;
-
-  ret.len = data["length"].as<gsize> ();
-  ret.data = (guint8 *) g_malloc (ret.len);
-
-  (val::global ("HEAPU8").call<val> (
-       "subarray", (guintptr) ret.data, (guintptr) ret.data + ret.len))
-      .call<void> ("set", data);
-
-  return ret;
-}
-
 static int
 gst_web_stream_src_chunk (guintptr thiz, val chunk)
 {
   GstWebStreamSrc *self = (GstWebStreamSrc *) thiz;
-  GByteArray map = gst_web_stream_copy_from_js (chunk);
+  GstBuffer *buffer = gst_web_utils_js_array_to_buffer (chunk);
+  guint chunk_size = gst_buffer_get_size (buffer);
 
   enum
   {
@@ -148,25 +135,25 @@ gst_web_stream_src_chunk (guintptr thiz, val chunk)
     GST_WEB_STREAM_CONTINUE = 1
   } ret = GST_WEB_STREAM_CONTINUE;
 
-  GST_DEBUG_OBJECT (self, "Received chunk of size: %u", map.len);
+  GST_DEBUG_OBJECT (self, "Received chunk of size: %u", chunk_size);
 
   GST_OBJECT_LOCK (self);
-  while (self->accumulated_data_size + map.len > self->queue_max_size &&
+  while (self->accumulated_data_size + chunk_size > self->queue_max_size &&
          !self->flushing) {
     /* In case of que queue max size is less then the amount accumulated
      * there's no way out: to prevent from this we will have to extend the
      * queue max size. */
-    if (map.len > self->queue_max_size) {
+    if (chunk_size > self->queue_max_size) {
       GST_INFO_OBJECT (
-          self, "Will have to extend the queue max size to %u", map.len);
-      self->queue_max_size = map.len;
+          self, "Will have to extend the queue max size to %u", chunk_size);
+      self->queue_max_size = chunk_size;
       continue;
     }
 
     GST_DEBUG_OBJECT (self,
         "Not enough space in the queue: (%u) --> (%u/%u) bytes."
         " Sleeping..",
-        map.len, self->accumulated_data_size, self->queue_max_size);
+        chunk_size, self->accumulated_data_size, self->queue_max_size);
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
 
@@ -176,24 +163,21 @@ gst_web_stream_src_chunk (guintptr thiz, val chunk)
     goto done;
   }
 
-  self->accumulated_data_size += map.len;
+  self->accumulated_data_size += chunk_size;
 
-  {
-    GstBuffer *buffer = gst_buffer_new_wrapped (map.data, map.len);
-    GST_BUFFER_OFFSET (buffer) = self->download_offset;
-    self->download_offset += map.len;
-    g_queue_push_tail (self->q, buffer);
-    map.data = NULL;
-  }
+  GST_BUFFER_OFFSET (buffer) = self->download_offset;
+  self->download_offset += chunk_size;
+  g_queue_push_tail (self->q, buffer);
+  buffer = NULL;
 
   GST_DEBUG_OBJECT (self,
       "Pushed buffer of size %u to the queue. Now it's of (%u/%u) bytes",
-      map.len, self->accumulated_data_size, self->queue_max_size);
+      chunk_size, self->accumulated_data_size, self->queue_max_size);
 
 done:
   g_cond_signal (&self->qcond);
   GST_OBJECT_UNLOCK (self);
-  g_free (map.data);
+  g_clear_pointer (&buffer, gst_buffer_unref);
   return ret;
 }
 

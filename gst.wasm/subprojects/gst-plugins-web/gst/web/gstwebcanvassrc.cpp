@@ -31,6 +31,7 @@
 #include <gst/video/gstvideometa.h>
 #include <emscripten/bind.h>
 #include <emscripten/threading.h>
+#include <gst/web/gstwebutils.h>
 
 using namespace emscripten;
 
@@ -120,20 +121,17 @@ gst_web_canvas_src_buffer_from_canvas (GstWebCanvasSrc *self)
   val image_data = context2d.call<val> ("getImageData", 0, 0, width, height);
   val data = image_data["data"];
 
-  std::vector<uint8_t> raw_data =
-      emscripten::convertJSArrayToNumberVector<uint8_t> (data);
-
-  if (width * height * 4 != (int) raw_data.size ()) {
-    GST_ERROR_OBJECT (
-        self, "Expected data to have size: %d.", width * height * 4);
-    return NULL;
-  }
-
-  buf = gst_buffer_new_memdup (raw_data.data (), raw_data.size ());
-
+  buf = gst_web_utils_js_array_to_buffer (data);
   if (buf == NULL) {
     GST_ERROR_OBJECT (
         self, "Cannot create buffer from canvas '%s' data", self->id);
+    return NULL;
+  }
+
+  if (width * height * 4 != gst_buffer_get_size (buf)) {
+    GST_ERROR_OBJECT (
+        self, "Expected data to have size: %d.", width * height * 4);
+    gst_buffer_unref (buf);
     return NULL;
   }
 

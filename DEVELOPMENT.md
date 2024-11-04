@@ -133,3 +133,19 @@ transferrable object Emscripten does transfer if required.
 [GstWebCanvas]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebcanvas.h
 [GstWebTask]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebtask.h
 [GstWebTaskPool]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebtaskpool.h
+
+Other advises
+=============
+Avoid using [emscripten::convertJSArrayToNumberVector()](https://emscripten.org/docs/api_reference/val.h.html#_CPPv4N10emscripten10emscripten3val28convertJSArrayToNumberVectorERK3val) to access the data of JS array: this function is very slow. We recommend using
+```c++
+GByteArray gst_web_utils_copy_data_from_js (const emscripten::val &data)
+```
+or
+```c++
+GstBuffer *gst_web_utils_js_array_to_buffer (const emscripten::val &data);
+```
+with
+```
+#include <gst/web/gstwebutils.h>
+```
+instead.
