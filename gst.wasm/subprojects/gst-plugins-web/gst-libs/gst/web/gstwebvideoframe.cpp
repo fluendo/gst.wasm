@@ -68,6 +68,7 @@ struct _GstWebVideoFramePrivate
   GstWebRunner *runner;
   /* The Emscripten's JS VideoFrame */
   val video_frame;
+  guint8 *data;
 };
 
 typedef struct _GstWebVideoFrameAllocator
@@ -190,14 +191,19 @@ gst_web_video_frame_allocator_map_full (
     GstWebVideoFrame *self, GstMapInfo *info, gsize size)
 {
   GstWebVideoFrameAllocatorMapCpuData data = {
-    .self = self, .data = NULL, .size = size, .info = NULL, .result = FALSE
+    .self = self, .info = NULL, .result = FALSE
   };
 
   if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
     GST_DEBUG ("Write flags not supported");
+    return NULL;
   }
 
-  data.data = (guint8 *) g_malloc (data.size);
+  if (self->priv->data)
+    goto beach;
+
+  data.data = self->priv->data = (guint8 *) g_malloc (size);
+  data.size = size;
 
   gst_web_runner_send_message (
       self->priv->runner, gst_web_video_frame_allocator_map_cpu_access, &data);
@@ -206,14 +212,15 @@ gst_web_video_frame_allocator_map_full (
     return NULL;
   }
 
-  return data.data;
+beach:
+  return self->priv->data;
 }
 
 static void
 gst_web_video_frame_allocator_unmap_full (
     GstWebVideoFrame *mem, GstMapInfo *info)
 {
-  g_free (info->data);
+  /* Nothing to do. */
 }
 
 static GstMemory *
@@ -250,6 +257,7 @@ gst_web_video_frame_allocator_alloc (
   mem->priv = g_new0 (GstWebVideoFramePrivate, 1);
   mem->priv->video_frame = vf_params->video_frame;
   mem->priv->runner = vf_params->runner;
+  mem->priv->data = NULL;
 
   /* Chain the memory init */
   /* We need to get the allocationSize from the video_frame to know the buffer
@@ -273,6 +281,7 @@ gst_web_video_frame_allocator_free (GstAllocator *allocator, GstMemory *memory)
 
   gst_object_unref (self->priv->runner);
   self->priv->video_frame = val::undefined ();
+  g_free (self->priv->data);
   g_free (self->priv);
 }
 
