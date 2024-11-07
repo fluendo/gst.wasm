@@ -61,6 +61,9 @@ typedef struct _GstWebTransportSrc
   GValue hashes;
   GstWebRunner *runner;
 
+  /* temporary property values until the connection is created */
+  gint incoming_high_water_mark;
+
   val transport;                                // owner: runner
   std::unordered_map<std::string, val> streams; // owner: runner
   val stream_readers[2];                        // owner: runner
@@ -68,11 +71,28 @@ typedef struct _GstWebTransportSrc
   gint nstreams[2];                             // owner: runner
 } GstWebTransportSrc;
 
+typedef struct _GstWebTransportSrcRequestObjectMsgData
+{
+  GstWebTransportSrc *self;
+  GstMessage *msg;
+} GstWebTransportSrcRequestObjectMsgData;
+
+/* FIXME we use this for setting/getting a single property. If there
+ * are more properties to set, wrap the actual generic property_set/get
+ * into a message, instead of doing it per property
+ */
+typedef struct _GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData
+{
+  GstWebTransportSrc *self;
+  gint value;
+} GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData;
+
 enum
 {
   PROP_0,
   PROP_LOCATION,
   PROP_SERVER_CERTIFICATE_HASHES,
+  PROP_DATAGRAMS_INCOMING_HIGH_WATER_MARK,
   PROP_MAX
 };
 
@@ -182,23 +202,17 @@ gst_web_transport_src_stream_linked (
   gst_element_sync_state_with_parent (src);
 }
 
-typedef struct _GstWebTransportSrcRequestObjectData
-{
-  GstWebTransportSrc *self;
-  GstMessage *msg;
-} GstWebTransportSrcRequestObjectData;
-
 static void
-gst_web_transport_src_request_object_free (
-    GstWebTransportSrcRequestObjectData *data)
+gst_web_transport_src_request_object_msg_data_free (
+    GstWebTransportSrcRequestObjectMsgData *data)
 {
   gst_message_unref (data->msg);
   g_free (data);
 }
 
 static void
-gst_web_transport_src_request_object (
-    GstWebTransportSrcRequestObjectData *data)
+gst_web_transport_src_request_object_msg (
+    GstWebTransportSrcRequestObjectMsgData *data)
 {
   GstWebTransportSrc *self = data->self;
   const GstStructure *s = gst_message_get_structure (data->msg);
@@ -219,6 +233,25 @@ gst_web_transport_src_request_object (
   }
   gst_web_utils_element_process_request_object (
       GST_ELEMENT_CAST (self), data->msg, (guintptr) object.as_handle ());
+}
+
+static void
+gst_web_transport_src_set_datagrams_incoming_high_water_mark_msg (
+    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData *data)
+{
+  GstWebTransportSrc *self = data->self;
+
+  self->transport["datagrams"].set ("incomingHighWaterMark", data->value);
+}
+
+static void
+gst_web_transport_src_get_datagrams_incoming_high_water_mark_msg (
+    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData *data)
+{
+  GstWebTransportSrc *self = data->self;
+
+  data->value =
+      self->transport["datagrams"]["incomingHighWaterMark"].as<int> ();
 }
 
 static gboolean
@@ -310,6 +343,43 @@ gst_web_transport_src_check_streams (GstWebTransportSrc *self)
   /* clang-format on */
 }
 
+static gint
+gst_web_transport_src_get_datagrams_incoming_high_water_mark (
+    GstWebTransportSrc *self)
+{
+  if (!self->runner)
+    return self->incoming_high_water_mark;
+  else {
+    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData data;
+
+    data.self = self;
+    data.value = 0;
+    gst_web_runner_send_message (self->runner,
+        (GstWebRunnerCB)
+            gst_web_transport_src_get_datagrams_incoming_high_water_mark_msg,
+        &data);
+    return data.value;
+  }
+}
+
+static void
+gst_web_transport_src_set_datagrams_incoming_high_water_mark (
+    GstWebTransportSrc *self, gint value)
+{
+  if (!self->runner)
+    self->incoming_high_water_mark = value;
+  else {
+    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData data;
+
+    data.self = self;
+    data.value = value;
+    gst_web_runner_send_message (self->runner,
+        (GstWebRunnerCB)
+            gst_web_transport_src_set_datagrams_incoming_high_water_mark_msg,
+        &data);
+  }
+}
+
 static void
 gst_web_transport_src_create_connection (GstWebTransportSrc *self)
 {
@@ -348,6 +418,10 @@ gst_web_transport_src_create_connection (GstWebTransportSrc *self)
 
   self->transport = wtclass.new_ (std::string (self->uri), options);
   self->transport["ready"].await ();
+
+  /* Propagate the properties */
+  self->transport["datagrams"].set (
+      "incomingHighWaterMark", self->incoming_high_water_mark);
 
   /* The requested streams */
   gst_element_foreach_src_pad (
@@ -445,7 +519,7 @@ gst_web_transport_src_handle_message (GstBin *bin, GstMessage *msg)
     } break;
 
     case GST_MESSAGE_ELEMENT: {
-      GstWebTransportSrcRequestObjectData *data;
+      GstWebTransportSrcRequestObjectMsgData *data;
       const GstStructure *s = gst_message_get_structure (msg);
       const gchar *object_name;
 
@@ -462,12 +536,12 @@ gst_web_transport_src_handle_message (GstBin *bin, GstMessage *msg)
       if (strncmp (object_name, "WebTransportReceiveStream/", 25))
         break;
 
-      data = g_new0 (GstWebTransportSrcRequestObjectData, 1);
+      data = g_new0 (GstWebTransportSrcRequestObjectMsgData, 1);
       data->msg = gst_message_ref (msg);
       data->self = self;
       gst_web_runner_send_message_async (self->runner,
-          (GstWebRunnerCB) gst_web_transport_src_request_object, data,
-          (GDestroyNotify) gst_web_transport_src_request_object_free);
+          (GstWebRunnerCB) gst_web_transport_src_request_object_msg, data,
+          (GDestroyNotify) gst_web_transport_src_request_object_msg_data_free);
       handled = TRUE;
     } break;
 
@@ -553,6 +627,10 @@ gst_web_transport_src_set_property (
     case PROP_SERVER_CERTIFICATE_HASHES:
       g_value_copy (value, &self->hashes);
       break;
+    case PROP_DATAGRAMS_INCOMING_HIGH_WATER_MARK:
+      gst_web_transport_src_set_datagrams_incoming_high_water_mark (
+          self, g_value_get_int (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -572,6 +650,10 @@ gst_web_transport_src_get_property (
       break;
     case PROP_SERVER_CERTIFICATE_HASHES:
       g_value_copy (&self->hashes, value);
+      break;
+    case PROP_DATAGRAMS_INCOMING_HIGH_WATER_MARK:
+      g_value_set_int (value,
+          gst_web_transport_src_get_datagrams_incoming_high_water_mark (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -648,7 +730,15 @@ gst_web_transport_src_class_init (GstWebTransportSrcClass *klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location", "URI of resource to read",
-          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          NULL,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                         GST_PARAM_MUTABLE_READY)));
+  g_object_class_install_property (gobject_class,
+      PROP_DATAGRAMS_INCOMING_HIGH_WATER_MARK,
+      g_param_spec_int ("datagrams-incoming-high-water-mark",
+          "Datagrams Incoming High Water Mark",
+          "High water mark for incoming chunks of data", 1, G_MAXINT, 1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class,
       PROP_SERVER_CERTIFICATE_HASHES,
       gst_param_spec_array ("server-certificate-hashes",
