@@ -69,7 +69,7 @@ struct _GstWebVideoFrameAllocationParams
 };
 
 GstWebVideoFrame *gst_web_video_frame_wrap (
-    val video_frame, GstWebRunner *runner);
+    val &video_frame, GstWebRunner *runner);
 val gst_web_video_frame_get_handle (GstWebVideoFrame *self);
 
 #endif

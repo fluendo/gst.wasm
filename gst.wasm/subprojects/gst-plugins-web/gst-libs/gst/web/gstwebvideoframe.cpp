@@ -235,7 +235,7 @@ gst_web_video_frame_init (void)
 }
 
 GstWebVideoFrame *
-gst_web_video_frame_wrap (val video_frame, GstWebRunner *runner)
+gst_web_video_frame_wrap (val &video_frame, GstWebRunner *runner)
 {
   GstWebVideoFrameAllocationParams params;
   GstWebVideoFrameAllocationSizeData allocation_size_data;
