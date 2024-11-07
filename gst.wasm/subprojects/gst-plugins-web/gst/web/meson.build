@@ -34,3 +34,5 @@ gstweb_dep = static_library('gstweb',
       '-g3',
   ],
 )
+
+plugins += [gstweb_dep]
