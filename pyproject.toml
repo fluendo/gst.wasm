@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "gst.wasm"
+version = "0.0.1"
+description = "WebAssembly port of GStreamer"
+authors = ["Fluendo S.A. <support@fluendo.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+cerbero = { git = "https://github.com/fluendo/cerbero", branch = "gst.wasm" }
+distro = "*"
+git-upstream-workflow = { git = "https://github.com/fluendo/git-upstream-workflow" }
