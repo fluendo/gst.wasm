@@ -29,19 +29,25 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Clone cerbero
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install python deps (cerbero)
         run: |
-          git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
+          poetry install
           git config --global protocol.file.allow always
       - name: Bootstrap
         run: |
-          ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap
+          poetry run cerbero -c build/gst.wasm.cbc bootstrap
       - name: Build dependencies
         run: |
-          ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build-deps gst.wasm
+          poetry run cerbero -c build/gst.wasm.cbc build-deps gst.wasm
       - name: Build gst.wasm
         run: |
-          ./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
+          poetry run cerbero -c build/gst.wasm.cbc build gst.wasm
       - name: Create tarball
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
