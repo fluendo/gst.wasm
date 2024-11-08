@@ -1,0 +1,62 @@
+[[remotes]]
+name = "fluendo"
+url = "git@github.com:fluendo/cerbero.git"
+
+[[remotes]]
+name = "origin"
+url = "https://github.com/GStreamer/cerbero.git"
+
+[target]
+remote = "fluendo"
+branch = "gst.wasm"
+
+[source]
+remote = "origin"
+branch = "main"
+
+[[features]]
+remote = "fluendo"
+name = "tests"
+summary = "Bring back tests"
+pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1471"
+status = "integrated"
+
+[[features]]
+remote = "fluendo"
+name = "tests2"
+summary = "Update more tests. Second round"
+pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1477"
+status = "integrated"
+
+[[features]]
+remote = "fluendo"
+name = "tests3"
+summary = "Tests update final round"
+pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1482"
+status = "merging"
+
+[[features]]
+remote = "fluendo"
+name = "local_source"
+summary = "New type of source that allows you to build a recipe without fetching or copying sources"
+pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1483"
+status = "pending"
+
+[[features]]
+remote = "fluendo"
+name = "packaging"
+summary = "Enable installation using pip with a git-https repository"
+pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1484"
+status = "pending"
+
+[[features]]
+remote = "fluendo"
+name = "emscripten"
+summary = "Add support for building for wasm target with emscripten toolchain"
+status = "pending"
+
+[[features]]
+remote = "fluendo"
+name = "emscripten-gl"
+summary = "Add OpenGL support in gst-plugins-base through new Emscripten based WebGL backend"
+status = "pending"
