@@ -1,0 +1,46 @@
+name: GUW sync
+
+
+on:
+  schedule:
+    # Every midnight but the ones from Fr to Sa and from Sa to Su
+    # Su Mo|Tu|We|Th|Fr|Sa|Su Mo
+    #   X  X  X  X  X        X
+    - cron: '0 0 * * 1-5'  # https://crontab.guru/#0_0_*_*_1-5
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Install python deps (GUW)
+        run: |
+          poetry install
+          git config --global protocol.file.allow always
+      - name: Temporal workaround to access public git repos # TODO handle SSH key
+        run: |
+          git config --global user.email "ci@fluendo.com"
+          git config --global user.name "gst.wasm CI"
+          sed -i "s#git@github.com:#https://github.com/#g" guw/cerbero.gst.wasm.toml
+          sed -i "s#git@github.com:#https://github.com/#g" guw/glib.gst.wasm.toml
+          sed -i "s#git@github.com:#https://github.com/#g" guw/gstreamer.gst.wasm.toml
+          sed -i "s#git@gitlab.freedesktop.org:#https://gitlab.freedesktop.org/#g" guw/gstreamer.gst.wasm.toml
+      - name: GUW sync cerbero
+        run: |
+          poetry run guw -l debug guw/cerbero.gst.wasm.toml sync --local
+      - name: GUW sync GLib
+        run: |
+          poetry run guw -l debug guw/glib.gst.wasm.toml sync --local
+      - name: GUW sync GStreamer
+        run: |
+          poetry run guw -l debug guw/gstreamer.gst.wasm.toml sync --local
