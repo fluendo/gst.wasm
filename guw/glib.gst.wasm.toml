@@ -1,0 +1,50 @@
+[[remotes]]
+name = "origin"
+url = "git@github.com:fluendo/glib.git"
+
+[[remotes]]
+name = "kleisauke"
+url = "https://github.com/kleisauke/glib.git"
+
+[target]
+remote = "origin"
+branch = "gst.wasm"
+
+[source]
+remote = "kleisauke"
+branch = "wasm-vips-2.76.0"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-revert-gregex"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-no-g_error"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-function-pointer"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-wasm-vs-emscripten"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-canvas-in-thread"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-main-loop-support"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-2.76.0-garray-fixes"
+status = "pending"

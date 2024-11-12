@@ -102,10 +102,10 @@ We keep on sync all the samples found at [samples](gst.wasm/subprojects/samples)
 To build an environment, you can use [steps from CI](.github/workflows/build.yaml):
 
 ```
-git clone https://github.com/fluendo/cerbero cerbero-src -b gst.wasm --depth=1
+poetry install
 git config --global protocol.file.allow always
-./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc bootstrap
-./cerbero-src/cerbero-uninstalled -c build/gst.wasm.cbc build gst.wasm
+poetry run cerbero -c build/gst.wasm.cbc bootstrap
+poetry run cerbero -c build/gst.wasm.cbc build gst.wasm
 ```
 
 As a result, in the local directory `build/gst.wasm_web_wasm32/dist/web_wasm32`

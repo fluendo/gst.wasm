@@ -1,0 +1,68 @@
+[[remotes]]
+name = "origin"
+url = "git@github.com:fluendo/gstreamer.git"
+
+[[remotes]]
+name = "freedesktop"
+url = "git@gitlab.freedesktop.org:gstreamer/gstreamer.git"
+
+[target]
+remote = "origin"
+branch = "gst.wasm"
+
+[source]
+remote = "origin"
+branch = "wasm-main-base"
+
+[[features]]
+remote = "origin"
+name = "meson_fix_nls"
+summary = "Use nls option to set ENABLE_NLS"
+pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7017"
+status = "merging"
+
+[[features]]
+remote = "origin"
+name = "wasm-main-function-pointer"
+summary = "Fix null function or function signature mismatch runtime errors"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-main-enable"
+summary = "Enable support for wasm"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-main-test"
+summary = "Enable unit tests for wasm"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-main-openal"
+summary = "Add emscripten support OpenAL to play audio"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-main-gl-support"
+summary = "Add emscripten OpenGL backend"
+status = "pending"
+
+[[features]]
+name = "wasm-main-videodec"
+remote = "origin"
+status = "pending"
+
+[[features]]
+name = "wasm-main-webtransport"
+remote = "origin"
+status = "pending"
+
+[[features]]
+remote = "origin"
+name = "wasm-main-wip"
+summary = "Commits in progress"
+status = "pending"
