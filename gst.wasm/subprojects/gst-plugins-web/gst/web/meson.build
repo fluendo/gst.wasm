@@ -2,6 +2,7 @@ sources = [
   'gstweb.c',
   'gstwebcanvassink.cpp',
   'gstwebcanvassrc.cpp',
+  'gstwebdownload.c',
   'gstwebfetchsrc.c',
   'gstwebstreamsrc.cpp',
   'codecs/gstwebcodecs.cpp',

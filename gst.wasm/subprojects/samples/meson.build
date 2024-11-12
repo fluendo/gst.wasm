@@ -32,6 +32,7 @@ examples = [
   'openal',
   'videotestsrc',
   'webcanvassrc',
+  'webdownload',
   'webfetchsrc',
   'webstreamsrc',
   'webtransportsrc',
