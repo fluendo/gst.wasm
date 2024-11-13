@@ -40,11 +40,13 @@
 #include "config.h"
 #endif
 
+#include <gst/video/navigation.h>
 #include <gst/video/video.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/video-color.h>
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <emscripten/threading.h>
 #include <gst/web/gstwebvideoframe.h>
 #include <gst/web/gstwebcanvas.h>
 #include <gst/web/gstwebutils.h>
@@ -65,6 +67,10 @@ using namespace emscripten;
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WEB_CANVAS_SINK))
 #define GST_IS_WEB_CANVAS_SINK_CLASS(klass)                                   \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_WEB_CANVAS_SINK))
+
+#define gst_web_canvas_sink_parent_class parent_class
+#define GST_CAT_DEFAULT gst_web_canvas_sink_debug_category
+GST_DEBUG_CATEGORY_STATIC (gst_web_canvas_sink_debug_category);
 
 #define DEFAULT_CANVAS_ID "#canvas"
 
@@ -102,20 +108,52 @@ enum
   PROP_LAST
 };
 
-#define GST_CAT_DEFAULT gst_web_canvas_sink_debug_category
-GST_DEBUG_CATEGORY_STATIC (gst_web_canvas_sink_debug_category);
-
-#define gst_web_canvas_sink_parent_class parent_class
-G_DEFINE_TYPE (GstWebCanvasSink, gst_web_canvas_sink, GST_TYPE_VIDEO_SINK);
-
-GST_ELEMENT_REGISTER_DEFINE (web_canvas_sink, "webcanvassink",
-    GST_RANK_SECONDARY, GST_TYPE_WEB_CANVAS_SINK);
-
 static GstStaticPadTemplate static_sink_template = GST_STATIC_PAD_TEMPLATE (
     "sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (
         GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME,
         GST_WEB_MEMORY_VIDEO_FORMATS_STR) ";" GST_VIDEO_CAPS_MAKE ("RGBA")));
+
+static const std::tuple<GstWebUtilsMouseCb, const char *> mouse_callbacks[] = {
+  std::make_tuple (emscripten_set_click_callback_on_thread, "click"),
+  std::make_tuple (emscripten_set_mouseup_callback_on_thread, "mouseup"),
+  std::make_tuple (emscripten_set_mousedown_callback_on_thread, "mousedown"),
+  std::make_tuple (emscripten_set_mousemove_callback_on_thread, "mousemove"),
+};
+
+static void
+gst_web_canvas_sink_navigation_send_event (
+    GstNavigation *navigation, GstEvent *event)
+{
+  GstWebCanvasSink *self = (GstWebCanvasSink *) navigation;
+
+  gboolean handled = FALSE;
+
+  gst_event_ref (event);
+  handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (self), event);
+
+  if (!handled)
+    gst_element_post_message (GST_ELEMENT (self),
+        gst_navigation_message_new_event (GST_OBJECT (self), event));
+
+  gst_event_unref (event);
+}
+
+static void
+gst_web_canvas_sink_navigation_interface_init (
+    GstNavigationInterface *iface, gpointer iface_data)
+{
+  iface->send_event_simple = gst_web_canvas_sink_navigation_send_event;
+}
+
+G_DEFINE_TYPE_WITH_CODE (
+    GstWebCanvasSink, gst_web_canvas_sink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (
+        GST_TYPE_NAVIGATION, gst_web_canvas_sink_navigation_interface_init);
+    GST_DEBUG_CATEGORY_INIT (gst_web_canvas_sink_debug_category,
+        "webcanvassink", 0, "Canvas Video Sink"));
+GST_ELEMENT_REGISTER_DEFINE (web_canvas_sink, "webcanvassink",
+    GST_RANK_SECONDARY, GST_TYPE_WEB_CANVAS_SINK);
 
 static void
 gst_web_canvas_sink_draw_video_frame (gpointer data)
@@ -225,13 +263,70 @@ gst_web_canvas_sink_set_info (
   return TRUE;
 }
 
+static EM_BOOL
+gst_web_canvas_sink_mouse_cb (
+    int event_type, const EmscriptenMouseEvent *event, void *data)
+{
+  GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (data);
+  GstNavigation *navigation = GST_NAVIGATION (self);
+
+  GST_DEBUG_OBJECT (self, "Mouse event %d received", event_type);
+  switch (event_type) {
+    case EMSCRIPTEN_EVENT_MOUSEMOVE:
+      GST_LOG_OBJECT (
+          self, "Mouse move to %d %d", event->targetX, event->targetY);
+      gst_navigation_send_mouse_event (navigation, "mouse-move", event->button,
+          event->targetX, event->targetY);
+      break;
+    case EMSCRIPTEN_EVENT_MOUSEDOWN:
+      GST_LOG_OBJECT (self, "Mouse down with button %d at %d %d",
+          event->button, event->targetX, event->targetY);
+      gst_navigation_send_mouse_event (navigation, "mouse-button-press",
+          event->button, event->targetX, event->targetY);
+      break;
+    case EMSCRIPTEN_EVENT_MOUSEUP:
+      GST_LOG_OBJECT (self, "Mouse up with button %d at %d %d", event->button,
+          event->targetX, event->targetY);
+      gst_navigation_send_mouse_event (navigation, "mouse-button-release",
+          event->button, event->targetX, event->targetY);
+      break;
+    default:
+      GST_LOG_OBJECT (self, "Event %d not handled", event_type);
+      break;
+  }
+  return EM_TRUE;
+}
+
+static void
+gst_web_canvas_sink_set_mouse_event_handlers (
+    GstWebCanvasSink *self, gboolean set = TRUE)
+{
+  EMSCRIPTEN_RESULT em_res = EMSCRIPTEN_RESULT_SUCCESS;
+
+  for (const auto &it : mouse_callbacks) {
+    GstWebUtilsMouseCb mouse_cb = std::get<0> (it);
+    const char *event_name = std::get<1> (it);
+
+    em_res = mouse_cb (self->id, self, FALSE,
+        set ? gst_web_canvas_sink_mouse_cb : NULL,
+        EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD);
+
+    if (em_res != EMSCRIPTEN_RESULT_SUCCESS) {
+      GST_WARNING_OBJECT (self, "Failed setting '%s' callback. Result: %d.",
+          event_name, em_res);
+    }
+  }
+}
+
 static gboolean
 gst_web_canvas_sink_start (GstBaseSink *sink)
 {
   GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (sink);
-  GstWebCanvasSinkSetupData data;
   GstWebRunner *runner = NULL;
   gboolean ret = FALSE;
+  GstWebCanvasSinkSetupData data;
+
+  GST_DEBUG_OBJECT (self, "Start webcanvassink");
 
   /* Ensure that we have a GstWebCanvas context */
   if (!gst_web_utils_element_ensure_canvas (self, &self->canvas, self->id)) {
@@ -250,6 +345,8 @@ gst_web_canvas_sink_start (GstBaseSink *sink)
   /* TODO pick the context from the canvas */
   data.self = self;
   gst_web_runner_send_message (runner, gst_web_canvas_sink_setup, &data);
+
+  gst_web_canvas_sink_set_mouse_event_handlers (self);
 
   ret = TRUE;
 
@@ -305,6 +402,16 @@ gst_web_canvas_sink_get_property (
   }
 }
 
+static gboolean
+gst_web_canvas_sink_stop (GstBaseSink *sink)
+{
+  GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (sink);
+
+  gst_web_canvas_sink_set_mouse_event_handlers (self, FALSE);
+
+  return TRUE;
+}
+
 static void
 gst_web_canvas_sink_set_property (
     GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -324,10 +431,10 @@ gst_web_canvas_sink_set_property (
 static void
 gst_web_canvas_sink_finalize (GObject *object)
 {
-  GstWebCanvasSink *sink;
+  GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (object);
 
-  sink = GST_WEB_CANVAS_SINK (object);
-  g_clear_pointer (&sink->id, g_free);
+  g_clear_pointer (&self->id, g_free);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -363,6 +470,7 @@ gst_web_canvas_sink_class_init (GstWebCanvasSinkClass *klass)
 
   basesink_class = GST_BASE_SINK_CLASS (klass);
   basesink_class->start = gst_web_canvas_sink_start;
+  basesink_class->stop = gst_web_canvas_sink_stop;
   videosink_class = GST_VIDEO_SINK_CLASS (klass);
   videosink_class->show_frame = gst_web_canvas_sink_show_frame;
   videosink_class->set_info = gst_web_canvas_sink_set_info;
