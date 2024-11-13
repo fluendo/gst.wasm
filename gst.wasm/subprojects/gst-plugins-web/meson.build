@@ -26,7 +26,7 @@ pkgconfig_variables = ['exec_prefix=${prefix}',
     'girdir=${datadir}/gir-1.0',
     'typelibdir=${libdir}/girepository-1.0']
 
-pkgconfig_subdirs = ['gstreamer-1.0']
+pkgconfig_subdirs = ['gstreamer-1.0', 'emscripten']
 
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 
