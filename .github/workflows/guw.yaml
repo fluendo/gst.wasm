@@ -45,10 +45,6 @@ jobs:
       - name: Temporal workaround to access public gitlab repos # TODO handle SSH key
         run: |
           sed -i "s#git@gitlab.freedesktop.org:#https://gitlab.freedesktop.org/#g" guw/gstreamer.gst.wasm.toml
-      - name: GUW sync cerbero
-        run: |
-          export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_cerbero"
-          poetry run guw -l debug guw/cerbero.gst.wasm.toml sync --local
       - name: GUW sync GLib
         run: |
           export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_glib"
@@ -57,3 +53,7 @@ jobs:
         run: |
           export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_gstreamer"
           poetry run guw -l debug guw/gstreamer.gst.wasm.toml sync --local
+      - name: GUW sync cerbero
+        run: |
+          export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_cerbero"
+          poetry run guw -l debug guw/cerbero.gst.wasm.toml sync --local
