@@ -32,7 +32,8 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-#include <gst/web/gstwebutils.h>
+#include <gst/web/gstwebtransferable.h>
+#include <gst/web/gstwebrunner.h>
 #include <gst/web/gstwebtask.h>
 #include <gst/web/gstwebtaskpool.h>
 
@@ -103,6 +104,58 @@ GST_DEBUG_CATEGORY_STATIC (gst_web_transport_src_debug);
 G_DECLARE_FINAL_TYPE (
     GstWebTransportSrc, gst_web_transport_src, GST, WEB_TRANSPORT_SRC, GstBin)
 
+static void
+gst_web_transport_src_request_object_msg_data_free (
+    GstWebTransportSrcRequestObjectMsgData *data)
+{
+  gst_message_unref (data->msg);
+  g_free (data);
+}
+
+static void
+gst_web_transport_src_request_object_msg (
+    GstWebTransportSrcRequestObjectMsgData *data)
+{
+  GstWebTransportSrc *self = data->self;
+  const GstStructure *s = gst_message_get_structure (data->msg);
+  const gchar *object_name;
+  val object;
+
+  object_name = gst_structure_get_string (s, "object-name");
+  GST_DEBUG_OBJECT (
+      data->self, "Processing the request object of '%s'", object_name);
+  if (!strncmp (object_name, "WebTransportReceiveStream/", 25)) {
+    const gchar *stream_name =
+        &object_name[26]; // the lenght of the above string
+    /* FIXME how to handle the case of a stream not found */
+    object = self->streams[stream_name];
+  } else {
+    GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
+    return;
+  }
+  gst_web_transferable_transfer_object (
+      (GstWebTransferable *) self, data->msg, (guintptr) object.as_handle ());
+}
+
+static void
+gst_web_transport_src_set_datagrams_incoming_high_water_mark_msg (
+    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData *data)
+{
+  GstWebTransportSrc *self = data->self;
+
+  self->transport["datagrams"].set ("incomingHighWaterMark", data->value);
+}
+
+static void
+gst_web_transport_src_get_datagrams_incoming_high_water_mark_msg (
+    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData *data)
+{
+  GstWebTransportSrc *self = data->self;
+
+  data->value =
+      self->transport["datagrams"]["incomingHighWaterMark"].as<int> ();
+}
+
 static GstURIType
 gst_web_transport_src_urihandler_get_type (GType type)
 {
@@ -161,10 +214,56 @@ gst_web_transport_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   uri_iface->set_uri = gst_web_transport_src_urihandler_set_uri;
 }
 
+static gboolean
+gst_web_transport_src_transferable_can_transfer (
+    GstWebTransferable *transferable, const gchar *object_name)
+{
+  GstWebTransportSrc *self;
+
+  g_return_val_if_fail (GST_IS_WEB_TRANSFERABLE (transferable), FALSE);
+  self = GST_WEB_TRANSPORT_SRC (transferable);
+
+  GST_DEBUG_OBJECT (self, "Requesting object %s", object_name);
+  /* Check if the requested object corresponds to us */
+  if (strncmp (object_name, "WebTransportReceiveStream/", 25))
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+gst_web_transport_src_transferable_transfer (GstWebTransferable *transferable,
+    const gchar *object_name, GstMessage *msg)
+{
+  GstWebTransportSrc *self;
+  GstWebTransportSrcRequestObjectMsgData *data;
+
+  g_return_if_fail (GST_IS_WEB_TRANSFERABLE (transferable));
+  self = GST_WEB_TRANSPORT_SRC (transferable);
+
+  data = g_new0 (GstWebTransportSrcRequestObjectMsgData, 1);
+  data->msg = gst_message_ref (msg);
+  data->self = self;
+  gst_web_runner_send_message_async (self->runner,
+      (GstWebRunnerCB) gst_web_transport_src_request_object_msg, data,
+      (GDestroyNotify) gst_web_transport_src_request_object_msg_data_free);
+}
+
+static void
+gst_web_transport_src_transferable_init (gpointer g_iface, gpointer iface_data)
+{
+  GstWebTransferableInterface *iface = (GstWebTransferableInterface *) g_iface;
+
+  iface->can_transfer = gst_web_transport_src_transferable_can_transfer;
+  iface->transfer = gst_web_transport_src_transferable_transfer;
+}
+
 G_DEFINE_TYPE_WITH_CODE (GstWebTransportSrc, gst_web_transport_src,
-    GST_TYPE_BIN,
-    G_IMPLEMENT_INTERFACE (
-        GST_TYPE_URI_HANDLER, gst_web_transport_src_uri_handler_init));
+                         GST_TYPE_BIN,
+                         G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+                             gst_web_transport_src_uri_handler_init);
+                         G_IMPLEMENT_INTERFACE (GST_TYPE_WEB_TRANSFERABLE,
+                             gst_web_transport_src_transferable_init));
 
 GST_ELEMENT_REGISTER_DEFINE (web_transport_src, "webtransportsrc",
     GST_RANK_SECONDARY, GST_TYPE_WEB_TRANSPORT_SRC);
@@ -200,58 +299,6 @@ gst_web_transport_src_stream_linked (
   target = gst_element_get_static_pad (src, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (pad), target);
   gst_element_sync_state_with_parent (src);
-}
-
-static void
-gst_web_transport_src_request_object_msg_data_free (
-    GstWebTransportSrcRequestObjectMsgData *data)
-{
-  gst_message_unref (data->msg);
-  g_free (data);
-}
-
-static void
-gst_web_transport_src_request_object_msg (
-    GstWebTransportSrcRequestObjectMsgData *data)
-{
-  GstWebTransportSrc *self = data->self;
-  const GstStructure *s = gst_message_get_structure (data->msg);
-  const gchar *object_name;
-  val object;
-
-  object_name = gst_structure_get_string (s, "object-name");
-  GST_DEBUG_OBJECT (
-      data->self, "Processing the request object of '%s'", object_name);
-  if (!strncmp (object_name, "WebTransportReceiveStream/", 25)) {
-    const gchar *stream_name =
-        &object_name[26]; // the lenght of the above string
-    /* FIXME how to handle the case of a stream not found */
-    object = self->streams[stream_name];
-  } else {
-    GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
-    return;
-  }
-  gst_web_utils_element_process_request_object (
-      GST_ELEMENT_CAST (self), data->msg, (guintptr) object.as_handle ());
-}
-
-static void
-gst_web_transport_src_set_datagrams_incoming_high_water_mark_msg (
-    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData *data)
-{
-  GstWebTransportSrc *self = data->self;
-
-  self->transport["datagrams"].set ("incomingHighWaterMark", data->value);
-}
-
-static void
-gst_web_transport_src_get_datagrams_incoming_high_water_mark_msg (
-    GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData *data)
-{
-  GstWebTransportSrc *self = data->self;
-
-  data->value =
-      self->transport["datagrams"]["incomingHighWaterMark"].as<int> ();
 }
 
 static gboolean
@@ -435,7 +482,7 @@ gst_web_transport_src_create_connection (GstWebTransportSrc *self)
   for (i = 0; i < 2; i++) {
     self->stream_promises[i] = self->stream_readers[i].call<val> ("read");
   }
-  gst_web_utils_js_register_on_message ();
+  gst_web_transferable_register_on_message ((GstWebTransferable *) self);
   gst_web_transport_src_check_streams (self);
 }
 
@@ -446,7 +493,7 @@ gst_web_transport_src_destroy_connection (GstWebTransportSrc *self)
    * close every stream
    * close the transport
    */
-  gst_web_utils_js_unregister_on_message ();
+  gst_web_transferable_unregister_on_message ((GstWebTransferable *) self);
 }
 
 static gboolean
@@ -487,6 +534,10 @@ gst_web_transport_src_handle_message (GstBin *bin, GstMessage *msg)
   GST_LOG_OBJECT (bin, "Handle message of type %s",
       gst_message_type_get_name (GST_MESSAGE_TYPE (msg)));
 
+  if ((handled = gst_web_transferable_handle_request_object (
+           (GstWebTransferable *) bin, msg)))
+    goto done;
+
   /* Process the request js object message */
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_STREAM_STATUS: {
@@ -518,37 +569,11 @@ gst_web_transport_src_handle_message (GstBin *bin, GstMessage *msg)
       handled = TRUE;
     } break;
 
-    case GST_MESSAGE_ELEMENT: {
-      GstWebTransportSrcRequestObjectMsgData *data;
-      const GstStructure *s = gst_message_get_structure (msg);
-      const gchar *object_name;
-
-      if (!s)
-        break;
-      if (g_strcmp0 (gst_structure_get_name (s),
-              GST_WEB_UTILS_MESSAGE_REQUEST_OBJECT_NAME))
-        break;
-
-      object_name = gst_structure_get_string (s, "object-name");
-
-      GST_DEBUG_OBJECT (self, "Requesting object %s", object_name);
-      /* Check if the requested object corresponds to us */
-      if (strncmp (object_name, "WebTransportReceiveStream/", 25))
-        break;
-
-      data = g_new0 (GstWebTransportSrcRequestObjectMsgData, 1);
-      data->msg = gst_message_ref (msg);
-      data->self = self;
-      gst_web_runner_send_message_async (self->runner,
-          (GstWebRunnerCB) gst_web_transport_src_request_object_msg, data,
-          (GDestroyNotify) gst_web_transport_src_request_object_msg_data_free);
-      handled = TRUE;
-    } break;
-
     default:
       break;
   }
 
+done:
   if (!handled)
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
   else
