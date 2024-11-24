@@ -2,6 +2,7 @@ gstweb_sources = [
   'gstwebrunner.c',
   'gstwebtask.c',
   'gstwebtaskpool.c',
+  'gstwebtransferable.cpp',
   'gstwebvideoframe.cpp',
   'gstwebutils.cpp',
   'gstwebcanvas.c'
@@ -9,6 +10,7 @@ gstweb_sources = [
 
 gstweb_headers = [
   'gstwebrunner.h',
+  'gstwebtransferable.h',
   'gstwebvideoframe.h',
   'gstwebutils.h',
   'gstwebcanvas.h'
