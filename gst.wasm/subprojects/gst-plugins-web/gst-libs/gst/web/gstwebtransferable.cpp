@@ -285,14 +285,16 @@ gst_web_transferable_transfer_object (
       "object-name", G_TYPE_STRING, &object_name, "user-data", G_TYPE_POINTER,
       &user_data, "tid", G_TYPE_INT, &tid, nullptr);
 
-  EM_ASM (
-      {
-        gst_web_transferable_js_worker_transfer_object (Emval.toValue ($0),
-            Emval.toValue ($1), Emval.toValue ($2), $3, $4, $5);
-      },
-      val::u8string (cb_name).as_handle (),
-      val::u8string (object_name).as_handle (), object, user_data, tid,
-      pthread_self ());
+  /* clang-format off */
+  EM_ASM ({
+    gst_web_transferable_js_worker_transfer_object (Emval.toValue ($0),
+        Emval.toValue ($1), Emval.toValue ($2), $3, $4, $5);
+    },
+    val::u8string (cb_name).as_handle (),
+    val::u8string (object_name).as_handle (), object, user_data, tid,
+    pthread_self ()
+  );
+  /* clang-format on */
   GST_DEBUG_OBJECT (self, "Transferred object to '%s' element done",
       GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
 }
