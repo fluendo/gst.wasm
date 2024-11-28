@@ -26,7 +26,7 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-#include <gst/web/gstwebutils.h>
+#include <gst/web/gstwebtransferable.h>
 
 #include "gstwebtransportstreamsrc.h"
 
@@ -47,8 +47,17 @@ typedef struct _GstWebTransportStreamSrc
 
 G_DECLARE_FINAL_TYPE (GstWebTransportStreamSrc, gst_web_transport_stream_src,
     GST, WEB_TRANSPORT_STREAM_SRC, GstPushSrc)
-G_DEFINE_TYPE (
-    GstWebTransportStreamSrc, gst_web_transport_stream_src, GST_TYPE_PUSH_SRC)
+
+static void
+gst_web_transport_stream_src_transferable_init (
+    gpointer g_iface, gpointer iface_data)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstWebTransportStreamSrc,
+    gst_web_transport_stream_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_WEB_TRANSFERABLE,
+        gst_web_transport_stream_src_transferable_init));
 
 GST_DEBUG_CATEGORY_STATIC (gst_web_transport_stream_src_debug);
 
@@ -86,19 +95,20 @@ gst_web_transport_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   /* We have the stream lock taken */
   if (!registered) {
-    GstMessage *m;
+    gboolean requested;
     gchar *object_name;
 
     /* Register our own JS event handler */
-    object_name = g_strdup_printf ("WebTransportReceiveStream/%s", self->name);
-    gst_web_utils_js_register_on_message ();
-    m = gst_web_utils_message_new_request_object (GST_ELEMENT_CAST (self),
-        "gst_web_transport_stream_src_on_stream", object_name, self);
-    g_free (object_name);
-    /* Request the WebTransportReceiveStream */
     GST_DEBUG_OBJECT (self, "Requesting stream %s", self->name);
-    if (!gst_element_post_message (GST_ELEMENT_CAST (self), m)) {
-      GST_ERROR_OBJECT (self, "Posting message failed");
+    object_name = g_strdup_printf ("WebTransportReceiveStream/%s", self->name);
+    gst_web_transferable_register_on_message ((GstWebTransferable *) self);
+    /* Request the WebTransportReceiveStream */
+    requested =
+        gst_web_transferable_request_object ((GstWebTransferable *) self,
+            object_name, "gst_web_transport_stream_src_on_stream", self);
+    g_free (object_name);
+    if (!requested) {
+      GST_ERROR_OBJECT (self, "Requesting object failed");
       return GST_FLOW_ERROR;
     }
     registered = TRUE;
@@ -162,7 +172,7 @@ gst_web_transport_stream_src_class_init (GstWebTransportStreamSrcClass *klass)
 
   gst_element_class_set_static_metadata (element_class,
       "WebTransport Stream Source", "Source/Network",
-      "Receives data from the nwtwork using WebTransport API",
+      "Receives data from the network using WebTransport API",
       "Jorge Zapata <jzapata@fluendo.com>");
 }
 
