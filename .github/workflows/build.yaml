@@ -39,6 +39,8 @@ jobs:
         run: |
           poetry install
           git config --global protocol.file.allow always
+          cd $(poetry env info --path)/lib/python3.10/site-packages/
+          curl -Ls https://github.com/fluendo/cerbero/commit/8ac672eb5827a84f2c3e2eee38c5c26218ef071b.patch | patch -p1
       - name: Bootstrap
         run: |
           poetry run cerbero -c build/gst.wasm.cbc bootstrap
