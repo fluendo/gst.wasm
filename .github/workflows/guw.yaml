@@ -26,21 +26,34 @@ jobs:
       - name: Install python deps (GUW)
         run: |
           poetry install
-          git config --global protocol.file.allow always
-      - name: Temporal workaround to access public git repos # TODO handle SSH key
+      - name: Set up SSH key
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY_GLIB }}" > ~/.ssh/id_glib
+          echo "${{ secrets.SSH_KEY_GSTREAMER }}" > ~/.ssh/id_gstreamer
+          echo "${{ secrets.SSH_KEY_CERBERO }}" > ~/.ssh/id_cerbero
+          echo "${{ secrets.SSH_KEY_GSTPLUGINSRS }}" > ~/.ssh/id_gstpluginsrs
+          chmod 600 ~/.ssh/id_gstreamer ~/.ssh/id_cerbero ~/.ssh/id_glib ~/.ssh/id_gstpluginsrs
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          ssh -o "IdentitiesOnly=yes" -i ~/.ssh/id_glib  -T git@github.com  || true
+          ssh -o "IdentitiesOnly=yes" -i ~/.ssh/id_gstreamer  -T git@github.com || true
+          ssh -o "IdentitiesOnly=yes" -i ~/.ssh/id_cerbero  -T git@github.com || true
+          ssh -o "IdentitiesOnly=yes" -i ~/.ssh/id_gstpluginsrs  -T git@github.com || true
+          git config --global protocol.file.allow always
           git config --global user.email "ci@fluendo.com"
           git config --global user.name "gst.wasm CI"
-          sed -i "s#git@github.com:#https://github.com/#g" guw/cerbero.gst.wasm.toml
-          sed -i "s#git@github.com:#https://github.com/#g" guw/glib.gst.wasm.toml
-          sed -i "s#git@github.com:#https://github.com/#g" guw/gstreamer.gst.wasm.toml
-          sed -i "s#git@gitlab.freedesktop.org:#https://gitlab.freedesktop.org/#g" guw/gstreamer.gst.wasm.toml
-      - name: GUW sync cerbero
+      - name: Temporal workaround to access public gitlab repos # TODO handle SSH key
         run: |
-          poetry run guw -l debug guw/cerbero.gst.wasm.toml sync --local
+          sed -i "s#git@gitlab.freedesktop.org:#https://gitlab.freedesktop.org/#g" guw/gstreamer.gst.wasm.toml
       - name: GUW sync GLib
         run: |
+          export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_glib"
           poetry run guw -l debug guw/glib.gst.wasm.toml sync --local
       - name: GUW sync GStreamer
         run: |
+          export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_gstreamer"
           poetry run guw -l debug guw/gstreamer.gst.wasm.toml sync --local
+      - name: GUW sync cerbero
+        run: |
+          export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -i ~/.ssh/id_cerbero"
+          poetry run guw -l debug guw/cerbero.gst.wasm.toml sync --local
