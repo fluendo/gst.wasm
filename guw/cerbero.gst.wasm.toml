@@ -11,6 +11,10 @@ remote = "fluendo"
 branch = "gst.wasm"
 
 [source]
+remote = "fluendo"
+branch = "main"
+
+[upstream]
 remote = "origin"
 branch = "main"
 

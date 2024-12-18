@@ -11,6 +11,10 @@ remote = "origin"
 branch = "gst.wasm"
 
 [source]
+remote = "origin"
+branch = "kleisauke_wasm-vips-2.76.0"
+
+[upstream]
 remote = "kleisauke"
 branch = "wasm-vips-2.76.0"
 
