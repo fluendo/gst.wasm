@@ -27,7 +27,7 @@
     <script type="text/javascript">
       var Module = {};
 
-      function onPageLoad() {
+      function onPageLoad(iframe) {
         var page = document.getElementById("page").contentWindow;
         hljs.highlightAll();
         // Set the Module canvas
@@ -35,12 +35,14 @@
           var canvas = page.document.getElementById("canvas");
           return canvas;
         })();
+        iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
       }
     </script>
     <iframe
       id="page"
       src="@PAGE_NAME@"
-      onload="onPageLoad()"
+      width="100%"
+      onload="onPageLoad(this)"
       title="Page"
       scrolling="no"
     ></iframe>
