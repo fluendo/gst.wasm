@@ -37,7 +37,7 @@ remote = "fluendo"
 name = "tests3"
 summary = "Tests update final round"
 pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1482"
-status = "merging"
+status = "integrated"
 
 [[features]]
 remote = "fluendo"
