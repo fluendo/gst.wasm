@@ -61,7 +61,8 @@ main (int argc, char **argv)
   gst_debug_set_default_threshold (1);
   gst_init (NULL, NULL);
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "GstWASM example debug");
-  gst_debug_set_threshold_from_string ("example:5, webtransport*:4", FALSE);
+  gst_debug_set_threshold_from_string (
+      "example:5, webtransport*:4, webtransferable*:5", FALSE);
 
   GST_INFO ("Registering elements");
   register_elements ();
