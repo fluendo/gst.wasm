@@ -19,7 +19,7 @@ remote = "origin"
 name = "meson_fix_nls"
 summary = "Use nls option to set ENABLE_NLS"
 pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7017"
-status = "merging"
+status = "integrated"
 
 [[features]]
 remote = "origin"
