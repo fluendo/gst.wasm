@@ -51,7 +51,8 @@
 
 using namespace emscripten;
 
-#define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 32
+//#define WEBMEM 1
+#define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 4
 
 #define GST_WEB_CODECS_VIDEO_DECODER_FROM_JS                                  \
   reinterpret_cast<GstWebCodecsVideoDecoder *> (                              \
@@ -75,7 +76,7 @@ typedef struct _GstWebCodecsVideoDecoderDecodeData
   GstVideoCodecFrame *frame;
 } GstWebCodecsVideoDecoderDecodeData;
 
-#if 0
+#ifndef WEBMEM
 static void
 gst_web_codecs_video_decoder_video_frame_to_codec_frame (
     GstWebCodecsVideoDecoder *self, val video_frame, GstVideoCodecFrame *frame)
@@ -108,7 +109,6 @@ gst_web_codecs_video_decoder_get_format (
     GstWebCodecsVideoDecoder *self, val video_frame)
 {
   GstVideoFormat format;
-  gboolean ret = FALSE;
   const gchar *vf_format;
   gint width;
   gint height;
@@ -143,88 +143,36 @@ gst_web_codecs_video_decoder_get_format (
   width = video_frame["displayWidth"].as<int> ();
   height = video_frame["displayHeight"].as<int> ();
 
-  GST_DEBUG_OBJECT (self, "Negotiating with width: %d, height: %d, format: %s",
+  GST_DEBUG_OBJECT (self, "width: %d, height: %d, format: %s",
       width, height, self->output_format);
 
   self->format = format;
   self->width = width;
   self->height = height;
 
-  ret = gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
+//  ret = gst_video_decoder_negotiate (GST_VIDEO_DECODER (self));
 
 done:
-  return ret;
+  return TRUE;
 }
+
+typedef struct {
+   val js_frame;
+} DecodedSomething;
 
 static void
 gst_web_codecs_video_decoder_on_output (val video_frame)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER_FROM_JS;
-  GstVideoDecoder *dec = GST_VIDEO_DECODER (self);
-  GstVideoCodecFrame *frame;
-  GstFlowReturn flow;
-  val vf_timestamp;
-
   GST_INFO_OBJECT (self, "VideoFrame Received");
 
-  GST_VIDEO_DECODER_STREAM_LOCK (self);
-  frame = gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
-  GST_DEBUG_OBJECT (self,
-      "queued frame %" GST_TIME_FORMAT " decoded frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (frame->pts),
-      GST_TIME_ARGS (GST_MSECOND * video_frame["timestamp"].as<int> ()));
-
-  /* Configure the output */
   if (!self->output_state) {
-    self->need_negotiation = TRUE;
-    gst_web_codecs_video_decoder_get_format (self, video_frame);
-  }
-  /* FIXME If we want to push video_frames directly or glTextures, we need
-   * to create the buffers ourselves
-   */
-#if 0
-  flow = gst_video_decoder_allocate_output_frame (dec, frame);
-
-  GST_ERROR_OBJECT (self, "Output caps are %" GST_PTR_FORMAT,
-      self->output_state->allocation_caps);
-
-  if (flow != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Flow error: %d", flow);
-    goto done;
+     // TODO: mutex ??
+     gst_web_codecs_video_decoder_get_format (self, video_frame);
+     self->need_negotiation = TRUE;
   }
 
-  /* In a software based pipeline we need to extract the video data
-   * in the format the sink element requires
-   */
-  gst_web_codecs_video_decoder_video_frame_to_codec_frame (self, video_frame,
-      frame);
-#endif
-  /* In this moment we have already negotiated downstream, we can safely push
-   * buffers */
-  {
-    GstBuffer *b;
-    GstWebRunner *runner;
-    GstWebVideoFrame *memory;
-
-    runner = gst_web_canvas_get_runner (self->canvas);
-    memory = gst_web_video_frame_wrap (video_frame, runner);
-    b = gst_buffer_new ();
-    gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
-    frame->output_buffer = b;
-  }
-
-  flow = gst_video_decoder_finish_frame (dec, frame);
-  frame = NULL;
-  if (flow != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Flow error: %d", flow);
-    goto done;
-  }
-
-done:
-  if (frame)
-    gst_video_codec_frame_unref (frame);
-
-  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+  g_async_queue_push (self->decoded_js, new val(video_frame));  
 }
 
 static void
@@ -372,8 +320,10 @@ gst_web_codecs_video_decoder_negotiate (GstVideoDecoder *decoder)
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
 
   /* If we don't know the output format yet, skip this */
-  if (!self->need_negotiation)
+  if (!self->need_negotiation) {
+     g_abort ();
     return TRUE;
+  }
 
   self->need_negotiation = FALSE;
 
@@ -389,10 +339,58 @@ gst_web_codecs_video_decoder_negotiate (GstVideoDecoder *decoder)
   /* Set the memory type */
   self->output_state->caps =
       gst_video_info_to_caps (&self->output_state->info);
+#if WEBMEM
   gst_caps_set_features_simple (self->output_state->caps,
       gst_caps_features_new (
           GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME, (char *) NULL));
+#endif
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
+}
+
+typedef struct
+{
+   val *js_frame;
+   GstVideoCodecFrame *gst_frame;
+   GstVideoDecoder *dec;
+} FData;
+
+static void
+js_frame_to_gst (gpointer ptr)
+{
+   FData *f = (FData *)ptr;
+   GstVideoDecoder *dec = f->dec;
+   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (dec);
+
+#if 0
+  GST_DEBUG_OBJECT (dec,
+      "Copying js frame %" GST_TIME_FORMAT " to gst frame %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_MSECOND * f->js_frame["timestamp"].as<int> ())
+      GST_TIME_ARGS (frame->pts));
+#endif
+
+#ifndef WEBMEM
+  /* In a software based pipeline we need to extract the video data
+   * in the format the sink element requires
+   */
+  gst_web_codecs_video_decoder_video_frame_to_codec_frame (self, *f->js_frame,
+      f->gst_frame);
+#else
+  {
+    GstBuffer *b;
+    GstWebRunner *runner;
+    GstWebVideoFrame *memory;
+
+    runner = gst_web_canvas_get_runner (self->canvas);
+    memory = gst_web_video_frame_wrap (f->js_frame, runner);
+    b = gst_buffer_new ();
+    gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
+    g_assert (frame->output_buffer == NULL);
+    f->gst_frame->output_buffer = b;
+  }  
+#endif
+
+  delete f->js_frame;
+  f->js_frame = NULL;
 }
 
 static GstFlowReturn
@@ -430,8 +428,59 @@ gst_web_codecs_video_decoder_handle_frame (
   gst_web_runner_send_message_async (
       runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
   gst_object_unref (GST_OBJECT (runner));
-
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
+
+  val *jsf;
+  while (NULL != (jsf = (val *)g_async_queue_try_pop (self->decoded_js))) {
+     GstVideoCodecFrame *frame;
+     GstFlowReturn flow;
+
+     if (G_UNLIKELY (self->need_negotiation)) {
+	if (!gst_video_decoder_negotiate (decoder)) {
+	   res = GST_FLOW_NOT_NEGOTIATED;
+	   break;
+	}
+
+	GST_ERROR_OBJECT (self, "Output caps are %" GST_PTR_FORMAT,
+			  self->output_state->allocation_caps);
+     }
+     
+     frame = gst_video_decoder_get_oldest_frame (decoder);
+     g_assert (frame);
+     GST_DEBUG_OBJECT (self, "Will push frame with ts %" GST_TIME_FORMAT,
+		       GST_TIME_ARGS (frame->pts));
+
+#ifndef WEBMEM
+     {
+	GstFlowReturn flow;
+
+	flow = gst_video_decoder_allocate_output_frame (decoder, frame);
+	if (GST_FLOW_OK != flow) {
+	   g_error ("Flow error: %d", flow);
+	}
+     }
+#endif
+     
+     {
+	FData dd;
+
+	dd.js_frame = jsf;
+	dd.gst_frame = frame;
+	dd.dec = decoder;
+	
+	runner = gst_web_canvas_get_runner (self->canvas);
+	gst_web_runner_send_message (runner, js_frame_to_gst, &dd);
+	gst_object_unref (GST_OBJECT (runner));
+     }
+     
+     GST_INFO_OBJECT (self, "Finishing frame %p", frame);
+     flow = gst_video_decoder_finish_frame (decoder, frame);
+     if (flow != GST_FLOW_OK) {
+	GST_ERROR_OBJECT (self, "Flow error: %d", flow);
+	res = flow;
+	break;
+     }
+  }
 
   return res;
 }
@@ -621,6 +670,9 @@ gst_web_codecs_video_decoder_init (
   gst_video_decoder_set_needs_sync_point (GST_VIDEO_DECODER (self), TRUE);
   g_mutex_init (&self->dequeue_lock);
   g_cond_init (&self->dequeue_cond);
+
+  // TODO: free in finalize/dispose
+  self->decoded_js = g_async_queue_new();
 }
 
 static void
@@ -647,7 +699,11 @@ gst_web_codecs_video_decoder_base_init (gpointer g_class)
                                        "RGBx, (string) BGRA, (string) BGRx }");
 
   video_frame_caps = gst_caps_from_string (
-      "video/x-raw(" GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME "),"
+      "video/x-raw"
+#if WEBMEM
+      "(" GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME ")"
+#endif
+      ", "
       "format = { (string) RGBA, (string) RGBx, (string) BGRA, (string) BGRx, "
       "(string) I420, (string) A420, (string) Y42B, (string) Y444, (string) "
       "NV12 }");

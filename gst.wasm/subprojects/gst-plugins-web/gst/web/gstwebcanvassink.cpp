@@ -216,11 +216,20 @@ gst_web_canvas_sink_setup (gpointer data)
       self->val_canvas.call<val> ("getContext", std::string ("2d"));
 }
 
+static void
+webcanvassinkdrawdata_release (gpointer ptr)
+{
+   GstWebCanvasSinkDrawData *data = (GstWebCanvasSinkDrawData *)ptr;
+
+   gst_buffer_unref (data->buffer);
+   g_free (data);
+}
+
 static GstFlowReturn
 gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
 {
   GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (sink);
-  GstWebCanvasSinkDrawData data;
+  GstWebCanvasSinkDrawData *data;
   GstWebRunner *runner;
   GstWebRunnerCB cb;
   GstCapsFeatures *features;
@@ -242,9 +251,11 @@ gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
   gst_caps_unref (caps);
 
   runner = gst_web_canvas_get_runner (self->canvas);
-  data.self = self;
-  data.buffer = buf;
-  gst_web_runner_send_message (runner, cb, &data);
+
+  data = g_new (GstWebCanvasSinkDrawData, 1);
+  data->self = self;
+  data->buffer = gst_buffer_ref (buf);
+  gst_web_runner_send_message_async (runner, cb, data, webcanvassinkdrawdata_release);
   gst_object_unref (GST_OBJECT (runner));
 
   GST_DEBUG_OBJECT (self, "show frame done, pts = %" GST_TIME_FORMAT,

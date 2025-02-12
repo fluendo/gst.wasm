@@ -11,7 +11,7 @@ executable(executable_name,
       dependency('gstreamer-emscripten-1.0'),
       dependency('gstopengl'),
       dependency('gstcompositor'),
-#      dependency('gstplayback')
+      dependency('gstvideoconvertscale')
     ],
     link_with: [
       gstweb_dep,
@@ -27,6 +27,7 @@ executable(executable_name,
       '-lhtml5',
       '-lGL',
       '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
+      '-sPTHREAD_POOL_SIZE=8',
     ],
     c_args: [
       '-g3',
