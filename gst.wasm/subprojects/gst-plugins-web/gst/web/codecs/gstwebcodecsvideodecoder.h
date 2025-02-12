@@ -77,6 +77,8 @@ struct _GstWebCodecsVideoDecoder
   gint dequeue_size;
   GMutex dequeue_lock;
   GCond dequeue_cond;
+
+  GAsyncQueue *decoded_js;
 };
 
 struct _GstWebCodecsVideoDecoderClass
