@@ -52,7 +52,7 @@
 using namespace emscripten;
 
 //#define WEBMEM 1
-#define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 4
+#define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 8
 
 #define GST_WEB_CODECS_VIDEO_DECODER_FROM_JS                                  \
   reinterpret_cast<GstWebCodecsVideoDecoder *> (                              \
@@ -101,6 +101,7 @@ gst_web_codecs_video_decoder_video_frame_to_codec_frame (
   video_frame.call<val> ("copyTo", buffer_data, options).await ();
   gst_buffer_unmap (frame->output_buffer, &map);
   GST_DEBUG_OBJECT (self, "Converted frame to C memory");
+  video_frame.call<void> ("close");
 }
 #endif
 
@@ -381,10 +382,10 @@ js_frame_to_gst (gpointer ptr)
     GstWebVideoFrame *memory;
 
     runner = gst_web_canvas_get_runner (self->canvas);
-    memory = gst_web_video_frame_wrap (f->js_frame, runner);
+    memory = gst_web_video_frame_wrap (*f->js_frame, runner);
     b = gst_buffer_new ();
     gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
-    g_assert (frame->output_buffer == NULL);
+    g_assert (f->gst_frame->output_buffer == NULL);
     f->gst_frame->output_buffer = b;
   }  
 #endif
@@ -401,34 +402,6 @@ gst_web_codecs_video_decoder_handle_frame (
   GstWebCodecsVideoDecoderDecodeData *decode_data;
   GstWebRunner *runner;
   GstFlowReturn res = GST_FLOW_OK;
-
-  GST_DEBUG_OBJECT (decoder, "Handling frame");
-  /* Wait until there is nothing pending to be to dequeued or there is a buffer
-   */
-  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-  g_mutex_lock (&self->dequeue_lock);
-  while (self->dequeue_size >= GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE) {
-    GST_DEBUG_OBJECT (self, "Reached queue limit [%d/%d], waiting for dequeue",
-        self->dequeue_size, GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE);
-    g_cond_wait (&self->dequeue_cond, &self->dequeue_lock);
-  }
-  self->dequeue_size++;
-  g_mutex_unlock (&self->dequeue_lock);
-  GST_VIDEO_DECODER_STREAM_LOCK (self);
-
-  /* We are ready to process data */
-  GST_DEBUG_OBJECT (self, "Ready to process more data");
-  decode_data = g_new (GstWebCodecsVideoDecoderDecodeData, 1);
-  decode_data->self = self;
-  decode_data->frame = frame;
-  /* We can not keep the stream lock taken here and when the decoder outputs
-   * frames, do it asynchronous
-   */
-  runner = gst_web_canvas_get_runner (self->canvas);
-  gst_web_runner_send_message_async (
-      runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
-  gst_object_unref (GST_OBJECT (runner));
-  GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
   val *jsf;
   while (NULL != (jsf = (val *)g_async_queue_try_pop (self->decoded_js))) {
@@ -473,14 +446,43 @@ gst_web_codecs_video_decoder_handle_frame (
 	gst_object_unref (GST_OBJECT (runner));
      }
      
-     GST_INFO_OBJECT (self, "Finishing frame %p", frame);
+     GST_ERROR_OBJECT (self, "Finishing frame %p", frame);
      flow = gst_video_decoder_finish_frame (decoder, frame);
      if (flow != GST_FLOW_OK) {
-	GST_ERROR_OBJECT (self, "Flow error: %d", flow);
+	g_error ("Flow error: %d", flow);
 	res = flow;
 	break;
      }
   }
+
+  
+  GST_DEBUG_OBJECT (decoder, "Handling frame");
+  /* Wait until there is nothing pending to be to dequeued or there is a buffer
+   */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+  g_mutex_lock (&self->dequeue_lock);
+  while (self->dequeue_size >= GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE) {
+    GST_DEBUG_OBJECT (self, "Reached queue limit [%d/%d], waiting for dequeue",
+        self->dequeue_size, GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE);
+    g_cond_wait (&self->dequeue_cond, &self->dequeue_lock);
+  }
+  self->dequeue_size++;
+  g_mutex_unlock (&self->dequeue_lock);
+  GST_VIDEO_DECODER_STREAM_LOCK (self);
+
+  /* We are ready to process data */
+  GST_DEBUG_OBJECT (self, "Ready to process more data");
+  decode_data = g_new (GstWebCodecsVideoDecoderDecodeData, 1);
+  decode_data->self = self;
+  decode_data->frame = frame;
+  /* We can not keep the stream lock taken here and when the decoder outputs
+   * frames, do it asynchronous
+   */
+  runner = gst_web_canvas_get_runner (self->canvas);
+  gst_web_runner_send_message_async (
+      runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
+  gst_object_unref (GST_OBJECT (runner));
+  GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
   return res;
 }

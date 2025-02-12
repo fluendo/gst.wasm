@@ -48,7 +48,7 @@ init_pipeline ()
       "location=\"https://commondatastorage.googleapis.com/"
       "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
       "qtdemux ! "
-      "webcodecsviddech264sw ! webcanvassink",
+      "webcodecsviddech264sw ! queue ! webcanvassink",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
