@@ -35,6 +35,7 @@ register_elements ()
   GST_PLUGIN_STATIC_DECLARE (isomp4);
   GST_PLUGIN_STATIC_DECLARE (compositor);
   GST_PLUGIN_STATIC_DECLARE (videoconvertscale);
+  GST_PLUGIN_STATIC_DECLARE (videotestsrc);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (web);
@@ -42,6 +43,7 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (isomp4);
   GST_PLUGIN_STATIC_REGISTER (compositor);
   GST_PLUGIN_STATIC_REGISTER (videoconvertscale);
+  GST_PLUGIN_STATIC_REGISTER (videotestsrc);
 }
 
 static void
@@ -50,30 +52,21 @@ init_pipeline ()
 #define H264SRC(loc) " webstreamsrc "                                \
       "location=\"" loc "\" ! "                                      \
       " qtdemux ! "                                                  \
-      " webcodecsviddech264sw ! queue "
+      " webcodecsviddech264sw "
   
   pipeline = gst_parse_launch (
-      /* "webstreamsrc " */
-//      "location=\"https://repository.paellaplayer.upv.es/belmar-multiresolution/media/720-presentation.mp4\" ! "
-      /* "location=\"https://commondatastorage.googleapis.com/" */
-      /* "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! " */
-      /* " qtdemux ! " */
-      /* " webcodecsviddech264sw ! " */
       " compositor name=mix "
-      " sink_0::width=482 sink_0::height=360 "
-      " sink_0::xpos=10 sink_0::ypos=10 sink_0::zorder=10 ! "
-      " queue ! webcanvassink async=false sync=false "
-      H264SRC ("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4") " ! mix.sink_0 "
-      H264SRC ("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4") " ! mix.sink_1 "
-
-
-      
-      //"queue ! mix.sink_0 "
-//      "webstreamsrc location=\"https://repository.paellaplayer.upv.es/belmar-multiresolution/media/720-presenter.mp4\" "
-//      "! typefind ! queue ! webcodecsviddech264sw ! queue ! mix.sink_1 "
-//      "compositor name=mix sink_0::width=482 sink_0::height=360 sink_0::xpos=10 sink_0::ypos=10 sink_0::zorder=10 ! webcanvassink sync=false"
+      " sink_1::width=300 sink_1::height=200 "
+      " sink_1::xpos=0 sink_1::ypos=0 sink_1::zorder=1 sink_0::zorder=0"
+      " ! queue ! webcanvassink "
+      H264SRC ("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
+      " ! mix.sink_0 "
+      " videotestsrc "
+//      H264SRC ("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")
+      " ! mix.sink_1 "
       ,
       NULL);
+
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
@@ -85,7 +78,7 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
-      "2, example:5, webcodec*:6", FALSE);
+      "2", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
