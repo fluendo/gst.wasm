@@ -150,8 +150,7 @@ G_DEFINE_TYPE_WITH_CODE (
     GstWebCanvasSink, gst_web_canvas_sink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (
         GST_TYPE_NAVIGATION, gst_web_canvas_sink_navigation_interface_init);
-    GST_DEBUG_CATEGORY_INIT (gst_web_canvas_sink_debug_category,
-        "webcanvassink", 0, "Canvas Video Sink"));
+   );
 GST_ELEMENT_REGISTER_DEFINE (web_canvas_sink, "webcanvassink",
     GST_RANK_SECONDARY, GST_TYPE_WEB_CANVAS_SINK);
 

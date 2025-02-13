@@ -61,7 +61,7 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
-      "example:5, webcodecs*:3, videodecoder*:3", FALSE);
+      "example:5, webcanvassink:8", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");

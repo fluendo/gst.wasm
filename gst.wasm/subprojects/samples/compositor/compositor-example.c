@@ -61,8 +61,11 @@ init_pipeline ()
       " ! queue ! webcanvassink "
       H264SRC ("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
       " ! mix.sink_0 "
+#if 0
       " videotestsrc "
-//      H264SRC ("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")
+#else
+      H264SRC ("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4")
+#endif
       " ! mix.sink_1 "
       ,
       NULL);
