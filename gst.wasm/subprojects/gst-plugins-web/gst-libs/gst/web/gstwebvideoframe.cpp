@@ -134,10 +134,15 @@ gst_web_video_frame_map_internal (
 
   val video_frame = gst_web_video_frame_get_handle (self);
   val data_view =
-      val (typed_memory_view<uint8_t> (size, static_cast<uint8_t *> (data)));
+    val (typed_memory_view (size, (guint8 *)data));
   val options = val::object ();
 
-  if (info != NULL) {
+  if (0
+      // There's no need to set the format, because currently we don't use
+      // this feature: "format" option is only needed if we want to do a convertion
+      // to RGB or similar format.
+      // If format is not set the frame is just copied with the input format
+      && info != NULL) {
     const char *format;
 
     format = gst_web_utils_video_format_to_web_format (
@@ -149,7 +154,7 @@ gst_web_video_frame_map_internal (
     }
     options.set ("format", format);
   } else {
-    GST_DEBUG ("No format specified. Use default format.");
+    GST_DEBUG ("Use input format.");
   }
 
   video_frame.call<val> ("copyTo", data_view, options).await ();
@@ -257,7 +262,7 @@ gst_web_video_frame_allocator_alloc (
   /* We use a priv structure to ease the C->C++ managing */
   mem->priv = g_new0 (GstWebVideoFramePrivate, 1);
   mem->priv->video_frame = vf_params->video_frame;
-  mem->priv->runner = vf_params->runner;
+  mem->priv->runner = (GstWebRunner*)gst_object_ref (vf_params->runner);
   mem->priv->data = NULL;
 
   /* Chain the memory init */
