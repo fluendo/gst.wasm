@@ -157,14 +157,13 @@ done:
   return TRUE;
 }
 
-typedef struct {
-   val js_frame;
-} DecodedSomething;
-
 static void
 gst_web_codecs_video_decoder_on_output (val video_frame)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER_FROM_JS;
+  GstBuffer *b;
+  GstWebVideoFrame *memory;
+
   GST_INFO_OBJECT (self, "VideoFrame Received");
 
   if (!self->output_state) {
@@ -173,7 +172,12 @@ gst_web_codecs_video_decoder_on_output (val video_frame)
      self->need_negotiation = TRUE;
   }
 
-  g_async_queue_push (self->decoded_js, new val(video_frame));  
+  memory = gst_web_video_frame_wrap (video_frame, self->runner);
+  g_assert (memory != NULL);
+  b = gst_buffer_new ();
+  gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
+
+  g_async_queue_push (self->decoded_js, b);
 }
 
 static void
@@ -348,51 +352,6 @@ gst_web_codecs_video_decoder_negotiate (GstVideoDecoder *decoder)
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
-typedef struct
-{
-   val *js_frame;
-   GstVideoCodecFrame *gst_frame;
-   GstVideoDecoder *dec;
-} FData;
-
-static void
-js_frame_to_gst (gpointer ptr)
-{
-   FData *f = (FData *)ptr;
-   GstVideoDecoder *dec = f->dec;
-   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (dec);
-
-#if 0
-  GST_DEBUG_OBJECT (dec,
-      "Copying js frame %" GST_TIME_FORMAT " to gst frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_MSECOND * f->js_frame["timestamp"].as<int> ())
-      GST_TIME_ARGS (frame->pts));
-#endif
-
-#ifndef WEBMEM
-  /* In a software based pipeline we need to extract the video data
-   * in the format the sink element requires
-   */
-  gst_web_codecs_video_decoder_video_frame_to_codec_frame (self, *f->js_frame,
-      f->gst_frame);
-#else
-  {
-    GstBuffer *b;
-    GstWebVideoFrame *memory;
-
-    memory = gst_web_video_frame_wrap (*f->js_frame, self->runner);
-    g_assert (memory != NULL);
-    b = gst_buffer_new ();
-    gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
-    g_assert (f->gst_frame->output_buffer == NULL);
-    f->gst_frame->output_buffer = b;
-  }  
-#endif
-
-  delete f->js_frame;
-  f->js_frame = NULL;
-}
-
 static GstFlowReturn
 gst_web_codecs_video_decoder_handle_frame (
     GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
@@ -401,10 +360,12 @@ gst_web_codecs_video_decoder_handle_frame (
   GstWebCodecsVideoDecoderDecodeData *decode_data;
   GstFlowReturn res = GST_FLOW_OK;
 
-  val *jsf;
-  while (NULL != (jsf = (val *)g_async_queue_try_pop (self->decoded_js))) {
-     GstVideoCodecFrame *frame;
+  GstBuffer *buffer;
+  while (NULL !=
+	 (buffer = (GstBuffer *)
+	  g_async_queue_try_pop (self->decoded_js))) {
      GstFlowReturn flow;
+     GstVideoCodecFrame *f;
 
      if (G_UNLIKELY (self->need_negotiation)) {
 	if (!gst_video_decoder_negotiate (decoder)) {
@@ -416,46 +377,26 @@ gst_web_codecs_video_decoder_handle_frame (
 			  self->output_state->allocation_caps);
      }
      
-     frame = gst_video_decoder_get_oldest_frame (decoder);
-     g_assert (frame);
+     f = gst_video_decoder_get_oldest_frame (decoder);
+     g_assert (f);
+     g_assert (f->output_buffer == NULL);
+     f->output_buffer = buffer;
      GST_DEBUG_OBJECT (self, "Will push frame with ts %" GST_TIME_FORMAT,
-		       GST_TIME_ARGS (frame->pts));
-
-#ifndef WEBMEM
-     {
-	GstFlowReturn flow;
-
-	flow = gst_video_decoder_allocate_output_frame (decoder, frame);
-	if (GST_FLOW_OK != flow) {
-	   g_error ("Flow error: %d", flow);
-	}
-     }
-#endif
+		       GST_TIME_ARGS (f->pts));
      
-     {
-	FData dd;
-
-	dd.js_frame = jsf;
-	dd.gst_frame = frame;
-	dd.dec = decoder;
-	
-	gst_web_runner_send_message (self->runner, js_frame_to_gst, &dd);
-     }
-     
-     GST_DEBUG_OBJECT (self, "Finishing frame %p", frame);
-     flow = gst_video_decoder_finish_frame (decoder, frame);
+     GST_DEBUG_OBJECT (self, "Finishing frame %p", f);
+     flow = gst_video_decoder_finish_frame (decoder, f);
      if (flow != GST_FLOW_OK) {
 	g_error ("Flow error: %d", flow);
 	res = flow;
 	break;
      }
   }
-
   
   GST_DEBUG_OBJECT (decoder, "Handling frame");
   /* Wait until there is nothing pending to be to dequeued or there is a buffer
    */
-  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+//  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
   g_mutex_lock (&self->dequeue_lock);
   while (self->dequeue_size >= GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE) {
     GST_DEBUG_OBJECT (self, "Reached queue limit [%d/%d], waiting for dequeue",
@@ -464,7 +405,7 @@ gst_web_codecs_video_decoder_handle_frame (
   }
   self->dequeue_size++;
   g_mutex_unlock (&self->dequeue_lock);
-  GST_VIDEO_DECODER_STREAM_LOCK (self);
+//  GST_VIDEO_DECODER_STREAM_LOCK (self);
 
   /* We are ready to process data */
   GST_DEBUG_OBJECT (self, "Ready to process more data");
