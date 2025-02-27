@@ -108,39 +108,14 @@ gst_web_download_prepare_output_buffer (
     GstBaseTransform *bt, GstBuffer *inbuf, GstBuffer **outbuf)
 {
   GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
-  GstMapInfo out_map, in_map;
-  GstFlowReturn ret = GST_FLOW_ERROR;
 
   if (gst_base_transform_is_passthrough (bt)) {
     *outbuf = inbuf;
     return GST_FLOW_OK;
   }
 
-  if (!gst_buffer_map (inbuf, &in_map, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Failed to map inpput buffer.");
-    goto beach;
-  }
-
-  g_warn_if_fail (self->vinfo.size == in_map.size);
   *outbuf = gst_buffer_new_allocate (NULL, self->vinfo.size, NULL);
-
-  if (!gst_buffer_map (*outbuf, &out_map, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Failed to map output buffer.");
-    g_clear_pointer (outbuf, gst_buffer_unref);
-    goto unmap_inbuf;
-  }
-
-  memcpy (out_map.data, in_map.data, in_map.size);
-
-  ret = GST_FLOW_OK;
-
-  gst_buffer_unmap (*outbuf, &out_map);
-
-unmap_inbuf:
-  gst_buffer_unmap (inbuf, &in_map);
-
-beach:
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -158,6 +133,29 @@ static GstFlowReturn
 gst_web_download_transform (
     GstBaseTransform *bt, GstBuffer *inbuf, GstBuffer *outbuf)
 {
+  GstWebVideoFrame *vf;
+  GstMapInfo out_map;
+  GstWebDownload *self = GST_WEB_DOWNLOAD (bt);
+
+  GST_DEBUG_OBJECT (self, "Transform start");
+
+  if (!gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Failed to map output buffer.");
+    return GST_FLOW_ERROR;
+  }
+
+  vf = (GstWebVideoFrame *) gst_buffer_get_memory (inbuf, 0);
+  g_assert (vf);
+  gst_web_video_frame_copy_to (vf, &self->vinfo, out_map.data, out_map.size);
+  gst_memory_unref (GST_MEMORY_CAST (vf));
+
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
+  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (inbuf);
+  GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (inbuf);
+
+  gst_buffer_unmap (outbuf, &out_map);
+
+  GST_DEBUG_OBJECT (self, "Transform end");
   return GST_FLOW_OK;
 }
 
