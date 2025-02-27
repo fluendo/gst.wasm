@@ -33,11 +33,15 @@ register_elements ()
   GST_PLUGIN_STATIC_DECLARE (web);
   GST_PLUGIN_STATIC_DECLARE (opengl);
   GST_PLUGIN_STATIC_DECLARE (isomp4);
+  GST_PLUGIN_STATIC_DECLARE (sdl2);
+  GST_PLUGIN_STATIC_DECLARE (videoconvertscale);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (web);
   GST_PLUGIN_STATIC_REGISTER (opengl);
   GST_PLUGIN_STATIC_REGISTER (isomp4);
+  GST_PLUGIN_STATIC_REGISTER (sdl2);
+  GST_PLUGIN_STATIC_REGISTER (videoconvertscale);
 }
 
 static void
@@ -48,7 +52,12 @@ init_pipeline ()
       "location=\"https://commondatastorage.googleapis.com/"
       "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
       "qtdemux ! "
-      "webcodecsviddech264sw ! queue ! webcanvassink",
+      "webcodecsviddech264sw "
+      " ! webdownload "
+      " ! videoconvert "
+      " ! video/x-raw(memory:SystemMemory) "
+      " ! queue "
+      " ! webcanvassink sync=false",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
@@ -61,7 +70,9 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
-      "example:5, webcanvassink:8", FALSE);
+      "2"
+      ", webcodecsviddec:8, videodecoder:7, webdownload:8"
+      , FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");

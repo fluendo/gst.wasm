@@ -51,7 +51,7 @@
 
 using namespace emscripten;
 
-//#define WEBMEM 1
+#define WEBMEM 1
 #define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 8
 
 #define GST_WEB_CODECS_VIDEO_DECODER_FROM_JS                                  \
@@ -138,9 +138,9 @@ gst_web_codecs_video_decoder_get_format (
     GST_ERROR_OBJECT (self, "Unsupported format %s", vf_format);
     goto done;
   }
-  self->output_format = g_strdup ("RGBA"); // g_strdup (vf_format);
-  format = GST_VIDEO_FORMAT_RGBA;          // FIXME, for now
-  // self->output_format = g_strdup (vf_format);
+//  self->output_format = g_strdup ("RGBA"); // g_strdup (vf_format);
+//  format = GST_VIDEO_FORMAT_RGBA;          // FIXME, for now
+  self->output_format = g_strdup (vf_format);
   width = video_frame["displayWidth"].as<int> ();
   height = video_frame["displayHeight"].as<int> ();
 
@@ -551,7 +551,7 @@ gst_web_codecs_video_decoder_open (GstVideoDecoder *decoder)
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
   gboolean ret = FALSE;
 
-#if WEBMEM
+#if 0
   if (!gst_web_utils_element_ensure_canvas (
           GST_ELEMENT (self), &self->canvas, NULL)) {
     GST_ERROR_OBJECT (self, "Failed requesting a WebCanvas context");
@@ -572,7 +572,7 @@ gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
   gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (self, "Start");
-#if WEBMEM
+#if 0
   self->runner = gst_web_canvas_get_runner (self->canvas);
 #else
   // Create runner with no canvas
@@ -621,14 +621,14 @@ static void
 gst_web_codecs_video_decoder_set_context (
     GstElement *element, GstContext *context)
 {
-#if WEBMEM
+#if 0
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (element);
 
   gst_web_utils_element_set_context (element, context, &self->canvas);
 #endif
 }
 
-static gboolean
+G_GNUC_UNUSED static gboolean
 gst_web_codecs_video_decoder_query (GstElement *element, GstQuery *query)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (element);
@@ -636,7 +636,7 @@ gst_web_codecs_video_decoder_query (GstElement *element, GstQuery *query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-#if WEBMEM
+#if 0
       ret = gst_web_utils_element_handle_context_query (
           element, query, self->canvas);
 #endif
@@ -737,7 +737,7 @@ gst_web_codecs_video_decoder_class_init (
 
   gobject_class->finalize = gst_web_codecs_video_decoder_finalize;
   element_class->set_context = gst_web_codecs_video_decoder_set_context;
-  element_class->query = gst_web_codecs_video_decoder_query;
+//  element_class->query = gst_web_codecs_video_decoder_query;
   gst_element_class_set_static_metadata (element_class,
       "WebCodecs base video decoder", "Codec/Decoder/Video",
       "decode streams using WebCodecs API",
