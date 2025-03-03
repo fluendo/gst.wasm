@@ -28,6 +28,7 @@ executable(executable_name,
       '-lGL',
       '-sUSE_SDL=2',
       '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
+      '-sPTHREAD_POOL_SIZE=16',
     ],
     c_args: [
       '-g3',

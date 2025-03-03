@@ -53,11 +53,11 @@ init_pipeline ()
       "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
       "qtdemux ! "
       "webcodecsviddech264sw "
+      " ! queue "
       " ! webdownload "
       " ! videoconvert "
       " ! video/x-raw(memory:SystemMemory) "
-      " ! queue "
-      " ! webcanvassink sync=false",
+      " ! webcanvassink",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
@@ -71,7 +71,7 @@ main (int argc, char **argv)
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
       "2"
-      ", webcodecsviddec:8, videodecoder:7, webdownload:8"
+      //      ", webcodecsviddec:8, videodecoder:7, webdownload:8"
       , FALSE);
 
   gst_emscripten_init ();
