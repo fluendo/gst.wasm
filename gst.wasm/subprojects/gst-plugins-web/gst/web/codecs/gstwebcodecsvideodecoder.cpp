@@ -569,7 +569,7 @@ gst_web_codecs_video_decoder_set_context (
 #endif
 }
 
-G_GNUC_UNUSED static gboolean
+static gboolean
 gst_web_codecs_video_decoder_query (GstElement *element, GstQuery *query)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (element);
@@ -678,7 +678,7 @@ gst_web_codecs_video_decoder_class_init (
 
   gobject_class->finalize = gst_web_codecs_video_decoder_finalize;
   element_class->set_context = gst_web_codecs_video_decoder_set_context;
-//  element_class->query = gst_web_codecs_video_decoder_query;
+  element_class->query = gst_web_codecs_video_decoder_query;
   gst_element_class_set_static_metadata (element_class,
       "WebCodecs base video decoder", "Codec/Decoder/Video",
       "decode streams using WebCodecs API",

@@ -52,7 +52,7 @@ init_pipeline ()
 #define H264SRC(loc) " webstreamsrc "                                \
       "location=\"" loc "\" ! "                                      \
       " qtdemux ! "                                                  \
-      " webcodecsviddech264sw "
+      " webcodecsviddech264sw ! webdownload "
   
   pipeline = gst_parse_launch (
       " compositor name=mix "
