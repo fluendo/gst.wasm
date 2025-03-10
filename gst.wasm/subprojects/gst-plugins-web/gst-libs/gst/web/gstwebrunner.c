@@ -50,6 +50,8 @@ struct _GstWebRunnerPrivate
 
   GMutex sync_message_lock;
   GCond sync_message_cond;
+
+  gint tid;
 };
 
 typedef struct _GstWebRunnerAsyncMessage
@@ -73,10 +75,11 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstWebRunner, gst_web_runner, GST_TYPE_OBJECT);
 static void
 _unlock_create_thread (GstWebRunner *self)
 {
+//  g_mutex_lock (&self->priv->create_lock);
   self->priv->created = TRUE;
   GST_INFO_OBJECT (self, "thread running");
   g_cond_signal (&self->priv->create_cond);
-  g_mutex_unlock (&self->priv->create_lock);
+  //g_mutex_unlock (&self->priv->create_lock);
 }
 
 static void
@@ -119,8 +122,10 @@ gst_web_runner_run_thread (GstWebRunner *self)
   GST_DEBUG_OBJECT (self, "Creating thread");
 
   klass = GST_WEB_RUNNER_GET_CLASS (self);
-  g_mutex_lock (&self->priv->create_lock);
+//  g_mutex_lock (&self->priv->create_lock);
 
+//  gst_web_runner_transfer_init_recv ??
+  self->priv->tid = pthread_self ();
   self->priv->alive = TRUE;
 
   /* unlocking of the create_lock happens when the
