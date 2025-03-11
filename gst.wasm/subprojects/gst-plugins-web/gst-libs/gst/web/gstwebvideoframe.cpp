@@ -376,3 +376,12 @@ gst_web_video_frame_get_handle (GstWebVideoFrame *self)
 {
   return self->priv->video_frame;
 }
+
+void
+gst_web_video_frame_transfer_to_runner (GstWebVideoFrame *self,
+					GstWebRunner *dst_runner,
+					GstWebRunnerCB when_done,
+					gpointer user_data)
+{
+   
+}

@@ -213,6 +213,8 @@ gst_web_canvas_sink_setup (gpointer data)
   self->val_canvas = val::module_property ("canvas");
   self->val_context =
       self->val_canvas.call<val> ("getContext", std::string ("2d"));
+
+  gst_web_transferable_register_on_message ((GstWebTransferable *)self);
 }
 
 static void
@@ -224,6 +226,73 @@ webcanvassinkdrawdata_release (gpointer ptr)
    g_free (data);
 }
 
+static gboolean
+gst_web_canvas_sink_has_raw_input (GstWebCanvasSink *self)
+{
+   GstCapsFeatures *features;
+   GstCaps *caps;
+
+   if (self->input_known)
+      return self->input_is_raw;
+   
+   caps = gst_pad_get_current_caps (GST_BASE_SINK (self)->sinkpad);
+   features = gst_caps_get_features (caps, 0);
+
+   self->input_is_raw = (features == NULL) ||
+      !gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME);
+   self->input_known = TRUE;
+   gst_caps_unref (caps);
+}
+
+static void
+gst_web_canvas_sink_transfer_video_frame (gpointer data)
+{
+   GstWebVideoFrame *vf;
+   val video_frame;
+   GstWebCanvasSinkDrawData *vf_data = (GstWebCanvasSinkDrawData *) data;
+   GstWebCanvasSink *self = vf_data->self;
+
+   // Ok so here we are in the canvas thread requesting a transfer
+
+   GST_DEBUG_OBJECT (self, "About to draw video frame %" GST_TIME_FORMAT,
+		     GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (draw_data->buffer)));
+   vf = (GstWebVideoFrame *) gst_buffer_get_memory (draw_data->buffer, 0);
+   video_frame = gst_web_video_frame_get_handle (vf);
+
+   gst_web_transferable_request_object ((GstWebTransferable *) self,
+       object_name, "gst_web_transport_stream_src_on_stream", self);
+   
+}
+
+static GstFlowReturn
+gst_web_canvas_prepare (GstBaseSink * sink,
+         GstBuffer * buffer)
+{
+   GstWebRunner *dst_runner;
+   GstWebRunner *src_runner;
+   GstWebCanvasSinkDrawData *data;
+   GstWebCanvasSink *self = GST_WEB_CANVAS_SINK (sink);
+   GstWebVideoFrame *vf;
+
+   if (gst_web_canvas_sink_has_raw_input (self))
+      return GST_FLOW_OK;
+
+   vf = (GstWebVideoFrame *) gst_buffer_get_memory (draw_data->buffer, 0);
+   
+   dst_runner = gst_web_canvas_get_runner (self->canvas);
+   src_runner = 
+   
+   // Ok, so here we are requesting the transfer of the VideoFrame using to canvas thread
+   data = g_new (GstWebCanvasSinkDrawData, 1);
+   data->self = self;
+   data->buffer = gst_buffer_ref (buf);
+   gst_web_runner_send_message_async (runner,
+       gst_web_canvas_sink_transfer_video_frame, data, webcanvassinkdrawdata_release);
+   
+   gst_object_unref (runner);
+   return GST_FLOW_OK;
+}
+
 static GstFlowReturn
 gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
 {
@@ -231,31 +300,20 @@ gst_web_canvas_sink_show_frame (GstVideoSink *sink, GstBuffer *buf)
   GstWebCanvasSinkDrawData *data;
   GstWebRunner *runner;
   GstWebRunnerCB cb;
-  GstCapsFeatures *features;
-  GstCaps *caps;
 
   GST_DEBUG_OBJECT (self, "show frame, pts = %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
 
-  /* Check the format */
-  caps = gst_pad_get_current_caps (GST_BASE_SINK (sink)->sinkpad);
-  features = gst_caps_get_features (caps, 0);
-  /* TODO cache this on set_info */
-  if (features && gst_caps_features_contains (
-                      features, GST_CAPS_FEATURE_MEMORY_WEB_VIDEO_FRAME)) {
-    cb = gst_web_canvas_sink_draw_video_frame;
-  } else {
-    cb = gst_web_canvas_sink_draw_raw;
-  }
-  gst_caps_unref (caps);
-
+  cb = gst_web_canvas_sink_has_raw_input (self) ?
+     gst_web_canvas_sink_draw_raw : gst_web_canvas_sink_draw_video_frame;
+  
   runner = gst_web_canvas_get_runner (self->canvas);
 
   data = g_new (GstWebCanvasSinkDrawData, 1);
   data->self = self;
   data->buffer = gst_buffer_ref (buf);
   gst_web_runner_send_message_async (runner, cb, data, webcanvassinkdrawdata_release);
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
 
   GST_DEBUG_OBJECT (self, "show frame done, pts = %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
@@ -419,6 +477,8 @@ gst_web_canvas_sink_stop (GstBaseSink *sink)
 
   gst_web_canvas_sink_set_mouse_event_handlers (self, FALSE);
 
+// TODO: gst_web_transferable_unregister_on_message 
+  
   return TRUE;
 }
 
