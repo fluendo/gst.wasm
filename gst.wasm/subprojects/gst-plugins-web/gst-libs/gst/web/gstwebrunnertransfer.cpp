@@ -77,24 +77,34 @@ EM_JS (void, gst_webrunner_transfer_send_message, (val cb_name, val object, gint
 /* clang-format on */
 
 void
-gst_web_runner_transfer_init_recv (void)
+gst_web_runner_transfer_init_recv (GstWebRunner *dst)
 {
-   /* Called in the RECEIVER thread */
+   static gsize once = 0;
+   
+   /* This function must be called from the RECEIVER thread */
+   g_assert (pthread_self() == gst_web_runner_tid (dst));
    
   /* clang-format off */
   /* We register the function on the worker when a message comes from the main thread */
-  EM_ASM ({
-    addEventListener ("message", gst_webrunner_transfer_recv_message);
-  });
-  /* And another event listener when the mssages comes from the worker */
-  /* TODO later instead of fetching the pthread id, use the actual GThread
-   * pointer and keep a list similar to what Emscripten does for pthreads
-   */
-  MAIN_THREAD_EM_ASM ({
-    var worker = PThread.pthreads[$0];
-    worker.addEventListener ("message", gst_webrunner_transfer_main_js_message);
-  }, pthread_self());
-  /* clang-format on */
+   if (dst->has_event_listener) {
+      EM_ASM ({
+	    addEventListener ("message", gst_webrunner_transfer_recv_message);
+	 });
+      dst->has_event_listener = true;
+   }
+   
+   if (g_once_init_enter (&once)) {
+      /* And another event listener when the mssages comes from the worker */
+      /* TODO later instead of fetching the pthread id, use the actual GThread
+       * pointer and keep a list similar to what Emscripten does for pthreads
+       */
+      MAIN_THREAD_EM_ASM ({
+	    var worker = PThread.pthreads[$0];
+	    worker.addEventListener ("message", gst_webrunner_transfer_main_js_message);
+	 }, pthread_self());
+      g_once_init_leave (&once, 1);
+   }
+   /* clang-format on */
 }
 
 static void
@@ -155,6 +165,7 @@ void gst_web_runner_transfer_object_async (
    data->object = object;
    data->when_ready = when_ready;
    data->user_data = user_data;
+   data->recv_tid = gst_web_runner_tid (dst);
 
    // NOTE: here we have a pointer to an object.
    // It probably makes sence to just send directly from

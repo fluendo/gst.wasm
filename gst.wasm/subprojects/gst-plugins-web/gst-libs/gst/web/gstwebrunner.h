@@ -51,6 +51,7 @@ struct _GstWebRunner
   /*< private >*/
   GstObject base;
 
+  bool has_event_listener;
   /*< private >*/
   GstWebRunnerPrivate *priv;
 
@@ -79,6 +80,8 @@ void gst_web_runner_send_message_async (GstWebRunner *self,
     GstWebRunnerCB callback, gpointer data, GDestroyNotify destroy);
 void gst_web_runner_send_message (
     GstWebRunner *self, GstWebRunnerCB callback, gpointer data);
+
+gint gst_web_runner_tid (GstWebRunner *self);
 
 G_END_DECLS
 

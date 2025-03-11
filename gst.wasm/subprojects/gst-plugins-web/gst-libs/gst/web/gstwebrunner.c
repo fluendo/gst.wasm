@@ -114,6 +114,12 @@ gst_web_runner_quit (GstWebRunner *self)
   g_main_loop_quit (self->priv->loop);
 }
 
+gint
+gst_web_runner_tid (GstWebRunner *self)
+{
+  return self->priv->tid;
+}
+
 static gpointer
 gst_web_runner_run_thread (GstWebRunner *self)
 {
