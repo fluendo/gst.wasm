@@ -306,35 +306,54 @@ gst_web_codecs_video_decoder_configure (gpointer data)
   GstWebCodecsVideoDecoderConfigureData *conf_data =
       (GstWebCodecsVideoDecoderConfigureData *) data;
   GstWebCodecsVideoDecoder *self = conf_data->self;
+  GstWebCodecsVideoDecoderClass *klass =
+      GST_WEB_CODECS_VIDEO_DECODER_GET_CLASS (self);
   GstVideoCodecState *state = conf_data->state;
   GstStructure *s;
   const GValue *codec_data_value = NULL;
   GstBuffer *codec_data = NULL;
   GstMapInfo map;
-  gchar *mime_codec;
+  const gchar *codec = NULL;
   val config = val::object ();
 
-  mime_codec = gst_codec_utils_caps_get_mime_codec (state->caps);
-  config.set ("codec", std::string (mime_codec));
-  g_free (mime_codec);
+  g_print ("configure\n");
+  GST_FIXME_OBJECT (self, "metadata (%p): %" GST_PTR_FORMAT,
+      GST_WEB_CODECS_VIDEO_DECODER_GET_CLASS (self)->metadata,
+      GST_WEB_CODECS_VIDEO_DECODER_GET_CLASS (self)->metadata);
+
+  codec = gst_structure_get_string (klass->metadata, "codec");
+  if (!codec) {
+    gchar *mime_codec = gst_codec_utils_caps_get_mime_codec (state->caps);
+    GST_DEBUG_OBJECT (self, "mime codec got from caps '%" GST_PTR_FORMAT "': '%s'",
+        state->caps, mime_codec);
+    g_print ("set codec: %s\n", mime_codec);
+    config.set ("codec", std::string (mime_codec));
+    g_free (mime_codec);
+  } else {
+    config.set ("codec", std::string (codec));
+  }
 
   s = gst_caps_get_structure (state->caps, 0);
   codec_data_value = gst_structure_get_value (s, "codec_data");
-  if (!codec_data_value) {
-    GST_ERROR_OBJECT (self, "Caps do not have codec_data");
-    conf_data->ret = FALSE;
-    return;
+  if (codec_data_value) {
+    codec_data = gst_value_get_buffer (codec_data_value);
+    if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Impossible to map the buffer");
+      conf_data->ret = FALSE;
+      return;
+    }
+    val codec_data_js = val (typed_memory_view (map.size, map.data));
+    config.set ("description", codec_data_js);
   }
 
-  codec_data = gst_value_get_buffer (codec_data_value);
-  if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Impossible to map the buffer");
-    conf_data->ret = FALSE;
-    return;
-  }
+  // if (!codec_data_value) {
+  //   GST_ERROR_OBJECT (self, "Caps do not have codec_data");
+  //   conf_data->ret = FALSE;
+  //   return;
+  // }
 
-  val codec_data_js = val (typed_memory_view (map.size, map.data));
-  config.set ("description", codec_data_js);
+
+
 
   GST_DEBUG_OBJECT (self, "Setting format");
   self->decoder.call<void> ("configure", config);
@@ -602,6 +621,7 @@ static void
 gst_web_codecs_video_decoder_finalize (GObject *object)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (object);
+  GstWebCodecsVideoDecoderClass *klass = GST_WEB_CODECS_VIDEO_DECODER_GET_CLASS (object);
 
   g_mutex_clear (&self->dequeue_lock);
   g_cond_clear (&self->dequeue_cond);
@@ -626,6 +646,8 @@ gst_web_codecs_video_decoder_init (
 static void
 gst_web_codecs_video_decoder_base_init (gpointer g_class)
 {
+  GstWebCodecsVideoDecoderClass *klass =
+      GST_WEB_CODECS_VIDEO_DECODER_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *sink_caps;
   GstCaps *src_caps;
@@ -665,6 +687,13 @@ gst_web_codecs_video_decoder_base_init (gpointer g_class)
   templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
   gst_element_class_add_pad_template (element_class, templ);
   gst_caps_unref (gl_caps);
+
+  // klass->metadata =
+  //     klass->metadata ? gst_structure_copy (klass->metadata) :
+  //     gst_structure_new_empty ("metadata");
+
+  // g_print ("klass (%p) metadata: %p,\n", klass->metadata, klass->metadata);
+  klass->metadata = NULL;
 }
 
 static void

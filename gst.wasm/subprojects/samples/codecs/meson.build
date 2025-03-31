@@ -9,7 +9,9 @@ executable(executable_name,
       common_deps,
       gstisomp4_dep,
       dependency('gstreamer-emscripten-1.0'),
-      dependency('gstopengl')
+      dependency('gstopengl'),
+      dependency('gstmatroska')
+
     ],
     link_with: [
       gstweb_dep,

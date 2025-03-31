@@ -46,9 +46,13 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WEB_CODECS_VIDEO_DECODER))
 #define GST_IS_WEB_CODECS_VIDEO_DECODER_CLASS(klass)                          \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_WEB_CODECS_VIDEO_DECODER))
+#define GST_WEB_CODECS_VIDEO_DECODER_GET_CLASS(obj)                           \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_WEB_CODECS_VIDEO_DECODER,       \
+  GstWebCodecsVideoDecoderClass))
 
 typedef struct _GstWebCodecsVideoDecoder GstWebCodecsVideoDecoder;
 typedef struct _GstWebCodecsVideoDecoderClass GstWebCodecsVideoDecoderClass;
+typedef struct _GstWebCodecsVideoDecoderClassData GstWebCodecsVideoDecoderClassData;
 
 /**
  * GstWebCodecsVideoDecoder:
@@ -80,7 +84,18 @@ struct _GstWebCodecsVideoDecoder
 struct _GstWebCodecsVideoDecoderClass
 {
   GstVideoDecoderClass base;
+  GstStructure *metadata;
+
+  gpointer _reserved[GST_PADDING];
 };
+
+struct _GstWebCodecsVideoDecoderClassData
+{
+  gchar *codec;
+
+  gpointer _reserved[GST_PADDING];
+};
+
 
 GType gst_web_codecs_video_decoder_get_type (void);
 

@@ -95,9 +95,15 @@ create_element_name (GType parent_type, const gchar *codec_name)
   return element_name;
 }
 
+static void
+class_init (gpointer klass, gpointer klass_data)
+{
+  GST_WEB_CODECS_VIDEO_DECODER_CLASS (klass)->metadata = GST_STRUCTURE (klass_data);
+}
+
 static gboolean
-register_video_decoder (
-    GstPlugin *plugin, const gchar *codec_name, GstCaps *caps, gboolean is_hw)
+register_video_decoder (GstPlugin *plugin, const gchar *codec_name,
+    const gchar* codec, GstCaps *caps, gboolean is_hw)
 {
   GType type, subtype;
   GTypeQuery type_query;
@@ -108,14 +114,24 @@ register_video_decoder (
   gchar *type_name, *element_name;
   guint rank;
   gboolean ret = TRUE;
+  GstStructure *metadata;
 
   GST_DEBUG ("Registering codec %" GST_PTR_FORMAT, caps);
 
   type = gst_web_codecs_video_decoder_get_type ();
   g_type_query (type, &type_query);
   memset (&type_info, 0, sizeof (type_info));
+
+  metadata = gst_structure_new_empty ("metadata");
   type_info.class_size = type_query.class_size;
   type_info.instance_size = type_query.instance_size;
+  type_info.class_data = metadata;
+  type_info.class_init = class_init;
+
+  if (codec) {
+    gst_structure_set (metadata, "codec", G_TYPE_STRING, codec, nullptr);
+  }
+
   type_name = create_type_name (type_query.type_name, codec_name);
 
   if (g_type_from_name (type_name) != G_TYPE_INVALID) {
@@ -136,6 +152,8 @@ register_video_decoder (
     goto failed_registration;
   }
 
+
+
   GST_INFO ("Element '%s' registered successfully", element_name);
 
 failed_registration:
@@ -150,7 +168,7 @@ existing_type:
 
 static gboolean
 video_decoder_is_config_supported (
-    val vdecclass, gchar *codec, gboolean hwaccel)
+    val vdecclass, const gchar *codec, gboolean hwaccel)
 {
   const gchar *acceleration = accelerations[hwaccel ? 1 : 0];
   gboolean is_supported;
@@ -168,7 +186,31 @@ video_decoder_is_config_supported (
   return is_supported;
 }
 
+static void
+register_video_decoder_sw_hw (GstPlugin *plugin, val vdecclass,
+    const gchar *element_name, const gchar *codec, const gchar *caps_str)
+{
+  guint i;
+  GstCaps *caps;
+  const gchar *codec_name_sufixes[] = {"SW", "HW"};
+
+  caps = gst_caps_from_string (caps_str);
+  for (i = 0; i < G_N_ELEMENTS (codec_name_sufixes); i++) {
+    gchar *codec_name = g_strdup_printf ("%s%s", element_name, codec_name_sufixes[i]);
+
+    if (!video_decoder_is_config_supported (vdecclass, codec, i)) {
+      GST_WARNING ("No decoder found for %s", codec_name);
+      continue;
+    }
+
+    register_video_decoder (plugin, codec_name, codec, caps, i);
+    g_free (codec_name);
+  }
+  gst_caps_unref (caps);
+}
+
 #include "utils/h264.cpp"
+#include "utils/vp9.cpp"
 
 static void
 scan_video_decoders (GstPlugin *plugin)
@@ -180,6 +222,9 @@ scan_video_decoders (GstPlugin *plugin)
   }
 
   scan_video_h264_decoder (plugin, vdecclass);
+  register_video_decoder_sw_hw (plugin, vdecclass, "VP8", "vp8", "video/x-vp8");
+  foreach_vp9_codec (plugin, vdecclass, FALSE);
+  foreach_vp9_codec (plugin, vdecclass, TRUE);
 }
 
 gboolean

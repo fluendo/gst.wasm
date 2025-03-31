@@ -290,7 +290,7 @@ scan_video_h264_decoder (GstPlugin *plugin, val vdecclass)
     } else {
       GST_INFO ("H.264 decoder found for %s", codec_names[i]);
       /* TODO If valid append to the caps alternatives */
-      register_video_decoder (plugin, codec_names[i], gst_caps_ref (caps), i);
+      register_video_decoder (plugin, codec_names[i], NULL, gst_caps_ref (caps), i);
     }
 
     gst_caps_unref (caps);
