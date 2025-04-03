@@ -1,4 +1,4 @@
-/*
+ /*
  * GStreamer - gst.wasm OpenAL example
  *
  * Copyright 2024 Fluendo S.A.
@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 #include <stdio.h>
 #include <emscripten.h>
 #include <emscripten/threading.h>

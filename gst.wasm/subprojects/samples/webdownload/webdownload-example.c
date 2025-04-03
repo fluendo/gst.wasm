@@ -1,5 +1,6 @@
 /*
- * Gst.WASM
+ * GStreamer - gst.wasm WebDownload example
+ *
  * Copyright 2024 Fluendo S.A.
  *  @author: Jorge Zapata <jzapata@fluendo.com>
  *

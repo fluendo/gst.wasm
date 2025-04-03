@@ -2,7 +2,7 @@
  * GStreamer - gst.wasm audiotestsrc example
  *
  * Copyright 2024 Fluendo S.A.
- *  @author: Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>
+ *  @author: Cesar Fabian Orccon Chipana <forccon@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 #include <iostream>
 #include <string>
 #include <emscripten/bind.h>

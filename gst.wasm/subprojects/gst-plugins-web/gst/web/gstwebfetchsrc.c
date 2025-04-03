@@ -1,5 +1,5 @@
 /*
- * GStreamer - GStreamer Web Fetch HTTP source
+ * GStreamer - gst.wasm Web Fetch HTTP source
  *
  * Copyright 2024 Fluendo S.A.
  *  @author: Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
