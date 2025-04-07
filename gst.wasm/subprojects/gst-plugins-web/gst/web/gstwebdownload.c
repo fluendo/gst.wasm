@@ -1,8 +1,8 @@
-/*
- * gst.wasm - gstwebdownload
+ /*
+ * GStreamer - gst.wasm WebDownload source
  *
  * Copyright 2024 Fluendo S.A.
- *  @author: Cesar Fabian Orccon Chipana <forccon@fluendo.com>
+ * @author: Cesar Fabian Orccon Chipana <forccon@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

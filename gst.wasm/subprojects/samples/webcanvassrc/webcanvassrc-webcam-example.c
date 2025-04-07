@@ -1,5 +1,5 @@
 /*
- * GStreamer - GStreamer WebCanvasSrc Webcam example
+ * GStreamer - gst.wasm WebCanvasSrc Webcam example
  *
  * Copyright 2024 Fluendo S.A.
  *  @author: Cesar Fabian Orccon Chipana <forccon@fluendo.com>
@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 #include <gst/gst.h>
 #include <emscripten.h>
 #include <gst/emscripten/gstemscripten.h>
