@@ -20,12 +20,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <emscripten.h>
 #include <gst/emscripten/gstemscripten.h>
 
 #define GST_CAT_DEFAULT example_dbg
 GST_DEBUG_CATEGORY_STATIC (example_dbg);
 
 static GstElement *pipeline;
+
+EM_JS(void, debuggg, (const char* str), {
+  const msg = UTF8ToString(str);
+
+  try {
+    const outputBox = document.getElementById("debuggg");
+    if (outputBox)
+      outputBox.textContent += msg + "\n";
+  } catch (e) {
+  }
+  
+  console.log (msg);
+});
 
 static void
 register_elements ()
@@ -37,19 +51,78 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (sdl2);
 }
 
+GstBusSyncReply
+sync_handler (GstBus * bus,
+    GstMessage * message,
+    gpointer user_data)
+{
+  switch (GST_MESSAGE_TYPE (message))
+  {
+    case GST_MESSAGE_ERROR: {
+      GError *err = NULL;
+      gchar *dbg_info = NULL;
+
+      gst_message_parse_error (message, &err, &dbg_info);
+      gchar *msg = g_strdup_printf ("%s: ERROR: %s (%s)\n",
+          GST_OBJECT_NAME (message->src), err->message,
+          (dbg_info) ? dbg_info : "no debug info");
+
+      debuggg (msg);
+      
+      g_error_free (err);
+      g_free (dbg_info);
+      g_free (msg);
+      break;
+    }
+
+    case GST_MESSAGE_STATE_CHANGED: {
+      GstState old_state, new_state;
+      
+      if (message->src != GST_OBJECT_CAST (pipeline))
+        break;
+      
+      gst_message_parse_state_changed (message, &old_state, &new_state, NULL);
+      gchar *msg = g_strdup_printf ("Pipeline state [%s]->[%s]\n",
+          gst_element_state_get_name (old_state),
+          gst_element_state_get_name (new_state));
+      debuggg (msg);
+      free (msg);
+      break;
+    }
+    default:
+      break;
+  }
+  
+  return GST_BUS_DROP;
+}
+
 static void
 init_pipeline ()
 {
+  GstBus *bus;
+  
   pipeline = gst_parse_launch ("videotestsrc pattern=ball ! sdl2sink", NULL);
+  debuggg ("create pipeline ok");
+
+  bus = gst_element_get_bus (pipeline);
+  gst_bus_set_sync_handler (bus,
+                          sync_handler,
+                          NULL,
+      NULL);
+  gst_object_unref (bus);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
 int
 main (int argc, char **argv)
 {
+  debuggg ("entered main ok");
   gst_init (NULL, NULL);
+  debuggg ("gst init ok");
   gst_emscripten_init ();
+  debuggg ("emscripten init ok");
   register_elements ();
+  debuggg ("register elements ok");
 
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "videotestsrc wasm example");
