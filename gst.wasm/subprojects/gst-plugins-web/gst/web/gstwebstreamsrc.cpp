@@ -217,7 +217,7 @@ EMSCRIPTEN_BINDINGS (gst_web_stream_src)
 }
 
 // clang-format off
-EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url, gint64 start, gint64 end), {
+EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url, gint start, gint end), {
       const fetchUrl = UTF8ToString (url);
       const options = (start != -1 && end != -1) ?
       {
