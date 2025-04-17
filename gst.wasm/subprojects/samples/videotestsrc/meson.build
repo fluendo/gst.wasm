@@ -8,7 +8,10 @@ executable(executable_name,
       '-sASYNCIFY',
       '-lGL',
       '-sUSE_SDL=2',
-      '-sASSERTIONS=1'
+      '-sASSERTIONS=1',
+      '-sEXPORT_ES6=0',
+      '-sENVIRONMENT=web,worker',
+      '-sLEGACY_VM_SUPPORT=1'
     ],
     link_with: [
       gstweb_sdl2_dep,

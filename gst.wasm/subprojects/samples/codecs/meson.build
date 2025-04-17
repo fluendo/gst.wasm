@@ -21,14 +21,13 @@ executable(executable_name,
       '-sPROXY_TO_PTHREAD',
       # Required by webfetchsrc, this should be brought directly by the dep
       '-sFETCH=1',
-      '-g3',
       '-lhtml5',
       '-lGL',
       '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
-    ],
-    c_args: [
-      '-g3',
-      '-O0',
+      '-sASSERTIONS=1',
+      '-sEXPORT_ES6=0',
+      '-sENVIRONMENT=web,worker',
+      '-sLEGACY_VM_SUPPORT=1'
     ],
     name_suffix: 'js',
     install: true,
