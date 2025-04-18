@@ -46,8 +46,7 @@ init_pipeline ()
 {
   pipeline = gst_parse_launch (
       "webstreamsrc "
-      "location=\"https://commondatastorage.googleapis.com/"
-      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+      "location=\"https://hbbtv-demo.fluendo.com/pip/bbb.mp4\" ! "
       "qtdemux ! "
       "webcodecsviddech264sw ! webcanvassink",
       NULL);
