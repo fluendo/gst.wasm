@@ -71,9 +71,9 @@ main (int argc, char **argv)
   gst_debug_set_default_threshold (1);
   gst_init (NULL, NULL);
   GST_DEBUG_CATEGORY_INIT (
-      example_dbg, "example", 0, "SW h264 decoder wasm example");
-  gst_debug_set_threshold_from_string (
-      "*:3, example:5, videodecoder*:3", FALSE);
+      example_dbg, "example", 0, "webcodecs wasm example");
+  gst_debug_set_threshold_from_string ("1", FALSE);
+  gst_debug_set_color_mode(GST_DEBUG_COLOR_MODE_OFF);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");

@@ -34,7 +34,7 @@ EM_JS(void, debuggg, (const char* str), {
   try {
     const outputBox = document.getElementById("debuggg");
     if (outputBox)
-      outputBox.textContent += msg + "\n";
+      outputBox.textContent += msg;
   } catch (e) {
   }
   
@@ -51,11 +51,15 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (sdl2);
 }
 
+#if DEBUG_GST_MSGS
 GstBusSyncReply
 sync_handler (GstBus * bus,
     GstMessage * message,
     gpointer user_data)
 {
+  if (thread_id != g_thread_self ())
+    return GST_BUS_DROP;
+
   switch (GST_MESSAGE_TYPE (message))
   {
     case GST_MESSAGE_ERROR: {
@@ -95,38 +99,41 @@ sync_handler (GstBus * bus,
   
   return GST_BUS_DROP;
 }
+#endif
 
 static void
 init_pipeline ()
 {
-  GstBus *bus;
-  
   pipeline = gst_parse_launch ("videotestsrc pattern=ball ! sdl2sink", NULL);
-  debuggg ("create pipeline ok");
+  debuggg ("create pipeline ok\n");
 
-  bus = gst_element_get_bus (pipeline);
-  gst_bus_set_sync_handler (bus,
-                          sync_handler,
-                          NULL,
-      NULL);
-  gst_object_unref (bus);
+#if DEBUG_GST_MSGS
+  {
+    GstBus *bus;
+    bus = gst_element_get_bus (pipeline);
+    gst_bus_set_sync_handler (bus,
+        sync_handler,
+        NULL,
+        NULL);
+    gst_object_unref (bus);
+  }
+#endif
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
 int
 main (int argc, char **argv)
 {
-  debuggg ("entered main ok");
+  debuggg ("entered main ok\n");
   gst_init (NULL, NULL);
-  debuggg ("gst init ok");
+  debuggg ("gst init ok\n");
   gst_emscripten_init ();
-  debuggg ("emscripten init ok");
   register_elements ();
-  debuggg ("register elements ok");
 
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "videotestsrc wasm example");
-  gst_debug_set_threshold_for_name ("example", 5);
+  gst_debug_set_threshold_from_string ("1", FALSE);
+  gst_debug_set_color_mode(GST_DEBUG_COLOR_MODE_OFF);
 
   init_pipeline ();
 
