@@ -41,13 +41,16 @@ register_elements ()
   GST_ELEMENT_REGISTER (qtdemux, NULL);
 }
 
+#ifndef GSTWASM_CODECS_EXAMPLE_SRC
+#define GSTWASM_CODECS_EXAMPLE_SRC "https://hbbtv-demo.fluendo.com/pip/bbb.mp4"
+#endif
+
 static void
 init_pipeline ()
 {
   pipeline = gst_parse_launch (
       "webstreamsrc "
-      "location=\"https://commondatastorage.googleapis.com/"
-      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+      "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\" ! "
       "qtdemux ! "
       "webcodecsviddech264sw ! webcanvassink",
       NULL);
