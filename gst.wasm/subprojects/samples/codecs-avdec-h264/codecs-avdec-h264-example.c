@@ -52,13 +52,16 @@ register_elements ()
   GST_ELEMENT_REGISTER (videoconvert, NULL);
 }
 
+#ifndef GSTWASM_AVDEC_H264_EXAMPLE_SRC
+#define GSTWASM_AVDEC_H264_EXAMPLE_SRC "https://hbbtv-demo.fluendo.com/pip/bbb.mp4"
+#endif
+
 static void
 init_pipeline ()
 {
   pipeline = gst_parse_launch (
       "webstreamsrc "
-      "location=\"https://commondatastorage.googleapis.com/"
-      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+      "location=\"" GSTWASM_AVDEC_H264_EXAMPLE_SRC "\" ! "
       "qtdemux ! "
       "avdec_h264 qos=false ! videoconvert ! queue ! webcanvassink",
       NULL);
