@@ -19,17 +19,10 @@ gstweb_dep = static_library('gstweb',
   install: true,
   dependencies: common_deps + codecs_deps + gstweb_dep,
   include_directories: [configinc],
-  c_args: gst_plugins_web_args + [
-    '-g3',
-    '-O0'
-  ],
-  cpp_args: gst_plugins_web_args + [
-    '-g3',
-    '-O0'
-  ],
+  c_args: gst_plugins_web_args,
+  cpp_args: gst_plugins_web_args,
   link_args: [
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
-      '-g3',
   ],
 )
 

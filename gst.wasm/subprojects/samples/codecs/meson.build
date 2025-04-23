@@ -20,14 +20,9 @@ executable(executable_name,
       '-sPROXY_TO_PTHREAD',
       # Required by webfetchsrc, this should be brought directly by the dep
       '-sFETCH=1',
-      '-g3',
       '-lhtml5',
       '-lGL',
       '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
-    ],
-    c_args: [
-      '-g3',
-      '-O0',
     ],
     name_suffix: 'js',
     install: true,

@@ -16,24 +16,18 @@ gstweb_headers = [
   'gstwebcanvas.h'
 ]
 
-extra_args = [
-  '-g3',
-  '-O0'
-]
-
 link_args = [
   '-lembind',
   '-sAUTO_NATIVE_LIBRARIES=1',
   '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
-  '-g3'
 ]
 
 pkg_name = 'gstreamer-web-' + api_version
 
 gstweb = library('gstweb-' + api_version,
   gstweb_sources,
-  c_args : gst_plugins_web_args + extra_args,
-  cpp_args: gst_plugins_web_args + extra_args,
+  c_args : gst_plugins_web_args,
+  cpp_args: gst_plugins_web_args,
   link_args: link_args,
   include_directories : [configinc, libinc],
   dependencies : [common_deps],

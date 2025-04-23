@@ -20,12 +20,7 @@ executable(executable_name,
       '-sPROXY_TO_PTHREAD',
       # Required by webfetchsrc, this should be brought directly by the dep
       '-sFETCH=1',
-      '-g3',
       '-lhtml5',
-    ],
-    c_args: [
-      '-g3',
-      '-O0',
     ],
     name_suffix: 'js',
     install: true,
