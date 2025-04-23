@@ -13,7 +13,6 @@ executable('index',
       '-sPTHREAD_POOL_SIZE=4',
       '-sFETCH=1',
       # Required by webcanvassink, this should be brought directly by the dep
-      '-lembind',
       '-sASYNCIFY',
       '-lhtml5'
   ],

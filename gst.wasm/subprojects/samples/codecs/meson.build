@@ -15,7 +15,6 @@ executable(executable_name,
       gstweb_dep,
     ],
     link_args: common_link_args + [
-      '-lembind',
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',

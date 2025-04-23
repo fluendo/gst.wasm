@@ -12,7 +12,6 @@ executable('webstreamsrc-example',
   link_args: [
       '-sFETCH=1',
       # Required by webcanvassink, this should be brought directly by the dep
-      '-lembind',
       '-lhtml5',
       '-sASYNCIFY',
   ],
