@@ -1,6 +1,5 @@
 webcanvassrc_example_common_link_args = [
   '-lembind',
-  '-sAUTO_NATIVE_LIBRARIES=1',
   '-sASYNCIFY',
   '-sUSE_SDL=2',
   # Required by webfetchsrc, this should be brought directly by the dep

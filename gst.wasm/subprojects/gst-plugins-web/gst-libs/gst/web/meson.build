@@ -55,5 +55,6 @@ install_headers(gstweb_headers, subdir : 'gstreamer-1.0/gst/web')
 
 gstweb_dep = declare_dependency(link_with : gstweb,
   include_directories : [libinc],
-  dependencies : [common_deps]
+  dependencies : [common_deps],
+  link_args : [link_args]
 )

@@ -29,7 +29,6 @@ gstweb_dep = static_library('gstweb',
   ],
   link_args: [
       '-lembind',
-      '-sAUTO_NATIVE_LIBRARIES=1',
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
       '-g3',
   ],

@@ -15,7 +15,6 @@ executable('audiotestsrc-example',
   include_directories: include_directories('.'),
   link_args: common_link_args + [
       '-lembind',
-      '-sAUTO_NATIVE_LIBRARIES=1',
       '-sEXPORTED_FUNCTIONS=_init', # defined in audiotestsrc-example.c
       '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
       '--extern-post-js=@0@/html/scripts/index.js'.format(meson.current_source_dir()),
