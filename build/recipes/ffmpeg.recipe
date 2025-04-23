@@ -1,113 +1,22 @@
 # -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
-from cerbero.tools.libtool import LibtoolLibrary
 
-class Recipe(recipe.Recipe):
-    name = 'ffmpeg'
-    version = '6.0'
-    licenses = [License.LGPLv2_1Plus]
-    stype = SourceType.TARBALL
-    url = 'https://ffmpeg.org/releases/%(name)s-%(version)s.tar.xz'
-    tarball_checksum = '57be87c22d9b49c112b6d24bc67d42508660e6b718b3db89c44e47e289137082'
-    patches = [
-        name + '/0001-Add-Meson-build.patch',
-    ]
+import os
+import sys
+import cerbero
+from cerbero.build import recipe
 
-    btype = BuildType.MESON
-    meson_options = {
-        # !! Enable only h264 decoder.
-        'auto_features' : 'disabled',
-        'h264_decoder' : 'enabled',
-        # ---------------------------
-        'avdevice': 'disabled',
-        'programs': 'disabled',
-        'flac_encoder': 'disabled',
-        'protocols': 'disabled',
-        'devices': 'disabled',
-        'network': 'disabled',
-        'hwaccels': 'disabled',
-        'dxva2': 'disabled',
-        'vdpau': 'disabled',
-        'filters': 'disabled',
-        'yadif_filter': 'enabled',
-        # Uncomment the following option once implemented in the port
-        # 'doc': 'disabled',
-        'd3d11va': 'disabled',
-        'audiotoolbox': 'disabled',
-        'videotoolbox': 'disabled',
-        'vaapi': 'disabled',
-        'crystalhd': 'disabled',
-        'mediacodec': 'disabled',
-        'mediafoundation' : 'disabled',
-        'nvenc': 'disabled',
-        'mmal': 'disabled',
-        'omx': 'disabled',
-        'omx_rpi': 'disabled',
-        'cuda': 'disabled',
-        'cuvid': 'disabled',
-        'libmfx': 'disabled',
-        'libnpp': 'disabled',
-        'libnpp': 'disabled',
-        'iconv': 'disabled',
-        'jni': 'disabled',
-        'v4l2_m2m': 'disabled',
-        'vulkan': 'disabled',
-        'tests': 'disabled', # To not waste time
-        # These two are redundant with Meson
-        # 'stripping': 'disabled',
-        # 'optimizations': 'enabled,
-        'nonfree': 'disabled',
-        'version3': 'disabled',
-    }
+def recipes_path():
+    return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero-share', 'recipes')
 
-    deps = ['bzip2', 'zlib']
+original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'ffmpeg.recipe'))
 
-    files_libs = ['libavcodec', 'libavformat', 'libavutil', 'libswresample', 'libavfilter', 'libpostproc', 'libswscale']
-    files_devel = []
-
+class Recipe(original_recipe):
+    def recipe_dir(self):
+        return recipes_path()
+    
     def prepare(self):
-        # Arch-specific flags
-        if self.config.target_arch == Architecture.X86:
-            if self.config.target_platform == Platform.IOS:
-                # Simulator doesn't like shared libs
-                self.library_type = LibraryType.STATIC
-            elif self.config.target_platform == Platform.ANDROID:
-                # ld.lld: error: relocation R_386_32 cannot be used against local symbol; recompile with -fPIC
-                # See https://github.com/FFmpeg/FFmpeg/blob/n6.0/libavutil/x86/x86inc.asm#L104-L108
-                self.meson_options['asm'] = 'disabled'
-
-        # Populate self.files_devel
-        files_devel_tpl = ['%(libdir)s/{}.la', '%(libdir)s/pkgconfig/{}.pc', 'include/{}']
-        if self.library_type != LibraryType.SHARED:
-            files_devel_tpl += ['%(libdir)s/{}.a']
-        for lib in self.files_libs:
-            self.files_devel += [tpl.format(lib) for tpl in files_devel_tpl]
-
-    def post_install(self):
-    # Meson does not generate la files
-        LibtoolLibrary('avcodec', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       deps=['swresample', 'avutil', 'z'],
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        LibtoolLibrary('avfilter', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       deps=['avformat', 'avcodec', 'swresample', 'avutil'],
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        LibtoolLibrary('avformat', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       deps=['avcodec', 'swresample', 'avutil', 'bz2', 'z'],
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        LibtoolLibrary('avutil', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        LibtoolLibrary('postproc', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        LibtoolLibrary('swresample', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       deps=['avutil'],
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        LibtoolLibrary('swscale', None, None, None,
-                       self.config.libdir, self.config.target_platform,
-                       deps=['avutil'],
-                       static_only=self.library_type == LibraryType.STATIC).save()
-        super().post_install()
+        self.meson_options.update({
+            'auto_features' : 'disabled',
+            'h264_decoder' : 'enabled',
+        });
+        super().prepare()
