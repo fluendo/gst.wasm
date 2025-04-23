@@ -1,0 +1,18 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+import os
+import sys
+import cerbero
+from cerbero.utils import imp_load_source
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+from import_helper import import_recipe
+
+custom = imp_load_source('custom', os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero-share','recipes', 'custom.py'))
+
+original_recipe = import_recipe('gst-libav-1.0.recipe')
+
+class Recipe(original_recipe):
+    meson_options = {
+        'element_groups' : 'viddec',
+    }
