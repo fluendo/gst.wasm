@@ -4,7 +4,7 @@ url = "git@github.com:fluendo/gstreamer.git"
 
 [[remotes]]
 name = "freedesktop"
-url = "git@gitlab.freedesktop.org:gstreamer/gstreamer.git"
+url = "git@ssh.gitlab.freedesktop.org:gstreamer/gstreamer.git"
 
 [target]
 remote = "origin"
