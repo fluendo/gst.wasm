@@ -12,7 +12,7 @@ executable(executable_name,
       dependency('gstopengl')
     ],
     link_with: [
-      gstweb_dep,
+      gstweb_lib,
     ],
     link_args: common_link_args + [
       '-sASYNCIFY',

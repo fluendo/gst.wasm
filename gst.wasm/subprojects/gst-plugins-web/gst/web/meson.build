@@ -14,7 +14,7 @@ sources = [
 # Codecs deps
 codecs_deps = [gstvideo_dep, gstpbutils_dep, gstgl_dep]
 
-gstweb_dep = static_library('gstweb',
+gstweb_lib = static_library('gstweb',
   sources,
   install: true,
   dependencies: common_deps + codecs_deps + gstweb_dep,
@@ -26,4 +26,4 @@ gstweb_dep = static_library('gstweb',
   ],
 )
 
-plugins += [gstweb_dep]
+plugins += [gstweb_lib]

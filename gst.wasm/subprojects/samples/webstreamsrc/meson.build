@@ -16,7 +16,7 @@ executable('webstreamsrc-example',
       '-sASYNCIFY',
   ],
   link_with: [
-    gstweb_dep
+    gstweb_lib
   ],
   name_suffix: 'html'
 )

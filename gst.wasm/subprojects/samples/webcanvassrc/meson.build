@@ -17,7 +17,7 @@ executable('webcanvassrc-animation-example',
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args,
   link_with: [
-    gstweb_dep,
+    gstweb_lib,
     gstweb_sdl2_dep,
   ],
   name_suffix: 'html',
@@ -41,7 +41,7 @@ executable('webcanvassrc-webcam-example',
     '-sINITIAL_MEMORY=536870912'
   ],
   link_with: [
-    gstweb_dep,
+    gstweb_lib,
     gstweb_sdl2_dep,
   ],
   name_suffix: 'html',
