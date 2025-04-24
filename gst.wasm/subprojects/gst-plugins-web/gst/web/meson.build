@@ -21,9 +21,6 @@ gstweb_lib = static_library('gstweb',
   include_directories: [configinc],
   c_args: gst_plugins_web_args,
   cpp_args: gst_plugins_web_args,
-  link_args: [
-      '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
-  ],
 )
 
 plugins += [gstweb_lib]
