@@ -72,6 +72,7 @@ The [current status](https://github.com/fluendo/gstreamer/compare/main...fluendo
 * ⏳ `wasm-main-videodec` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-videodec)
 * ⏳ `wasm-main-webtransport` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-webtransport)
 * ⏳ `wasm-main-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-wip)
+* ⏳ `libav-add-element-groups`: Add element_groups meson option to gst-libav [(PR link)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8877)
 <!-- END guw gstreamer.toml markdown -->
 
 ### Cerbero
