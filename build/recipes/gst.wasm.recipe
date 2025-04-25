@@ -12,6 +12,7 @@ class Recipe(recipe.Recipe):
         "gst-plugins-base-1.0",
         "gst-plugins-good-1.0",
         "gst-plugins-bad-1.0",
+        "gst-libav-1.0",
     ]
     meson_subprojects = [
         "gst-plugins-web",

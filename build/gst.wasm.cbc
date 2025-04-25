@@ -25,7 +25,8 @@ recipes_remotes = {
     'gst-plugins-base-1.0': {'fluendo': gst_url },
     'gst-plugins-good-1.0': {'fluendo': gst_url },
     'gst-plugins-bad-1.0': {'fluendo': gst_url },
-    'gst-plugins-ugly-1.0': {'fluendo': gst_url }
+    'gst-plugins-ugly-1.0': {'fluendo': gst_url },
+    'gst-libav-1.0': {'fluendo': gst_url }
 }
 
 recipes_commits = {
@@ -33,7 +34,8 @@ recipes_commits = {
     'gst-plugins-base-1.0': gst_commit,
     'gst-plugins-good-1.0': gst_commit,
     'gst-plugins-bad-1.0': gst_commit,
-    'gst-plugins-ugly-1.0': gst_commit
+    'gst-plugins-ugly-1.0': gst_commit,
+    'gst-libav-1.0': gst_commit
 }
 
 # FIXME: remove this once all variables are correctly configured in web.config

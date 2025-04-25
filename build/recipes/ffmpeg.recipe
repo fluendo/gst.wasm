@@ -1,0 +1,22 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+
+import os
+import sys
+import cerbero
+from cerbero.build import recipe
+
+def recipes_path():
+    return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero-share', 'recipes')
+
+original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'ffmpeg.recipe'))
+
+class Recipe(original_recipe):
+    def recipe_dir(self):
+        return recipes_path()
+    
+    def prepare(self):
+        self.meson_options.update({
+            'auto_features' : 'disabled',
+            'h264_decoder' : 'enabled',
+        });
+        super().prepare()

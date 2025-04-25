@@ -12,6 +12,7 @@ gstvideo_dep = dependency('gstreamer-video-1.0')
 
 # Plugins
 gstisomp4_dep = dependency('gstisomp4')
+gstlibav_dep = dependency('gstlibav')
 gstcoreelements_dep = dependency('gstcoreelements')
 gstapp_dep = dependency('gstapp')
 gstaudiotestsrc_dep = dependency('gstaudiotestsrc')
@@ -27,6 +28,7 @@ gstweb_sdl2_dep = gstpluginsweb.get_variable('sdl2_dep')
 examples = [
   'audiotestsrc',
   'codecs',
+  'codecs-avdec-h264',
   'gl',
   'gstlaunch',
   'openal',
