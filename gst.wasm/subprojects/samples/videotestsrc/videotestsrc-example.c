@@ -22,9 +22,6 @@
 
 #include <gst/emscripten/gstemscripten.h>
 
-#define GST_CAT_DEFAULT example_dbg
-GST_DEBUG_CATEGORY_STATIC (example_dbg);
-
 static GstElement *pipeline;
 
 static void
@@ -37,10 +34,36 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (sdl2);
 }
 
+EM_JS(void, debuggg, (const char* str), {
+  const msg = UTF8ToString(str);
+
+  try {
+    const outputBox = document.getElementById("debuggg");
+    if (outputBox)
+      outputBox.textContent += msg;
+  } catch (e) {
+  }
+  
+  console.log (msg);
+});
+
+GType gst_video_test_src_get_type(void);
+GType gst_sdl2_sink_get_type (void);
+
 static void
 init_pipeline ()
 {
-  pipeline = gst_parse_launch ("videotestsrc pattern=ball ! sdl2sink", NULL);
+  pipeline = gst_pipeline_new (NULL);
+  GstElement *videotestsrc = g_object_new (gst_video_test_src_get_type (), "pattern", 18, NULL);
+  GstElement *sdl2sink = g_object_new (gst_sdl2_sink_get_type (), NULL);
+
+  gst_bin_add_many (GST_BIN_CAST (pipeline),
+      GST_ELEMENT_CAST (videotestsrc),
+      GST_ELEMENT_CAST (sdl2sink), NULL);
+
+  gst_element_link (videotestsrc, sdl2sink);
+  
+  debuggg ("create pipeline ok\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
