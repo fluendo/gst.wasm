@@ -390,15 +390,15 @@ gst_sdl2_sink_class_init (GstSDL2SinkClass * class)
   gst_element_class_add_static_pad_template (klass.element,
       &gst_sdl2_sink_template);
 
-  klass.basesink->set_caps = GST_DEBUG_FUNCPTR (gst_sdl2_sink_setcaps);
-  klass.basesink->unlock = GST_DEBUG_FUNCPTR (gst_sdl2_sink_unlock);
-  klass.basesink->unlock_stop = GST_DEBUG_FUNCPTR (gst_sdl2_sink_unlock_stop);
-  klass.basesink->prepare = GST_DEBUG_FUNCPTR (gst_sdl2_sink_prepare);
-  klass.basesink->start = GST_DEBUG_FUNCPTR (gst_sdl2_sink_start);
-  klass.basesink->stop = GST_DEBUG_FUNCPTR (gst_sdl2_sink_stop);
+  klass.basesink->set_caps = gst_sdl2_sink_setcaps;
+  klass.basesink->unlock = gst_sdl2_sink_unlock;
+  klass.basesink->unlock_stop = gst_sdl2_sink_unlock_stop;
+  klass.basesink->prepare = gst_sdl2_sink_prepare;
+  klass.basesink->start = gst_sdl2_sink_start;
+  klass.basesink->stop = gst_sdl2_sink_stop;
 
   klass.videosink->show_frame =
-      GST_DEBUG_FUNCPTR (gst_sdl2_sink_show_frame);
+      gst_sdl2_sink_show_frame;
 
   GST_DEBUG_CATEGORY_INIT (sdl2sink_dbg, "sdl2sink",
       0, "SDL2 Sink");
