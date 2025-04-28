@@ -7,21 +7,15 @@ executable(executable_name,
     c_code,
     dependencies: [
       common_deps,
+      gstwebplugin_dep,
       dependency('gstrtp'),
       dependency('gstopengl')
-    ],
-    link_with: [
-      gstweb_lib,
     ],
     link_args: common_link_args + [
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
-      # Required by webfetchsrc, this should be brought directly by the dep
-      '-sFETCH=1',
-      '-lhtml5',
       '-lGL',
-      '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
     ],
     name_suffix: 'js',
     install: true,

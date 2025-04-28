@@ -9,12 +9,10 @@ executable(executable_name,
       common_deps,
       gstisomp4_dep,
       gstlibav_dep,
+      gstwebplugin_dep,
       dependency('gstreamer-emscripten-1.0'),
       dependency('gstopengl'),
       dependency('gstvideoconvertscale'),
-    ],
-    link_with: [
-      gstweb_dep
     ],
     link_args: common_link_args + [
       '-lembind',

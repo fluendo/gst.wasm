@@ -22,8 +22,8 @@ common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_
 
 # Plugins relative to gst-plugins-web subproject
 gstpluginsweb = subproject('gst-plugins-web')
-gstweb_lib = gstpluginsweb.get_variable('gstweb_lib')
 gstweb_sdl2_dep = gstpluginsweb.get_variable('sdl2_dep')
+gstwebplugin_dep = gstpluginsweb.get_variable('gstwebplugin_dep')
 
 examples = [
   'audiotestsrc',
