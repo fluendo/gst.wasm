@@ -4,7 +4,7 @@ sources = [
 
 configure_file(output: 'config.h', configuration: cdata)
 
-sdl2_dep = static_library('gstsdl2',
+sdl2_lib = static_library('gstsdl2',
   sources,
   c_args: ['-DHAVE_CONFIG_H', '-sUSE_SDL=2', '-Wall', '-Werror'],
   link_args: ['-sUSE_SDL=2', '-lGL'],
@@ -14,4 +14,4 @@ sdl2_dep = static_library('gstsdl2',
   install_dir: plugins_install_dir,
 )
 
-plugins += [sdl2_dep]
+plugins += [sdl2_lib]
