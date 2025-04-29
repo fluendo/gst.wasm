@@ -14,4 +14,11 @@ sdl2_lib = static_library('gstsdl2',
   install_dir: plugins_install_dir,
 )
 
-plugins += [sdl2_lib]
+pkgconfig.generate(sdl2_lib, install_dir: plugins_pkgconfig_install_dir)
+sdl2_dep = declare_dependency(link_with : sdl2_lib,
+
+  variables: {'full_path': sdl2_lib.full_path()},
+  include_directories : [libinc],
+  dependencies: [gstemscripten_dep, gstvideo_dep],
+)
+meson.override_dependency(sdl2_lib.name(), sdl2_dep)

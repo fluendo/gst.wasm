@@ -1,6 +1,7 @@
 executable(executable_name,
     'gstlaunch-example.c',
     dependencies: [common_deps,
+                   sdl2_dep,
                    dependency('gstopenal'),
                    dependency('gstcoreelements'),
                    dependency('gstreamer-emscripten-1.0'),
@@ -13,9 +14,6 @@ executable(executable_name,
       '-lGL',
       '-sUSE_SDL=2',
       '--shell-file=@0@/html/index.html'.format(meson.current_source_dir())
-    ],
-    link_with: [
-      gstweb_sdl2_lib,
     ],
     c_args: ['-DHAVE_CONFIG_H', '-sUSE_SDL=2', '-Wall', '-Werror'],
     name_suffix: 'html',
