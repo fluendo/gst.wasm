@@ -276,7 +276,7 @@ gst_web_codecs_utils_scan_video_h264_decoder (GstPlugin *plugin, val vdecclass)
             g_strdup_printf ("avc1.%02X%02X%02X", sps[0], sps[1], sps[2]);
         /* Validate */
         conf_supported =
-            video_decoder_is_config_supported (vdecclass, mime_codec, i);
+            is_config_supported (vdecclass, val::null (), mime_codec, i);
         supported |= conf_supported;
         /* Merge profile and level into the caps */
         g_free (mime_codec);
