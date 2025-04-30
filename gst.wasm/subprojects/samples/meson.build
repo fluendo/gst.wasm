@@ -22,7 +22,7 @@ common_deps = [gst_dep, gstapp_dep, gstcoreelements_dep, gstaudio_dep, gstvideo_
 
 # Plugins relative to gst-plugins-web subproject
 gstpluginsweb = subproject('gst-plugins-web')
-sdl2_dep = gstpluginsweb.get_variable('sdl2_dep')
+gstsdl2_dep = gstpluginsweb.get_variable('gstsdl2_dep')
 gstwebplugin_dep = gstpluginsweb.get_variable('gstwebplugin_dep')
 
 examples = [

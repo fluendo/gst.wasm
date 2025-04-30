@@ -9,7 +9,7 @@ webcanvassrc_example_common_deps = [
 
 executable('webcanvassrc-animation-example',
   'webcanvassrc-animation-example.c',
-  dependencies: webcanvassrc_example_common_deps + gstwebplugin_dep + sdl2_dep,
+  dependencies: webcanvassrc_example_common_deps + gstwebplugin_dep + gstsdl2_dep,
   include_directories: include_directories('.'),
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args,
@@ -25,7 +25,7 @@ custom_target('webcanvassrc-animation-example-js',
 
 executable('webcanvassrc-webcam-example',
   'webcanvassrc-webcam-example.c',
-  dependencies: webcanvassrc_example_common_deps + gstwebplugin_dep + sdl2_dep,
+  dependencies: webcanvassrc_example_common_deps + gstwebplugin_dep + gstsdl2_dep,
   include_directories: include_directories('.'),
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args + [

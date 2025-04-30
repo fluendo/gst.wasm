@@ -1,7 +1,7 @@
 executable(executable_name,
     'gstlaunch-example.c',
     dependencies: [common_deps,
-                   sdl2_dep,
+                   gstsdl2_dep,
                    dependency('gstopenal'),
                    dependency('gstcoreelements'),
                    dependency('gstreamer-emscripten-1.0'),
