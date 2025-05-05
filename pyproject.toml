@@ -8,6 +8,6 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
-cerbero = { git = "https://github.com/fluendo/cerbero", branch = "gst.wasm" }
+cerbero = { git = "https://github.com/fluendo/cerbero", branch = "RDI-2506" }
 distro = "*"
 git-upstream-workflow = { git = "https://github.com/fluendo/git-upstream-workflow" }
