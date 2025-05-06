@@ -1,5 +1,7 @@
 webcanvassrc_example_common_link_args = [
   '-sASYNCIFY',
+  # Required by webfetchsrc, this should be brought directly by the dep
+  '-sFETCH=1',
 ]
 webcanvassrc_example_common_deps = [
     common_deps,
