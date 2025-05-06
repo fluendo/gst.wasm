@@ -185,14 +185,9 @@ gst_web_codecs_audio_decoder_get_format (
   gst_audio_info_set_format (&self->output_info, gst_format, sample_rate,
       number_of_channels, positions);
   g_free (positions);
-  // Note: gst_audio_decoder_allocate_output_buffer allocates buffers without
-  // GstAudioMeta. Internally, gst_audio_buffer_map is used, which asserts:
-  // !meta && info->layout == GST_AUDIO_LAYOUT_INTERLEAVED
-  // Summary: We only support GST_AUDIO_LAYOUT_INTERLEAVED. In order to support
-  // GST_AUDIO_LAYOUT_NONINTERLEAVED, we need to properly add GstAudioMeta to
-  // the buffer allocated by gst_audio_decoder_allocate_output_buffer.
-  g_assert (GST_AUDIO_INFO_LAYOUT (&self->output_info) ==
-            GST_AUDIO_LAYOUT_INTERLEAVED);
+
+  self->output_info.layout =
+      planar ? GST_AUDIO_LAYOUT_NON_INTERLEAVED : GST_AUDIO_LAYOUT_INTERLEAVED;
 
   // Log the audio info values
   GST_DEBUG_OBJECT (self,
@@ -237,34 +232,16 @@ gst_web_codecs_audio_decoder_audio_data_to_buffer (
 
   GST_DEBUG_OBJECT (self, "Copy AudioData to GstBuffer");
   if (planar) {
-    guint width;
-    gsize sample_size;
-
-    g_assert (self->output_info.finfo != NULL);
-    width = GST_AUDIO_FORMAT_INFO_WIDTH (self->output_info.finfo);
-    g_assert (width % 8 == 0);
-    sample_size = width / 8;
-
+    guint8 *dst_ptr = map.data;
     for (int i = 0; i < channels; i++) {
       val opts = val::object ();
       opts.set ("planeIndex", i);
       guint32 plane_size =
           audio_data.call<val> ("allocationSize", opts).as<guint32> ();
 
-      guint8 *dst_ptr = (guint8 *) malloc (plane_size);
       val dst_view = val (typed_memory_view (plane_size, dst_ptr));
       audio_data.call<val> ("copyTo", dst_view, opts);
-
-      guint8 *inptr = dst_ptr;
-      guint8 *outptr = map.data;
-
-      guint32 samples = plane_size / sample_size;
-      for (guint32 s = 0; s < samples; ++s) {
-        memcpy (outptr + (s * channels + i) * sample_size,
-            inptr + s * sample_size, sample_size);
-      }
-
-      free (dst_ptr);
+      dst_ptr += plane_size;
     }
   } else {
     GST_DEBUG_OBJECT (self, "Copy fisrt plane");
@@ -328,6 +305,8 @@ gst_web_codecs_audio_decoder_on_output (val audio_data)
   }
 
   buffer = gst_audio_decoder_allocate_output_buffer (dec, total_size);
+  gst_buffer_add_audio_meta (
+      buffer, &self->output_info, (total_size / self->output_info.bpf), NULL);
   if (!buffer) {
     GST_ERROR_OBJECT (self, "Failed to allocate output buffer");
     goto done;
