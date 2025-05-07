@@ -15,20 +15,10 @@ executable(executable_name,
       dependency('gstvideoconvertscale'),
     ],
     link_args: common_link_args + [
-      '-lembind',
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
-      # Required by webfetchsrc, this should be brought directly by the dep
-      '-sFETCH=1',
-      # '-g3',
-      '-lhtml5',
       '-lGL',
-      '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
-    ],
-    c_args: [
-      # '-g3',
-      # '-O0',
     ],
     name_suffix: 'js',
     install: true,
