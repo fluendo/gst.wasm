@@ -13,10 +13,6 @@ executable(executable_name,
       '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
       '-sPROXY_TO_PTHREAD', # To avoid deadlock between main thread access like stdout from a thread while main thread is blocked
     ],
-    c_args: [
-      '-g3',
-      '-O0',
-    ],
     name_suffix: 'js',
     install: true,
     install_dir: install_dir,

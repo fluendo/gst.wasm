@@ -6,18 +6,11 @@ executable('webstreamsrc-example',
   sources,
   install: true,
   install_dir: install_dir,
-  dependencies: common_deps,
+  dependencies: common_deps + gstwebplugin_dep,
   include_directories: include_directories('.'),
   c_args: ['-DHAVE_CONFIG_H=1'],
   link_args: [
-      '-sFETCH=1',
-      # Required by webcanvassink, this should be brought directly by the dep
-      '-lembind',
-      '-lhtml5',
       '-sASYNCIFY',
-  ],
-  link_with: [
-    gstweb_dep
   ],
   name_suffix: 'html'
 )

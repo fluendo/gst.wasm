@@ -8,25 +8,14 @@ executable(executable_name,
     dependencies: [
       common_deps,
       gstisomp4_dep,
+      gstwebplugin_dep,
       dependency('gstreamer-emscripten-1.0'),
-      dependency('gstdebugutilsbad'),
-    ],
-    link_with: [
-      gstweb_dep,
+      dependency('gstdebugutilsbad')
     ],
     link_args: common_link_args + [
-      '-lembind',
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
-      # Required by webfetchsrc, this should be brought directly by the dep
-      '-sFETCH=1',
-      '-g3',
-      '-lhtml5',
-    ],
-    c_args: [
-      '-g3',
-      '-O0',
     ],
     name_suffix: 'js',
     install: true,

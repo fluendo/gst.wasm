@@ -9,28 +9,16 @@ executable(executable_name,
       common_deps,
       gstisomp4_dep,
       gstlibav_dep,
+      gstwebplugin_dep,
       dependency('gstreamer-emscripten-1.0'),
       dependency('gstopengl'),
       dependency('gstvideoconvertscale'),
     ],
-    link_with: [
-      gstweb_dep
-    ],
     link_args: common_link_args + [
-      '-lembind',
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
-      # Required by webfetchsrc, this should be brought directly by the dep
-      '-sFETCH=1',
-      # '-g3',
-      '-lhtml5',
       '-lGL',
-      '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread
-    ],
-    c_args: [
-      # '-g3',
-      # '-O0',
     ],
     name_suffix: 'js',
     install: true,
