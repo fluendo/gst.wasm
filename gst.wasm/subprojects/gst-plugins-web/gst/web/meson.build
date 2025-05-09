@@ -17,7 +17,6 @@ codecs_deps = [gstvideo_dep, gstpbutils_dep, gstgl_dep]
 gstweb_link_args = [
   '-sFETCH=1',
   '-lhtml5',
-  '-sOFFSCREENCANVAS_SUPPORT'
 ]
 gstweb_lib_deps = common_deps + codecs_deps + gstweb_dep
 gstweb_lib = static_library('gstweb',
