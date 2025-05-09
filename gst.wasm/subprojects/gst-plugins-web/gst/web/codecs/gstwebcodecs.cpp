@@ -44,6 +44,7 @@
 
 #include "gstwebcodecs.h"
 #include "gstwebcodecsvideodecoder.h"
+#include "gstwebcodecsaudiodecoder.h"
 
 using namespace emscripten;
 
@@ -76,6 +77,8 @@ create_element_name (GType parent_type, const gchar *codec_name)
 
   if (parent_type == gst_web_codecs_video_decoder_get_type ())
     prefix = "webcodecsviddec";
+  else if (parent_type == gst_web_codecs_audio_decoder_get_type ())
+    prefix = "webcodecsauddec";
 
   if (!prefix) {
     GST_ERROR ("No prefix, therefore wrong type");
@@ -98,10 +101,10 @@ create_element_name (GType parent_type, const gchar *codec_name)
 }
 
 static gboolean
-register_video_decoder (
-    GstPlugin *plugin, const gchar *codec_name, GstCaps *caps, gboolean is_hw)
+register_decoder (GstPlugin *plugin, const gchar *codec_name, GstCaps *caps,
+    gboolean is_hw, GType type)
 {
-  GType type, subtype;
+  GType subtype;
   GTypeQuery type_query;
   GTypeInfo type_info = {
     0,
@@ -113,7 +116,6 @@ register_video_decoder (
 
   GST_DEBUG ("Registering codec %" GST_PTR_FORMAT, caps);
 
-  type = gst_web_codecs_video_decoder_get_type ();
   g_type_query (type, &type_query);
   memset (&type_info, 0, sizeof (type_info));
   type_info.class_size = type_query.class_size;
@@ -151,18 +153,38 @@ existing_type:
 }
 
 static gboolean
-video_decoder_is_config_supported (
-    val vdecclass, gchar *codec, gboolean hwaccel)
+register_video_decoder (
+    GstPlugin *plugin, const gchar *codec_name, GstCaps *caps, gboolean is_hw)
 {
-  const gchar *acceleration = accelerations[hwaccel ? 1 : 0];
+  return register_decoder (plugin, codec_name, caps, is_hw,
+      gst_web_codecs_video_decoder_get_type ());
+}
+
+static gboolean
+register_audio_decoder (
+    GstPlugin *plugin, const gchar *codec_name, GstCaps *caps, gboolean is_hw)
+{
+  return register_decoder (plugin, codec_name, caps, is_hw,
+      gst_web_codecs_audio_decoder_get_type ());
+}
+
+static gboolean
+is_config_supported (
+    val codec_class, val config, gchar *codec, gboolean hwaccel)
+{
   gboolean is_supported;
-  val config = val::object ();
+  const gchar *acceleration = accelerations[hwaccel ? 1 : 0];
 
   GST_LOG ("Checking for support of codec %s, hardwareAcceleration: %s", codec,
       acceleration);
-  config.set ("codec", std::string (codec));
+
+  if (!config) {
+    config = val::object ();
+    config.set ("codec", std::string (codec));
+  }
   config.set ("hardwareAcceleration", std::string (acceleration));
-  val result = vdecclass.call<val> ("isConfigSupported", config).await ();
+
+  val result = codec_class.call<val> ("isConfigSupported", config).await ();
   is_supported = result["supported"].as<bool> ();
   GST_LOG ("Decoder for codec '%s' with hw-acceleration '%s' is %ssupported",
       codec, acceleration, is_supported ? "" : "not ");
@@ -184,6 +206,23 @@ scan_video_decoders (GstPlugin *plugin)
   gst_web_codecs_utils_scan_video_h264_decoder (plugin, vdecclass);
 }
 
+static void
+scan_audio_decoders (GstPlugin *plugin)
+{
+  val adecclass = val::global ("AudioDecoder");
+  if (!adecclass.as<bool> ()) {
+    GST_ERROR ("No global AudioDecoder");
+    return;
+  }
+
+  GstCaps *caps;
+
+  caps = gst_caps_from_string ("audio/mpeg");
+  // TODO: Check supported config and caps
+  register_audio_decoder (plugin, "AACSW", caps, FALSE);
+  gst_caps_unref (caps);
+}
+
 gboolean
 gst_web_codecs_init (GstPlugin *plugin)
 {
@@ -192,6 +231,7 @@ gst_web_codecs_init (GstPlugin *plugin)
   gst_web_codecs_data_quark =
       g_quark_from_static_string ("gst-web-codecs-data");
   scan_video_decoders (plugin);
+  scan_audio_decoders (plugin);
 
   return TRUE;
 }

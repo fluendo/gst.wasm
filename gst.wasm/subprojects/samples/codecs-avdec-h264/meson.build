@@ -19,6 +19,7 @@ executable(executable_name,
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
       '-lGL',
+      '-sOFFSCREENCANVAS_SUPPORT'
     ],
     name_suffix: 'js',
     install: true,
