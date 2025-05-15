@@ -130,9 +130,11 @@ meson --cross-file=emscripten-crossfile.meson _builddir
 First, you'll need to install Emscripten tools from https://emscripten.org/docs/getting_started/downloads.html
 Then you can run the samples by doing:
 
+First, you'll need to install Emscripten tools from https://emscripten.org/docs/getting_started/downloads.html
+Then you can run the samples by doing:
+
 ```
 emrun _builddir/subprojects/samples/videotestsrc/videotestsrc-example.html
-emrun _builddir/subprojects/samples/audiotestsrc/audiotestsrc-example.html # Press the 'play' button to hear to a sound.
 emrun _builddir/subprojects/samples/openal/openal-example.html # Click to hear to a sound.
 ```
 
