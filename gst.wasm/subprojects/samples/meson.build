@@ -39,6 +39,7 @@ examples = [
   'webstreamsrc',
   'webtransportsrc',
   'webtransportsrc-streams',
+  'gstinspect',
 ]
 
 common_link_args = [
