@@ -26,6 +26,18 @@
  #  include "config.h"
  #endif
  
+ #include <gst/emscripten/gstemscripten.h> //Added by me
+
+ static void
+register_elements () //Added by me: only adding audioconvert element
+{
+  GST_ELEMENT_REGISTER_DECLARE (audioconvert);
+  GST_PLUGIN_STATIC_DECLARE (web);
+
+  GST_ELEMENT_REGISTER (audioconvert, NULL);
+  GST_PLUGIN_STATIC_REGISTER (web);
+}
+ 
  /* FIXME 2.0: suppress warnings for deprecated API such as GValueArray
   * with newer GLib versions (>= 2.31.0) */
  #define GLIB_DISABLE_DEPRECATION_WARNINGS
@@ -1340,6 +1352,7 @@
  static void
  print_element_list (gboolean print_all, gchar * ftypes)
  {
+  g_print("I'm here 0\n");
    int plugincount = 0, featurecount = 0, blacklistcount = 0;
    GList *plugins, *orig_plugins;
    gchar **types = NULL;
@@ -1350,14 +1363,17 @@
      types = g_strsplit (ftypes, "/", -1);
      for (i = 0; types[i]; i++)
        *types[i] = g_ascii_toupper (*types[i]);
+      g_print("I'm here 1\n");
  
    }
+   g_print("I'm here 2\n");
  
    orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
-   if (sort_output == SORT_TYPE_NAME)
-     orig_plugins = plugins =
-         g_list_sort (plugins, gst_plugin_name_compare_func);
+  //  if (sort_output == SORT_TYPE_NAME) //Modified by me (breaks silently) 
+  //    orig_plugins = plugins =
+  //        g_list_sort (plugins, gst_plugin_name_compare_func);
    while (plugins) {
+     g_print("I'm here 3\n");
      GList *features, *orig_features;
      GstPlugin *plugin;
  
@@ -1373,9 +1389,11 @@
      orig_features = features =
          gst_registry_get_feature_list_by_plugin (gst_registry_get (),
          gst_plugin_get_name (plugin));
+     g_print("I'm here 3.5?\n");
      if (sort_output == SORT_TYPE_NAME)
        orig_features = features =
            g_list_sort (features, gst_plugin_feature_name_compare_func);
+     g_print("I'm here 4?\n");
      while (features) {
        GstPluginFeature *feature;
  
@@ -1452,6 +1470,7 @@
  
      gst_plugin_feature_list_free (orig_features);
    }
+   g_print("I'm here 4\n");
  
    gst_plugin_list_free (orig_plugins);
    g_strfreev (types);
@@ -2282,7 +2301,7 @@
    /* avoid glib warnings when inspecting deprecated properties */
    g_setenv ("G_ENABLE_DIAGNOSTIC", "0", FALSE);
  
-   g_set_prgname ("gst-inspect-1.0"); //Mofied by me
+   g_set_prgname ("gst-inspect-1.0"); //Modified by me
  
  #ifndef GST_DISABLE_OPTION_PARSING
    ctx = g_option_context_new ("[ELEMENT-NAME | PLUGIN-NAME]");
@@ -2471,6 +2490,27 @@
  int
  main (int argc, char *argv[])
  {
+
+  //Added by me
+  gst_init (NULL, NULL);
+  gst_debug_set_threshold_from_string (
+      "example:5",
+      FALSE);
+  gst_emscripten_init ();
+  g_print ("Registering elements");
+  register_elements ();
+  g_print ("Listing available plugins:\n");
+  GstRegistry *registry = gst_registry_get ();
+  GList *plugins = gst_registry_get_plugin_list (registry);
+  for (GList *l = plugins; l != NULL; l = l->next) {
+    GstPlugin *plugin = (GstPlugin *) l->data;
+    const gchar *name = gst_plugin_get_name (plugin);
+    g_print (" - %s\n", name);
+  }
+  g_list_free (plugins);
+  char *my_argv[] = { "gst-inspect-1.0", "-a", NULL };
+  int my_argc = 2;
+
    int ret;
  
    /* gstinspect.c calls this function */
@@ -2481,7 +2521,8 @@
  #if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
    ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
  #else
-   ret = real_main (argc, argv);
+   //ret = real_main (argc, argv); //Modified by me
+   ret = real_main (my_argc, my_argv);
  #endif
  
  #if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
