@@ -2,22 +2,28 @@ fs = import('fs')
 c_code = executable_name + '.c'
 html_code = executable_name + '-page.html'
 
-include_directories('upstream-gstreamer')
+#FIXME: this is the ugliest thing I've ever seen. This is the consequence of gst-inspect-1.0 being a tool and not a library
+#Maybe converting GStreamer to a subproject?
+gstinspect_source_dir = '../../../../build/gst.wasm_web_wasm32/sources/local/gstreamer-1.0/subprojects/gstreamer/tools'
+gst_basics_source_dir = '../../../../build/gst.wasm_web_wasm32/sources/local/gstreamer-1.0/subprojects/gstreamer'
+config_h_dir = '../../../../build/gst.wasm_web_wasm32/sources/web_wasm32/gstreamer-1.0/subprojects/gstreamer/_builddir'
+gstreamer_includes = include_directories(gstinspect_source_dir, gst_basics_source_dir, config_h_dir)
 
 executable(executable_name,
     'gstinspect-example.c',
-    'upstream-gstreamer/gstinspect.c',
     dependencies: [common_deps, 
     dependency('gstweb'),
     dependency('gstsdl2'),
     ],
+    include_directories: [gstreamer_includes],
     link_args: common_link_args + [
       #'-sEXPORTED_FUNCTIONS=_init_pipeline,_main,cwrap',
       '-lhtml5',
       '-sASYNCIFY',
+      '-g3',
     ],
     #c_args: ['-DHAVE_CONFIG_H', '-Wall', '-Werror'],
-    c_args: ['-Wall', '-Werror', '-Wno-deprecated-declarations'],
+    c_args: ['-Wall', '-Werror', '-Wno-deprecated-declarations', '-Wno-error=macro-redefined', '-DHAVE_CONFIG_H'],
     name_suffix: 'html',
     install: true,
     install_dir: install_dir,

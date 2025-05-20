@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "glib-compat-private.h": "c",
+        "cstdlib": "c",
+        "tools.h": "c",
+        "string.h": "c",
+        "locale.h": "c",
+        "gst_private.h": "c",
+        "gstemscripten.h": "c"
+    }
+}

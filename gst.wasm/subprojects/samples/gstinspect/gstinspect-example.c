@@ -20,13 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
+#include <gst/emscripten/gstemscripten.h>
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 
-#include <gst/emscripten/gstemscripten.h>
-#include "gstinspect.h"
+#define main gst_inspect_main
+#include "gst-inspect.c"
+#undef main
 
 
 static void
@@ -47,27 +48,11 @@ main (int argc, char *argv[])
   GST_DEBUG_CATEGORY_STATIC (example_dbg);
   GST_DEBUG_CATEGORY_INIT (
     example_dbg, "example", 0, "gstinspect wasm example");
-  //gst_debug_set_threshold_from_string ("example:5", FALSE);
   register_elements ();
-  char *my_argv[] = { "-a", NULL };
-
-  int ret;
   
-  /* TAKEN AND MODIFIED FROM UPSTREAM GSTREAMER - gstinspect.c*/
-  /* gstinspect.c calls this function */
-#if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
-  argv = g_win32_get_command_line ();
-#endif
-
-#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
-  ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
-#else
-  ret = real_main (2, my_argv);
-#endif
-
-#if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
-  g_strfreev (argv);
-#endif
-
+  //Sorting breaks silently and colors ANSI codes are not supported in wasm
+  char *my_argv[] = { NULL, "-a", "--sort=none", "--no-colors"};
+  int ret = gst_inspect_main (4, my_argv);
+  
   return ret;
 }
