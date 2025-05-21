@@ -30,11 +30,11 @@ recipes_remotes = {
 }
 
 recipes_commits = {
-    'gstreamer-1.0': gst_commit,
-    'gst-plugins-base-1.0': gst_commit,
-    'gst-plugins-good-1.0': gst_commit,
-    'gst-plugins-bad-1.0': gst_commit,
-    'gst-plugins-ugly-1.0': gst_commit,
+    'gstreamer-1.0': 'fluendo/CS-3298',
+    'gst-plugins-base-1.0': 'fluendo/CS-3298',
+    'gst-plugins-good-1.0': 'fluendo/CS-3298',
+    'gst-plugins-bad-1.0': 'fluendo/CS-3298',
+    'gst-plugins-ugly-1.0': 'fluendo/CS-3298',
     'gst-libav-1.0': gst_commit
 }
 

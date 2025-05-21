@@ -33,11 +33,13 @@ static void
 register_elements ()
 {
   GST_ELEMENT_REGISTER_DECLARE (queue);
+  GST_ELEMENT_REGISTER_DECLARE (capsfilter);
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
   GST_ELEMENT_REGISTER_DECLARE (glimagesink);
   GST_ELEMENT_REGISTER_DECLARE (web_canvas_sink);
   GST_ELEMENT_REGISTER_DECLARE (web_stream_src);
   GST_ELEMENT_REGISTER_DECLARE (videoconvert);
+  GST_ELEMENT_REGISTER_DECLARE (dashdemux);
   GST_PLUGIN_STATIC_DECLARE (libav);
 
   gst_web_utils_init ();
@@ -50,10 +52,12 @@ register_elements ()
   GST_ELEMENT_REGISTER (qtdemux, NULL);
   GST_ELEMENT_REGISTER (queue, NULL);
   GST_ELEMENT_REGISTER (videoconvert, NULL);
+  GST_ELEMENT_REGISTER (dashdemux, NULL);
+  GST_ELEMENT_REGISTER (capsfilter, NULL);
 }
 
 #ifndef GSTWASM_AVDEC_H264_EXAMPLE_SRC
-#define GSTWASM_AVDEC_H264_EXAMPLE_SRC "https://hbbtv-demo.fluendo.com/pip/bbb.mp4"
+#define GSTWASM_AVDEC_H264_EXAMPLE_SRC "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd"
 #endif
 
 static void
@@ -62,8 +66,8 @@ init_pipeline ()
   pipeline = gst_parse_launch (
       "webstreamsrc "
       "location=\"" GSTWASM_AVDEC_H264_EXAMPLE_SRC "\" ! "
-      "qtdemux ! "
-      "avdec_h264 qos=false ! videoconvert ! queue ! webcanvassink",
+      "dashdemux ! video/quicktime ! qtdemux ! queue ! "
+      "avdec_h264 qos=false ! videoconvert ! webcanvassink",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
@@ -76,7 +80,7 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "SW h264 decoder wasm example");
   gst_debug_set_threshold_from_string (
-      "*:3, example:5, videodecoder*:3", FALSE);
+      "2,webstreamsrc:6,basesrc:6", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");

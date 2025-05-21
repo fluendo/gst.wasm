@@ -12,6 +12,7 @@ executable(executable_name,
       gstwebplugin_dep,
       dependency('gstreamer-emscripten-1.0'),
       dependency('gstopengl'),
+      dependency('gstdash'),
       dependency('gstvideoconvertscale'),
     ],
     link_args: common_link_args + [
@@ -19,7 +20,9 @@ executable(executable_name,
       # This is giving problems when running the WebRunner at set_format
       '-sPROXY_TO_PTHREAD',
       '-lGL',
-      '-sOFFSCREENCANVAS_SUPPORT'
+      '-sOFFSCREENCANVAS_SUPPORT',
+      '-sPTHREAD_POOL_SIZE=16',
+      '-g3'
     ],
     name_suffix: 'js',
     install: true,

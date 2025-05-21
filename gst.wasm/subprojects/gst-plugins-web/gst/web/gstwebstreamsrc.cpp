@@ -399,6 +399,7 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   if (G_UNLIKELY (self->flushing)) {
     GST_OBJECT_UNLOCK (self);
+    GST_DEBUG_OBJECT (self, "Flushing");
     return GST_FLOW_FLUSHING;
   }
 
@@ -408,6 +409,7 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
                         : self->in_eos ? GST_FLOW_EOS
                                        : GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (self);
+    GST_DEBUG_OBJECT (self, "Return %d", ret);
     return ret;
   }
 
