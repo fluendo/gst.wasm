@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WebTransport H264 Canvas Example</title>
+    <style>
+      body { background: #222; color: #eee; }
+      canvas { border: 1px solid #888; }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="320" height="240"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      const url = 'https://127.0.0.1:4443';
+
+      let decoder;
+
+      async function start() {
+        try {
+          const transport = new WebTransport(url);
+          await transport.ready;
+          console.log('WebTransport connected');
+
+          decoder = new VideoDecoder({
+            output: handleFrame,
+            error: e => console.error('Decoder error:', e)
+          });
+
+          decoder.configure({
+            codec: 'avc1.42E01E',
+            codedWidth: width,
+            codedHeight: height,
+          });
+
+          const reader = transport.incomingUnidirectionalStreams.getReader();
+          while (true) {
+            const { value: stream, done } = await reader.read();
+            if (done) break;
+            handleStream(stream);
+          }
+        } catch (e) {
+          console.error('WebTransport error:', e);
+        }
+      }
+
+      async function handleStream(stream) {
+        const reader = stream.getReader();
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (!value) continue;
+
+          try {
+            decoder.decode(new EncodedVideoChunk({
+              type: 'key',
+              timestamp: performance.now() * 1000, // microseconds
+              data: value
+            }));
+          } catch (e) {
+            console.error('Decode error:', e);
+          }
+        }
+      }
+
+      function handleFrame(frame) {
+        try {
+          ctx.drawImage(frame, 0, 0, width, height);
+        } finally {
+          frame.close();
+        }
+      }
+
+      start();
+    </script>
+  </body>
+</html>
