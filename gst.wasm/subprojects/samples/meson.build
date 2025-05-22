@@ -39,6 +39,7 @@ examples = [
   'webstreamsrc',
   'webtransportsrc',
   'webtransportsrc-streams',
+  'dash',
 ]
 
 common_link_args = [
