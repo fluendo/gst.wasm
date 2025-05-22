@@ -382,7 +382,7 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   GST_OBJECT_LOCK (self);
   while (self->accumulated_data_size == 0 && !self->fetch_error &&
-         !self->flushing) {
+         !self->flushing && !self->in_eos) {
     GST_DEBUG_OBJECT (self, "Queue is empty, wait for a buffer");
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
@@ -404,9 +404,9 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   *outbuf = (GstBuffer *) g_queue_pop_head (self->q);
   if (G_UNLIKELY (*outbuf == NULL)) {
-    GstFlowReturn ret = self->flushing ? GST_FLOW_FLUSHING
-                        : self->in_eos ? GST_FLOW_EOS
-                                       : GST_FLOW_ERROR;
+     GstFlowReturn ret = self->in_eos ? GST_FLOW_EOS
+	: self->flushing ? GST_FLOW_FLUSHING
+	: GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (self);
     return ret;
   }
