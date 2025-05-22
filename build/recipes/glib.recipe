@@ -25,7 +25,8 @@ class Recipe(recipe.Recipe):
     name = 'glib'
     version = "2.76.0"
     remotes = {"origin": "https://github.com/fluendo/glib.git"}
-    commit = "origin/gst.wasm"
+    commit = "origin/CS-3298"
+    #"origin/funcptrs-aslob"
     licenses = [License.LGPLv2Plus]
     btype = BuildType.MESON
     meson_options = {'libmount': 'disabled', 'dtrace': 'false'}
