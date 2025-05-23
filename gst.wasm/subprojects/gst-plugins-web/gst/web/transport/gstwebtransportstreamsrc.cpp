@@ -187,6 +187,13 @@ gst_web_transport_stream_src_new (const gchar *name)
   self = GST_WEB_TRANSPORT_STREAM_SRC (
       g_object_new (GST_TYPE_WEB_TRANSPORT_STREAM_SRC, "name", name, NULL));
   self->name = g_strdup (name);
+  GST_DEBUG_OBJECT (self, "gst_web_transport_stream_src_new with name %s",
+      self->name);
+  if (g_strcmp0 (self->name, "datagram")) {
+    gst_base_src_set_live (GST_BASE_SRC (self), FALSE);
+  } else {
+    gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
+  }
   return GST_ELEMENT_CAST (self);
 }
 

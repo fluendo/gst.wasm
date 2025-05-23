@@ -38,6 +38,7 @@ examples = [
   'webfetchsrc',
   'webstreamsrc',
   'webtransportsrc',
+  'webtransportsrc-streams',
 ]
 
 common_link_args = [
