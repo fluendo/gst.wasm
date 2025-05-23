@@ -10,7 +10,7 @@ target_distro = Distro.EMSCRIPTEN
 target_arch = Architecture.WASM32
 
 # The home dir defines
-folder_name = 'gst.wasm_{}_{}'.format(target_platform, target_arch)
+folder_name = 'gst.wasm.hbbtv_{}_{}'.format(target_platform, target_arch)
 home_dir = os.path.join(path, folder_name)
 
 external_recipes = {
@@ -43,3 +43,5 @@ host = "wasm32-unknown-linux"
 
 emscripten_path = os.path.join(home_dir, "emsdk", "upstream", "emscripten")
 env['PATH'] = f'{emscripten_path}:{env["PATH"]}'
+
+variants.override(["hbbtv"])
