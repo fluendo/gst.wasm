@@ -248,6 +248,12 @@ class Recipe(recipe.Recipe):
         elif self.config.target_platform == Platform.WEB:
             self.patches += ["glib/0001-Update-gitmodules-with-GitHub-URL.patch"]
             self.meson_options["nls"] = "disabled"
+            if self.config.variants.hbbtv:
+                self.meson_options["glib_assert"] = "false"
+                self.meson_options["glib_checks"] = "false"
+                self.meson_options["debug"] = "false"
+                self.meson_options["glib_debug"] = "disabled"
+                self.meson_options["optimization"] = "s"
 
         if self.config.platform in [Platform.DARWIN, Platform.IOS]:
             # Meson doesn't yet introduce rpaths properly.
