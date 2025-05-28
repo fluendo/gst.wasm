@@ -60,6 +60,12 @@ summary = "Add support for building for wasm target with emscripten toolchain"
 status = "pending"
 
 [[features]]
+name = "emscripten-hbbtv"
+remote = "fluendo"
+summary = "Add 'hbbtv' variant with compatibility parameters to run on TV browsers"
+status = "pending"
+
+[[features]]
 remote = "fluendo"
 name = "emscripten-gl"
 summary = "Add OpenGL support in gst-plugins-base through new Emscripten based WebGL backend"
