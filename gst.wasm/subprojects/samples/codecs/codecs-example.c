@@ -21,6 +21,8 @@
  */
 
 #include <gst/emscripten/gstemscripten.h>
+#include <gst/web/gstwebutils.h>
+#include <gst/web/gstwebvideoframe.h>
 
 GST_DEBUG_CATEGORY_STATIC (example_dbg);
 #define GST_CAT_DEFAULT example_dbg
@@ -30,24 +32,25 @@ static GstElement *pipeline;
 static void
 register_elements ()
 {
-  GST_PLUGIN_STATIC_DECLARE (coreelements);
+  GST_ELEMENT_REGISTER_DECLARE (qtdemux);
+  GST_ELEMENT_REGISTER_DECLARE (glimagesink);
   GST_PLUGIN_STATIC_DECLARE (web);
-  GST_PLUGIN_STATIC_DECLARE (opengl);
-  GST_PLUGIN_STATIC_DECLARE (isomp4);
 
-  GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (web);
-  GST_PLUGIN_STATIC_REGISTER (opengl);
-  GST_PLUGIN_STATIC_REGISTER (isomp4);
+  GST_ELEMENT_REGISTER (glimagesink, NULL);
+  GST_ELEMENT_REGISTER (qtdemux, NULL);
 }
+
+#ifndef GSTWASM_CODECS_EXAMPLE_SRC
+#define GSTWASM_CODECS_EXAMPLE_SRC "https://hbbtv-demo.fluendo.com/pip/bbb.mp4"
+#endif
 
 static void
 init_pipeline ()
 {
   pipeline = gst_parse_launch (
       "webstreamsrc "
-      "location=\"https://commondatastorage.googleapis.com/"
-      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+      "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\" ! "
       "qtdemux ! "
       "webcodecsviddech264sw ! webcanvassink",
       NULL);
