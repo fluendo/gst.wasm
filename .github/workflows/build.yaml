@@ -41,6 +41,7 @@ jobs:
           git config --global protocol.file.allow always
       - name: Bootstrap
         run: |
+          sudo apt-get update
           poetry run cerbero -c build/gst.wasm.cbc bootstrap
       - name: Build dependencies
         run: |
