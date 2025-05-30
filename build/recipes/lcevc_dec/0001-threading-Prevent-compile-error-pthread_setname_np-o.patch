@@ -1,0 +1,29 @@
+From b02fee0535536c271d59e760ae3ebf1aa3202b59 Mon Sep 17 00:00:00 2001
+From: Fabian Orccon <cfoch.fabian@gmail.com>
+Date: Tue, 27 May 2025 21:35:44 +0200
+Subject: [PATCH] threading: Prevent compile error pthread_setname_np on
+ emscripten
+
+---
+ src/api_utility/src/threading.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/api_utility/src/threading.cpp b/src/api_utility/src/threading.cpp
+index 900205c..dc18908 100644
+--- a/src/api_utility/src/threading.cpp
++++ b/src/api_utility/src/threading.cpp
+@@ -52,8 +52,10 @@ bool setThreadName(std::wstring_view name)
+ bool setThreadName(std::string_view name)
+ {
+     if (!name.empty()) {
+-#if defined(__ANDROID__) || defined(__linux__)
++#if defined(__ANDROID__) || defined(__linux__) || !defined(__EMSCRIPTEN__)
+         const int res = pthread_setname_np(pthread_self(), name.data());
++#elif defined(__EMSCRIPTEN__)
++        const int res = 0;
+ #else // i.e. Apple
+         const int res = pthread_setname_np(name.data());
+ #endif
+-- 
+2.43.0
+
