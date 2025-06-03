@@ -11,6 +11,7 @@ class Recipe(recipe.Recipe):
     static = True
     configure_options = (
         '-DVN_CORE_SIMD=disabled '
+        '-DVN_CORE_THREADING=disabled '
     )
     patches = [
         '../recipes/lcevc_dec/0001-threading-Prevent-compile-error-pthread_setname_np-o.patch',
