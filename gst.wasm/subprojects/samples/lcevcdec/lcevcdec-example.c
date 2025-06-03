@@ -55,11 +55,12 @@ init_pipeline ()
   pipeline = gst_parse_launch (
       "webstreamsrc "
       "location=\"http://localhost:8000/lcevc-sample.mp4\" ! "
-      "qtdemux ! h264parse ! avdec_h264 qos=false ! lcevcdec verbose=true ! fakesink silent=false signal-handoffs=true",
+      "qtdemux ! h264parse ! avdec_h264 qos=false ! lcevcdec verbose=true ! "
+      "fakesink silent=false signal-handoffs=true",
       NULL);
   g_signal_connect (pipeline, "deep-notify",
       G_CALLBACK (gst_object_default_deep_notify), NULL);
-  
+
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
@@ -71,7 +72,8 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   // gst_debug_set_threshold_from_string (
-  //     "3, example:5, webcodecs*:3, videodecoder*:3, lcevcdec:6, *video*decoder*:6", FALSE);
+  //     "3, example:5, webcodecs*:3, videodecoder*:3, lcevcdec:6,
+  //     *video*decoder*:6", FALSE);
   gst_debug_set_threshold_from_string (
       "3, videodecoder*:6, lcevcdec:6", FALSE);
 
