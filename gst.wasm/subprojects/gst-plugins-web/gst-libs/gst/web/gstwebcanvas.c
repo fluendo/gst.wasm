@@ -90,6 +90,7 @@ gst_web_canvas_new (const gchar *canvases)
   GstWebCanvas *self;
 
   self = g_object_new (GST_TYPE_WEB_CANVAS, NULL);
+  self->priv = gst_web_canvas_get_instance_private (self);
   self->priv->canvases = g_strdup (canvases);
   /* FIXME use a property runner */
   /* Create the runner with the passed in canvas */
