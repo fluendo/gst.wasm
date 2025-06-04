@@ -31,6 +31,7 @@ executable(executable_name,
       '-sPROXY_TO_PTHREAD',
       '-lGL',
       '-sOFFSCREENCANVAS_SUPPORT',
+      '-sSTACK_SIZE=1048576'
     ],
     name_suffix: 'js',
     install: true,
