@@ -36,6 +36,7 @@ executable(executable_name,
       '-sASSERTIONS=1',
       '-sALLOW_MEMORY_GROWTH=1',
       '-sUSE_PTHREADS=1',
+      '-sSTACK_SIZE=1048576'
     ],
     name_suffix: 'js',
     install: true,
