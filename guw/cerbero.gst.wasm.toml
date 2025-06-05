@@ -44,7 +44,7 @@ remote = "fluendo"
 name = "local_source"
 summary = "New type of source that allows you to build a recipe without fetching or copying sources"
 pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1483"
-status = "pending"
+status = "integrated"
 
 [[features]]
 remote = "fluendo"
