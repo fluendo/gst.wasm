@@ -40,6 +40,7 @@ examples = [
   'webtransportsrc',
   'webtransportsrc-streams',
   'gstinspect',
+  'dash',
 ]
 
 common_link_args = [

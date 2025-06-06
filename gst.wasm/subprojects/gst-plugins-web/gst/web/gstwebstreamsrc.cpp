@@ -217,18 +217,12 @@ EMSCRIPTEN_BINDINGS (gst_web_stream_src)
 }
 
 // clang-format off
-EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url, gint64 start, gint64 end), {
+EM_JS(void, gst_web_stream_fetch, (guintptr thiz, const char* url, const char *range), {
       const fetchUrl = UTF8ToString (url);
-      const options = (start != -1 && end != -1) ?
+      const options = range ?
       {
           headers: {
-              'Range': `bytes=${start}-${end}`
-          }
-      }
-      : (end == -1 && start != -1 && start != 0) ?
-      {
-          headers: {
-              'Range': `bytes=${start}-`
+              'Range': UTF8ToString (range)
           }
       }
       : {};
@@ -348,8 +342,21 @@ gst_web_stream_fetch_thread (gpointer data)
         GST_TIME_ARGS (self->download_start),
         GST_TIME_ARGS (self->download_end));
   }
+  
+  gchar *range;
+  gint64 s = self->download_start, e = self->download_end;
+
+  if (s != -1 && e != -1) {
+     range = g_strdup_printf ("bytes=%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT, s, e);
+  } else if (e == -1 && s != -1 && s != 0) {
+     range = g_strdup_printf ("bytes=%" G_GINT64_FORMAT "-", s);
+  } else {
+     range = NULL;
+  }
+
   gst_web_stream_fetch (
-      (guintptr) self, self->uri, self->download_start, self->download_end);
+      (guintptr) self, self->uri, range);
+  g_free (range);
   return NULL;
 }
 
@@ -375,7 +382,7 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   GST_OBJECT_LOCK (self);
   while (self->accumulated_data_size == 0 && !self->fetch_error &&
-         !self->flushing) {
+         !self->flushing && !self->in_eos) {
     GST_DEBUG_OBJECT (self, "Queue is empty, wait for a buffer");
     g_cond_wait (&self->qcond, GST_OBJECT_GET_LOCK (self));
   }
@@ -397,9 +404,9 @@ gst_web_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 
   *outbuf = (GstBuffer *) g_queue_pop_head (self->q);
   if (G_UNLIKELY (*outbuf == NULL)) {
-    GstFlowReturn ret = self->flushing ? GST_FLOW_FLUSHING
-                        : self->in_eos ? GST_FLOW_EOS
-                                       : GST_FLOW_ERROR;
+     GstFlowReturn ret = self->in_eos ? GST_FLOW_EOS
+	: self->flushing ? GST_FLOW_FLUSHING
+	: GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (self);
     return ret;
   }
