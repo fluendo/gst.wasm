@@ -44,7 +44,7 @@ remote = "fluendo"
 name = "local_source"
 summary = "New type of source that allows you to build a recipe without fetching or copying sources"
 pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1483"
-status = "pending"
+status = "integrated"
 
 [[features]]
 remote = "fluendo"
@@ -57,6 +57,12 @@ status = "pending"
 remote = "fluendo"
 name = "emscripten"
 summary = "Add support for building for wasm target with emscripten toolchain"
+status = "pending"
+
+[[features]]
+name = "emscripten-hbbtv"
+remote = "fluendo"
+summary = "Add 'hbbtv' variant with compatibility parameters to run on TV browsers"
 status = "pending"
 
 [[features]]
