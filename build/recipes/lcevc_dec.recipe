@@ -1,0 +1,18 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+import shutil
+
+class Recipe(recipe.Recipe):
+    name = 'lcevc_dec'
+    # licenses = [{License.BSD_like: ['LICENSE.txt']}]
+    stype = SourceType.GIT
+    remotes = {'origin': 'https://github.com/v-novaltd/LCEVCdec'}
+    commit = version = '3.3.7'
+    btype = BuildType.CMAKE
+    static = True
+    configure_options = (
+        # '-DVN_CORE_SIMD=disabled '
+    )
+    patches = [
+        '../recipes/lcevc_dec/0001-threading-Prevent-compile-error-pthread_setname_np-o.patch',
+        '../recipes/lcevc_dec/0001-emscripten-Fix-js-output.patch',
+    ]

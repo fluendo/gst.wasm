@@ -1,0 +1,63 @@
+From 1adb96b7ce5410e4ee035eec572bf2fb152e101d Mon Sep 17 00:00:00 2001
+From: Fabian Orccon <cfoch.fabian@gmail.com>
+Date: Fri, 30 May 2025 20:52:01 +0200
+Subject: [PATCH] emscripten: Fix js output
+
+---
+ cmake/tools/link_bytecode_to_js.py | 4 ----
+ src/core/decoder/CMakeLists.txt    | 3 ++-
+ 2 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/cmake/tools/link_bytecode_to_js.py b/cmake/tools/link_bytecode_to_js.py
+index 022195b..cf28e85 100644
+--- a/cmake/tools/link_bytecode_to_js.py
++++ b/cmake/tools/link_bytecode_to_js.py
+@@ -60,7 +60,6 @@ def addBuildTypeEnv(build_type):
+     elif build_type == "Release":
+         build_args += [
+             '-O3',
+-            '--closure', '1'
+         ]
+     elif build_type == "MinSizeRel":
+         build_args += [
+@@ -84,8 +83,6 @@ def addBuildTypeEnv(build_type):
+ 
+ def compile(input_file, output_file, functions, workerjs, prejs, licensejs,
+             build_type, tracing, debug, libraries):
+-    sys.path.append(os.environ['EMSCRIPTEN_ROOT_PATH'])
+-
+     cur_path = os.getcwd()
+ 
+     exported_functions = ''.join("EXPORTED_FUNCTIONS=\"['_free','_malloc',%s]\"" % (
+@@ -108,7 +105,6 @@ def compile(input_file, output_file, functions, workerjs, prejs, licensejs,
+         '-s', 'MODULARIZE=1',
+         '-s', 'EXPORT_NAME=libDPIModule',
+         '-s', 'ENVIRONMENT=web,worker',
+-        '-s', f'DEMANGLE_SUPPORT={"0" if debug else "1"}',
+         '-s', 'ALLOW_MEMORY_GROWTH=1',
+         # '-s', 'SHARED_MEMORY=1',
+         # '-pthread',
+diff --git a/src/core/decoder/CMakeLists.txt b/src/core/decoder/CMakeLists.txt
+index 5a5f2e4..0ad30df 100644
+--- a/src/core/decoder/CMakeLists.txt
++++ b/src/core/decoder/CMakeLists.txt
+@@ -129,7 +129,7 @@ if (EMSCRIPTEN)
+         "_perseus_decoder_get_last_error_wrapper")
+ 
+     set(LCEVC_CORE_BC_FILE
+-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}${CMAKE_STATIC_LIBRARY_PREFIX}lcevc_dec_core${CMAKE_STATIC_LIBRARY_SUFFIX}
++        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}${CMAKE_STATIC_LIBRARY_PREFIX}lcevc_dec_core_static${CMAKE_STATIC_LIBRARY_SUFFIX}
+     )
+     set(LCEVC_CORE_JS_FILE
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}${CMAKE_STATIC_LIBRARY_PREFIX}lcevc_dec_core.js)
+@@ -151,6 +151,7 @@ if (EMSCRIPTEN)
+         set(EMS_EXTRA_ARGS ${EMS_EXTRA_ARGS} "--link-library" "lcevc_dec_overlay_images")
+     endif ()
+ 
++    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+     add_custom_command(
+         TARGET lcevc_dec_core
+         POST_BUILD
+-- 
+2.43.0
+
