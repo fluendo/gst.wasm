@@ -20,6 +20,6 @@ class Recipe(recipe.Recipe):
     ]
 
     def prepare(self):
-        self.sources_dir = os.path.join(self.recipe_dir(), "..", "..", "gst.wasm")
-        self.config_build_dir = os.path.join(self.sources_dir, "_builddir")
+        self.config_src_dir = os.path.join(self.recipe_dir(), "..", "..", "gst.wasm")
+        self.build_dir = os.path.join(self.config_src_dir, "_builddir")
         self.make_install.remove("--skip-subprojects")
