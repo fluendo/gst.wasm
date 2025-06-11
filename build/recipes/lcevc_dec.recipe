@@ -10,7 +10,7 @@ class Recipe(recipe.Recipe):
     btype = BuildType.CMAKE
     static = True
     configure_options = (
-        '-DVN_CORE_SIMD=disabled '
+        # '-DVN_CORE_SIMD=disabled '
     )
     patches = [
         '../recipes/lcevc_dec/0001-threading-Prevent-compile-error-pthread_setname_np-o.patch',
