@@ -1,29 +1,33 @@
 fs = import('fs')
+
 c_code = executable_name + '.c'
 html_code = executable_name + '-page.html'
 
-#FIXME: this is the ugliest thing I've ever seen. This is the consequence of gst-inspect-1.0 being a tool and not a library
-#Maybe converting GStreamer to a subproject?
-gstinspect_source_dir = '../../../../build/gst.wasm_web_wasm32/sources/local/gstreamer-1.0/subprojects/gstreamer/tools'
-gst_basics_source_dir = '../../../../build/gst.wasm_web_wasm32/sources/local/gstreamer-1.0/subprojects/gstreamer'
-gstreamer_includes = include_directories(gstinspect_source_dir, gst_basics_source_dir)
-
 executable(executable_name,
-    'gstinspect-example.c',
-    dependencies: [common_deps, 
-    dependency('gstweb'),
-    dependency('gstsdl2'),
+    c_code,
+    dependencies: [
+      common_deps,
+      gstisomp4_dep,
+      gstlibav_dep,
+      gstwebplugin_dep,
+      dependency('gstreamer-emscripten-1.0'),
+      dependency('gstopengl'),
+      dependency('gstdash'),
+      dependency('gstvideoconvertscale'),
     ],
-    include_directories: [gstreamer_includes],
     link_args: common_link_args + [
-      '-lhtml5',
       '-sASYNCIFY',
+      # This is giving problems when running the WebRunner at set_format
+      '-sPROXY_TO_PTHREAD',
+      '-lGL',
+      '-sOFFSCREENCANVAS_SUPPORT',
     ],
-    c_args: ['-Wall', '-Werror', '-Wno-deprecated-declarations', '-Wno-unused-function'],
-    name_suffix: 'html',
+    name_suffix: 'js',
     install: true,
-    install_dir: install_dir,
+    install_dir: install_dir
 )
+
+install_data(html_code, install_dir: install_dir)
 
 custom_target('js',
   input: html_code,
@@ -35,6 +39,7 @@ custom_target('js',
 # This should be changed to something that works at compile time
 html_data = configuration_data()
 html_data.set('PAGE_NAME', html_code)
+html_data.set('PAGE_CODE', fs.read(html_code).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace('\'', '&#39;').strip())
 html_data.set('EXECUTABLE_NAME', executable_name + '.js')
 html_data.set('CODE', fs.read(c_code).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace('\'', '&#39;').strip())
 

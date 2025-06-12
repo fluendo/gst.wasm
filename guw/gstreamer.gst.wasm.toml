@@ -68,6 +68,11 @@ summary = "Commits in progress"
 status = "pending"
 
 [[features]]
+name = "wasm-main-dash"
+remote = "origin"
+status = "pending"
+
+[[features]]
 remote = "origin"
 name = "libav-add-element-groups"
 summary = "Add element_groups meson option to gst-libav"
