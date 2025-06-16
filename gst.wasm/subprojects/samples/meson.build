@@ -29,6 +29,7 @@ examples = [
   'audio-decoder',
   'codecs',
   'codecs-avdec-h264',
+  'lcevcdec',
   'gl',
   'gstlaunch',
   'openal',
