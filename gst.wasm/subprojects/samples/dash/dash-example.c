@@ -76,7 +76,7 @@ init_pipeline ()
       "dashdemux presentation-delay=2s "
       "max-video-width=" G_STRINGIFY (CANVAS_WIDTH) " max-video-height=" G_STRINGIFY (CANVAS_HEIGHT) " ! "
       "video/quicktime ! qtdemux ! queue ! "
-      "avdec_h264 qos=false ! videoconvert ! webcanvassink",
+      "avdec_h264 qos=false max-threads=4 ! videoconvert ! webcanvassink",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
