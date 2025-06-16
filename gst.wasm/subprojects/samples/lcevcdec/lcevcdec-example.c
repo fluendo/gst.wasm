@@ -35,6 +35,7 @@ static void
 register_elements ()
 {
   GST_PLUGIN_STATIC_DECLARE (coreelements);
+  GST_PLUGIN_STATIC_DECLARE (debugutilsbad);
   GST_PLUGIN_STATIC_DECLARE (isomp4);
   GST_PLUGIN_STATIC_DECLARE (lcevcdecoder);
   GST_PLUGIN_STATIC_DECLARE (libav);
@@ -44,6 +45,7 @@ register_elements ()
   GST_ELEMENT_REGISTER_DECLARE (videoconvert);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
+  GST_PLUGIN_STATIC_REGISTER (debugutilsbad);
   GST_PLUGIN_STATIC_REGISTER (isomp4);
   GST_PLUGIN_STATIC_REGISTER (lcevcdecoder);
   GST_PLUGIN_STATIC_REGISTER (libav);
@@ -58,9 +60,12 @@ init_pipeline ()
 {
   pipeline = gst_parse_launch (
       "webstreamsrc "
-      "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! "
-      "qtdemux ! h264parse ! avdec_h264 qos=false ! lcevcdec ! "
-      "videoconvert ! webcanvassink sync=false",
+      "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC
+      "\" ! identity eos-after=100 ! "
+      "qtdemux ! h264parse ! avdec_h264 qos=false max-threads=8 ! lcevcdec "
+      "qos=false ! "
+      "videoconvert ! fpsdisplaysink sync=false text-overlay=false "
+      "video-sink=webcanvassink silent=false",
       NULL);
   g_signal_connect (pipeline, "deep-notify",
       G_CALLBACK (gst_object_default_deep_notify), NULL);
@@ -74,8 +79,8 @@ main (int argc, char **argv)
   gst_debug_set_default_threshold (1);
   gst_init (NULL, NULL);
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "lcevcdec wasm example");
-  gst_debug_set_threshold_from_string (
-      "3, videodecoder*:6, lcevcdec:6", FALSE);
+  // gst_debug_set_threshold_from_string (
+  //     "3, videodecoder*:6, lcevcdec:6", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
