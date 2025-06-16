@@ -63,7 +63,7 @@ init_pipeline ()
       "webstreamsrc "
       "location=\"" GSTWASM_AVDEC_H264_EXAMPLE_SRC "\" ! "
       "qtdemux ! "
-      "avdec_h264 qos=false ! videoconvert ! queue ! webcanvassink",
+      "avdec_h264 qos=false max-threads=4 ! videoconvert ! queue ! webcanvassink",
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
