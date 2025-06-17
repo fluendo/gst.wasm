@@ -5,8 +5,9 @@ from cerbero.tools.libtool import LibtoolLibrary
 class Recipe(recipe.Recipe):
     name = "gst.wasm"
     version = "main"
-    stype = SourceType.CUSTOM
+    stype = SourceType.LOCAL_DIR
     btype = BuildType.MESON
+    path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "gst.wasm")
     deps = [
         "gstreamer-1.0",
         "gst-plugins-base-1.0",
@@ -20,6 +21,4 @@ class Recipe(recipe.Recipe):
     ]
 
     def prepare(self):
-        self.config_src_dir = os.path.join(self.recipe_dir(), "..", "..", "gst.wasm")
-        self.build_dir = os.path.join(self.config_src_dir, "_builddir")
         self.make_install.remove("--skip-subprojects")
