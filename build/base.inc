@@ -38,3 +38,5 @@ folder_name = '{}_{}_{}'.format(folder_prefix, target_platform, target_arch)
 home_dir = os.path.join(path, folder_name)
 emscripten_path = os.path.join(home_dir, "emsdk", "upstream", "emscripten")
 env['PATH'] = f'{emscripten_path}:{env["PATH"]}'
+
+extra_mirrors = ["https://fluendo.github.io/cerbero-deps"]
