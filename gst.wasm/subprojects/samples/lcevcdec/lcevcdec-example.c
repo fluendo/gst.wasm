@@ -26,8 +26,7 @@ GST_DEBUG_CATEGORY_STATIC (example_dbg);
 #define GST_CAT_DEFAULT example_dbg
 
 #define GSTWASM_LCEVCDEC_EXAMPLE_SRC                                          \
-  "https://d3mfda3gpj3dw1.cloudfront.net/vn9s0p86SVbJorX6/"                   \
-  "lcevc_vn9s0p86SVbJorX6_2.mp4"
+  "http://localhost:6931/sample.mp4"
 
 static GstElement *pipeline;
 
@@ -43,6 +42,8 @@ register_elements ()
   GST_ELEMENT_REGISTER_DECLARE (lcevcdec);
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
   GST_ELEMENT_REGISTER_DECLARE (videoconvert);
+  GST_ELEMENT_REGISTER_DECLARE (openalsink);
+  GST_ELEMENT_REGISTER_DECLARE (audioconvert);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (libav);
@@ -52,30 +53,55 @@ register_elements ()
   GST_ELEMENT_REGISTER (lcevcdec, NULL);
   GST_ELEMENT_REGISTER (qtdemux, NULL);
   GST_ELEMENT_REGISTER (videoconvert, NULL);
+  GST_ELEMENT_REGISTER (openalsink, NULL);
+  GST_ELEMENT_REGISTER (audioconvert, NULL);
 }
 
 static void
 init_pipeline ()
 {
   pipeline = gst_parse_launch (
+#if 1
       "webstreamsrc "
-      "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux ! h264parse ! "
-      "avdec_h264 ! lcevcdec ! videoconvert ! webcanvassink",
+      "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux name=m ! multiqueue max-size-buffers=100 name=mm "
+
+      //            " ! h264parse ! avdec_h264 max-threads=4 ! lcevcdec ! videoconvert ! webcanvassink"
+
+      " ! h264parse ! webcodecsviddech264sw ! queue ! videoconvert ! lcevcdec ! videoconvert ! queue ! webcanvassink"
+      
+      //      " mm. ! audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink async=false"
+      ,
+#endif
+
+#if 0
+      "webstreamsrc "
+      "location=\"https://commondatastorage.googleapis.com/"
+      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
+      "qtdemux ! "
+      "audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink",
+#endif
+      
       NULL);
 
+  g_usleep (G_TIME_SPAN_SECOND*3);
+  
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
 int
 main (int argc, char **argv)
 {
-  gst_debug_set_default_threshold (1);
+  //  gst_debug_set_default_threshold (3);
   gst_init (NULL, NULL);
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "lcevcdec wasm example");
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
   register_elements ();
+
+  gst_debug_set_threshold_from_string (
+      "*webcodecsauddec*:6, *audiodecoder*:6",
+      FALSE);
 
   GST_INFO ("Initializing pipeline");
   init_pipeline ();

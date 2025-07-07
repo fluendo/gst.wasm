@@ -38,6 +38,27 @@
         })();
         iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
       }
+
+      console.log('start');
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('got audio ctx');
+      
+      function resumeAudio() {
+	  console.log('page clicked');
+	  if (1 || audioCtx.state === 'suspended') {
+	      console.log('resuming audio context');
+	      audioCtx.resume().then(() => {
+		  console.log('AudioContext resumed');
+		  // Optional: remove listener after resuming
+		  document.removeEventListener('click', resumeAudio);
+		  document.removeEventListener('keydown', resumeAudio);
+	      });
+	  }
+      }
+
+      // Attach resume to common user interactions
+      document.addEventListener('click', resumeAudio);
+      document.addEventListener('keydown', resumeAudio);
     </script>
     <iframe
       id="page"
