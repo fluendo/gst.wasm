@@ -63,13 +63,14 @@ init_pipeline ()
   pipeline = gst_parse_launch (
 #if 1
       "webstreamsrc "
-      "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux name=m ! multiqueue max-size-buffers=100 name=mm "
+      "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux name=q ! multiqueue name=m"
 
-      //            " ! h264parse ! avdec_h264 max-threads=4 ! lcevcdec ! videoconvert ! webcanvassink"
+                  " ! h264parse ! avdec_h264 max-threads=4 ! lcevcdec ! videoconvert ! webcanvassink"
 
-      " ! h264parse ! webcodecsviddech264sw ! queue ! videoconvert ! lcevcdec ! videoconvert ! queue ! webcanvassink"
-      
-      //      " mm. ! audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink async=false"
+      //" ! h264parse ! webcodecsviddech264sw ! queue ! videoconvert ! lcevcdec ! videoconvert ! queue ! webcanvassink"
+
+      " q. ! m. "
+      " m. ! audio/mpeg ! identity silent=false name=iaud ! webcodecsauddecaacsw ! audioconvert ! openalsink"
       ,
 #endif
 
@@ -91,7 +92,7 @@ init_pipeline ()
 int
 main (int argc, char **argv)
 {
-  //  gst_debug_set_default_threshold (3);
+  gst_debug_set_default_threshold (1);
   gst_init (NULL, NULL);
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "lcevcdec wasm example");
 
@@ -100,7 +101,7 @@ main (int argc, char **argv)
   register_elements ();
 
   gst_debug_set_threshold_from_string (
-      "*webcodecsauddec*:6, *audiodecoder*:6",
+      "1",
       FALSE);
 
   GST_INFO ("Initializing pipeline");
