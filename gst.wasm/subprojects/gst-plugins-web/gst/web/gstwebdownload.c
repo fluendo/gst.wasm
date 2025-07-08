@@ -152,6 +152,7 @@ gst_web_download_transform (
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
   GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (inbuf);
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (inbuf);
+  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_META, 0, -1);
 
   gst_buffer_unmap (outbuf, &out_map);
 
