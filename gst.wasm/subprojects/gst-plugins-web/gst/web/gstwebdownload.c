@@ -149,9 +149,8 @@ gst_web_download_transform (
   gst_web_video_frame_copy_to (vf, &self->vinfo, out_map.data, out_map.size);
   gst_memory_unref (GST_MEMORY_CAST (vf));
 
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (inbuf);
-  GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (inbuf);
+  gst_buffer_copy_into (
+      outbuf, inbuf, GST_BUFFER_COPY_META | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
   gst_buffer_unmap (outbuf, &out_map);
 
