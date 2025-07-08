@@ -66,7 +66,11 @@ init_pipeline ()
       " ! qtdemux name=demux"
       " ! multiqueue name=q"
       " ! h264parse "
+#if 0 // <--- change to 1 to swap the decoder
       " ! avdec_h264 max-threads=4"
+#else
+      " ! webcodecsviddech264sw ! webdownload ! videoconvert"
+#endif
       " ! lcevcdec"
       " ! videoconvert"
       " ! webcanvassink"
