@@ -57,31 +57,23 @@ register_elements ()
   GST_ELEMENT_REGISTER (audioconvert, NULL);
 }
 
+#define AVDEC 1
+
 static void
 init_pipeline ()
 {
   pipeline = gst_parse_launch (
-#if 1
       "webstreamsrc "
       "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux name=q ! multiqueue name=m"
-
-                  " ! h264parse ! avdec_h264 max-threads=4 ! lcevcdec ! videoconvert ! webcanvassink"
-
-      //" ! h264parse ! webcodecsviddech264sw ! queue ! videoconvert ! lcevcdec ! videoconvert ! queue ! webcanvassink"
-
+      " ! h264parse "
+#if AVDEC
+                 " ! avdec_h264 max-threads=4 ! lcevcdec ! videoconvert ! webcanvassink"
+#else
+      " ! webcodecsviddech264sw ! queue ! videoconvert ! lcevcdec ! videoconvert ! queue ! webcanvassink"
+#endif
       " q. ! m. "
-      " m. ! audio/mpeg ! identity silent=false name=iaud ! webcodecsauddecaacsw ! audioconvert ! openalsink"
+      " m. ! audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink"
       ,
-#endif
-
-#if 0
-      "webstreamsrc "
-      "location=\"https://commondatastorage.googleapis.com/"
-      "gtv-videos-bucket/sample/BigBuckBunny.mp4\" ! "
-      "qtdemux ! "
-      "audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink",
-#endif
-      
       NULL);
 
   g_usleep (G_TIME_SPAN_SECOND*3);
@@ -100,9 +92,9 @@ main (int argc, char **argv)
   GST_INFO ("Registering elements");
   register_elements ();
 
-  gst_debug_set_threshold_from_string (
-      "1",
-      FALSE);
+  /* gst_debug_set_threshold_from_string ( */
+  /*     "1,webcodecsauddec:7", */
+  /*     FALSE); */
 
   GST_INFO ("Initializing pipeline");
   init_pipeline ();
