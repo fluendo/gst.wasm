@@ -66,6 +66,7 @@ struct _GstWebCodecsVideoDecoder
   gchar *output_format;
 
   /* TODO move this to a prv struct */
+  GstWebRunner *runner;
   GstWebCanvas *canvas;
   gint width;
   gint height;

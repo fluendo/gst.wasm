@@ -379,11 +379,9 @@ js_frame_to_gst (gpointer ptr)
 #else
   {
     GstBuffer *b;
-    GstWebRunner *runner;
     GstWebVideoFrame *memory;
 
-    runner = gst_web_canvas_get_runner (self->canvas);
-    memory = gst_web_video_frame_wrap (f->js_frame, runner);
+    memory = gst_web_video_frame_wrap (f->js_frame, self->runner);
     b = gst_buffer_new ();
     gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
     g_assert (frame->output_buffer == NULL);
@@ -401,7 +399,6 @@ gst_web_codecs_video_decoder_handle_frame (
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
   GstWebCodecsVideoDecoderDecodeData *decode_data;
-  GstWebRunner *runner;
   GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (decoder, "Handling frame");
@@ -426,10 +423,8 @@ gst_web_codecs_video_decoder_handle_frame (
   /* We can not keep the stream lock taken here and when the decoder outputs
    * frames, do it asynchronous
    */
-  runner = gst_web_canvas_get_runner (self->canvas);
   gst_web_runner_send_message_async (
-      runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
-  gst_object_unref (GST_OBJECT (runner));
+      self->runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
   val *jsf;
@@ -470,9 +465,7 @@ gst_web_codecs_video_decoder_handle_frame (
 	dd.gst_frame = frame;
 	dd.dec = decoder;
 	
-	runner = gst_web_canvas_get_runner (self->canvas);
-	gst_web_runner_send_message (runner, js_frame_to_gst, &dd);
-	gst_object_unref (GST_OBJECT (runner));
+	gst_web_runner_send_message (self->runner, js_frame_to_gst, &dd);
      }
      
      GST_INFO_OBJECT (self, "Finishing frame %p", frame);
@@ -493,7 +486,6 @@ gst_web_codecs_video_decoder_set_format (
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
   GstWebCodecsVideoDecoderConfigureData conf_data;
-  GstWebRunner *runner;
 
   GST_INFO_OBJECT (
       self, "Setting format with sink caps %" GST_PTR_FORMAT, state->caps);
@@ -521,21 +513,18 @@ gst_web_codecs_video_decoder_set_format (
    * context */
 
   /* Call constructor */
-  runner = gst_web_canvas_get_runner (self->canvas);
   gst_web_runner_send_message (
-      runner, gst_web_codecs_video_decoder_ctor, self);
+      self->runner, gst_web_codecs_video_decoder_ctor, self);
   /* Configure */
   conf_data.self = self;
   conf_data.state = state;
   gst_web_runner_send_message (
-      runner, gst_web_codecs_video_decoder_configure, &conf_data);
+      self->runner, gst_web_codecs_video_decoder_configure, &conf_data);
 
   /* Keep the input state available */
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
-
-  gst_object_unref (GST_OBJECT (runner));
 
   return TRUE;
 }
@@ -574,12 +563,11 @@ static gboolean
 gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
 {
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
-  GstWebRunner *runner;
   gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (self, "Start");
-  runner = gst_web_canvas_get_runner (self->canvas);
-  if (!gst_web_runner_run (runner, NULL)) {
+  self->runner = gst_web_runner_new (NULL);
+  if (!gst_web_runner_run (self->runner, NULL)) {
     GST_ERROR_OBJECT (self, "Impossible to run the runner");
     goto done;
   }
@@ -587,7 +575,6 @@ gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
   ret = TRUE;
 
 done:
-  gst_object_unref (GST_OBJECT (runner));
   return ret;
 }
 
