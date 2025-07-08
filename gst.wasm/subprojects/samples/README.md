@@ -17,3 +17,4 @@ The following is a list of provided samples:
 12. **audio-decoder**: Plays ACC audio streamed from the web using GStreamer and WebCodecs codecs.
 13. **codecs-avdec-h264**: Plays an H.264 video streamed from the web using GStreamer and the FFmpeg decoder (avdec_h264) codec, rendering it to a browser canvas
 14. **gstinspect**: Provides the output of GStreamer's `gst-inspect-1.0 -a`, showing all available plugins.
+15. **lcevcdec**: Provides an example decoding a LCEVC stream.
