@@ -57,7 +57,7 @@ register_elements ()
   GST_ELEMENT_REGISTER (audioconvert, NULL);
 }
 
-//#define AVDEC 1
+#define AVDEC 1
 
 static void
 init_pipeline ()

@@ -58,7 +58,7 @@ using namespace emscripten;
 
 #define GST_WEB_CODECS_AUDIO_DECODER_FROM_JS                                  \
   reinterpret_cast<GstWebCodecsAudioDecoder *> (                              \
-      val::module_property ("aself").as<int> ())
+      val::module_property ("self").as<int> ())
 
 #define GST_CAT_DEFAULT gst_web_codecs_audio_decoder_debug_category
 GST_DEBUG_CATEGORY_STATIC (gst_web_codecs_audio_decoder_debug_category);
@@ -481,7 +481,7 @@ gst_web_codecs_audio_decoder_ctor (gpointer data)
   /* FIXME this will overwrite if other decoders/elements are handled
    * in the same thread
    */
-  mod.set ("aself", reinterpret_cast<int> (self));
+  mod.set ("self", reinterpret_cast<int> (self));
   options.set ("output",
       val::module_property ("gst_web_codecs_audio_decoder_on_output"));
   options.set (
