@@ -557,7 +557,6 @@ gst_web_codecs_audio_decoder_handle_frame (
 {
   GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (decoder);
   GstWebCodecsAudioDecoderDecodeData *decode_data;
-  GstWebRunner *runner;
   GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (self,
@@ -584,11 +583,9 @@ gst_web_codecs_audio_decoder_handle_frame (
   decode_data->self = self;
   decode_data->buffer = gst_buffer_ref (buffer);
 
-  runner = gst_web_canvas_get_runner (self->canvas);
-  gst_web_runner_send_message_async (runner,
+  gst_web_runner_send_message_async (self->runner,
       gst_web_codecs_audio_decoder_decode, decode_data,
       (GDestroyNotify) gst_web_codecs_audio_decoder_decode_data_free);
-  gst_object_unref (GST_OBJECT (runner));
 
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
@@ -601,27 +598,22 @@ gst_web_codecs_audio_decoder_set_format (
 {
   GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (decoder);
   GstWebCodecsAudioDecoderConfigureData conf_data;
-  GstWebRunner *runner;
 
   GST_INFO_OBJECT (
       self, "Setting format with sink caps %" GST_PTR_FORMAT, caps);
 
-  /* Call constructor */
-  runner = gst_web_canvas_get_runner (self->canvas);
   gst_web_runner_send_message (
-      runner, gst_web_codecs_audio_decoder_ctor, self);
+      self->runner, gst_web_codecs_audio_decoder_ctor, self);
   /* Configure */
   conf_data.self = self;
   conf_data.caps = caps;
   gst_web_runner_send_message (
-      runner, gst_web_codecs_audio_decoder_configure, &conf_data);
+      self->runner, gst_web_codecs_audio_decoder_configure, &conf_data);
 
   /* Keep the input state available */
   if (self->input_caps)
     gst_caps_unref (self->input_caps);
   self->input_caps = gst_caps_ref (caps);
-
-  gst_object_unref (GST_OBJECT (runner));
 
   return TRUE;
 }
@@ -637,24 +629,6 @@ gst_web_codecs_audio_decoder_flush (GstAudioDecoder *decoder, gboolean hard)
 }
 
 static gboolean
-gst_web_codecs_audio_decoder_open (GstAudioDecoder *decoder)
-{
-  GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (decoder);
-  gboolean ret = FALSE;
-
-  if (!gst_web_utils_element_ensure_canvas (
-          GST_ELEMENT (self), &self->canvas, NULL)) {
-    GST_ERROR_OBJECT (self, "Failed requesting a WebCanvas context");
-    goto done;
-  }
-
-  ret = TRUE;
-
-done:
-  return ret;
-}
-
-static gboolean
 gst_web_codecs_audio_decoder_start (GstAudioDecoder *decoder)
 {
   GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (decoder);
@@ -662,16 +636,17 @@ gst_web_codecs_audio_decoder_start (GstAudioDecoder *decoder)
   gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (self, "Start");
-  runner = gst_web_canvas_get_runner (self->canvas);
+  runner = gst_web_runner_new (NULL);
   if (!gst_web_runner_run (runner, NULL)) {
     GST_ERROR_OBJECT (self, "Impossible to run the runner");
+    gst_object_unref (runner);
     goto done;
   }
   GST_DEBUG_OBJECT (self, "Started");
+  g_warn_if_fail (self->runner == NULL);
+  self->runner = runner;
   ret = TRUE;
-
 done:
-  gst_object_unref (GST_OBJECT (runner));
   return ret;
 }
 
@@ -683,6 +658,7 @@ gst_web_codecs_audio_decoder_stop (GstAudioDecoder *decoder)
   GST_DEBUG_OBJECT (self, "Stop");
   /* TODO Call reset */
 
+  g_clear_pointer (&self->runner, gst_object_unref);
   g_clear_pointer (&self->input_caps, gst_caps_unref);
   g_clear_pointer (&self->output_caps, gst_caps_unref);
 
@@ -692,46 +668,12 @@ gst_web_codecs_audio_decoder_stop (GstAudioDecoder *decoder)
 }
 
 static void
-gst_web_codecs_audio_decoder_set_context (
-    GstElement *element, GstContext *context)
-{
-  GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (element);
-
-  gst_web_utils_element_set_context (element, context, &self->canvas);
-}
-
-static gboolean
-gst_web_codecs_audio_decoder_query (GstElement *element, GstQuery *query)
-{
-  GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (element);
-  gboolean ret = FALSE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-      ret = gst_web_utils_element_handle_context_query (
-          element, query, self->canvas);
-      break;
-    default:
-      break;
-  }
-
-  if (!ret)
-    ret = GST_ELEMENT_CLASS (parent_class)->query (element, query);
-
-  return ret;
-}
-
-static void
 gst_web_codecs_audio_decoder_finalize (GObject *object)
 {
   GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (object);
 
   g_mutex_clear (&self->dequeue_lock);
   g_cond_clear (&self->dequeue_cond);
-  if (self->canvas) {
-    gst_object_unref (self->canvas);
-    self->canvas = NULL;
-  }
 
   GST_DEBUG_OBJECT (self, "End of finalize");
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -780,15 +722,11 @@ gst_web_codecs_audio_decoder_class_init (
   GstAudioDecoderClass *audio_decoder_class = GST_AUDIO_DECODER_CLASS (klass);
 
   gobject_class->finalize = gst_web_codecs_audio_decoder_finalize;
-  element_class->set_context = gst_web_codecs_audio_decoder_set_context;
-  element_class->query = gst_web_codecs_audio_decoder_query;
   gst_element_class_set_static_metadata (element_class,
       "WebCodecs base audio decoder", "Codec/Decoder/Audio",
       "decode streams using WebCodecs API",
       "Fluendo S.A. <engineering@fluendo.com>");
 
-  audio_decoder_class->open =
-      GST_DEBUG_FUNCPTR (gst_web_codecs_audio_decoder_open);
   audio_decoder_class->start =
       GST_DEBUG_FUNCPTR (gst_web_codecs_audio_decoder_start);
   audio_decoder_class->stop =

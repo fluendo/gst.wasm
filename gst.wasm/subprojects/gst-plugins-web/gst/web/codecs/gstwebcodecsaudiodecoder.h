@@ -63,13 +63,12 @@ struct _GstWebCodecsAudioDecoder
 {
   GstAudioDecoder base;
 
+  GstWebRunner *runner;
   GstCaps *input_caps;
   GstCaps *output_caps;
   GstAudioInfo output_info;
 
   /* TODO: Move this to a prv struct */
-  /* TODO: No need for a canvas here */
-  GstWebCanvas *canvas;
   gboolean need_negotiation;
 
   emscripten::val decoder;
