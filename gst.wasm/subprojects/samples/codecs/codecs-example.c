@@ -35,14 +35,20 @@ register_elements ()
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
   GST_ELEMENT_REGISTER_DECLARE (glimagesink);
   GST_PLUGIN_STATIC_DECLARE (web);
+  GST_PLUGIN_STATIC_DECLARE (coreelements);
+  GST_ELEMENT_REGISTER_DECLARE (openalsink);
+  GST_ELEMENT_REGISTER_DECLARE (audioconvert);
 
   GST_PLUGIN_STATIC_REGISTER (web);
   GST_ELEMENT_REGISTER (glimagesink, NULL);
   GST_ELEMENT_REGISTER (qtdemux, NULL);
+  GST_PLUGIN_STATIC_REGISTER (coreelements);
+  GST_ELEMENT_REGISTER (openalsink, NULL);
+  GST_ELEMENT_REGISTER (audioconvert, NULL);
 }
 
 #ifndef GSTWASM_CODECS_EXAMPLE_SRC
-#define GSTWASM_CODECS_EXAMPLE_SRC "https://hbbtv-demo.fluendo.com/pip/bbb.mp4"
+#define GSTWASM_CODECS_EXAMPLE_SRC "https://hbbtv-demo.fluendo.com/bbb.mp4"
 #endif
 
 static void
@@ -50,9 +56,14 @@ init_pipeline ()
 {
   pipeline = gst_parse_launch (
       "webstreamsrc "
-      "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\" ! "
-      "qtdemux ! "
-      "webcodecsviddech264sw ! webcanvassink",
+      "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\""
+      " ! qtdemux name=demux ! multiqueue name=q"
+      " ! webcodecsviddech264sw ! webcanvassink"
+#if 1 // <-- change to 0 to disable audio
+      " demux. ! q. "
+      " q. ! audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink"
+#endif
+      ,
       NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
