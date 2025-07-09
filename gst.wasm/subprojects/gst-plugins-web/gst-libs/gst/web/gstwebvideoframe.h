@@ -81,6 +81,10 @@ G_BEGIN_DECLS
 GType gst_web_video_frame_get_type (void);
 void gst_web_video_frame_init (void);
 
+gboolean
+gst_web_video_frame_copy_to (
+   GstWebVideoFrame *self, GstVideoInfo *info, guint8 *data, gsize size);
+
 G_END_DECLS
 
 #endif /* __GST_WEB_VIDEO_FRAME_H__ */

@@ -11,6 +11,8 @@ executable(executable_name,
       dependency('gstreamer-emscripten-1.0'),
       dependency('gstopengl'),
       dependency('gstweb'),
+      dependency('gstopenal'),
+      dependency('gstaudioconvert'),
     ],
     link_args: common_link_args + [
       '-sASYNCIFY',

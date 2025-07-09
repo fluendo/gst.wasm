@@ -26,10 +26,9 @@ gstsdl2_dep = gstpluginsweb.get_variable('gstsdl2_dep')
 gstwebplugin_dep = gstpluginsweb.get_variable('gstwebplugin_dep')
 
 examples = [
-  'audio-decoder',
-  'avdec+lcevc+aac',
   'codecs',
   'codecs-avdec-h264',
+  'lcevc+aac',
   'lcevcdec',
   'gl',
   'gstlaunch',
