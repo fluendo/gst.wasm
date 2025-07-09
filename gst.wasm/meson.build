@@ -5,4 +5,6 @@ project(
 )
 
 subproject('gst-plugins-web')
-subproject('samples')
+if not get_option('examples').disabled()
+  subproject('samples')
+endif
