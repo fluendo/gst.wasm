@@ -20,6 +20,9 @@ class Recipe(recipe.Recipe):
         "gst-plugins-web",
         "samples"
     ]
+    meson_options = {
+        "examples": "enabled",
+    }
 
     def prepare(self):
         self.make_install.remove("--skip-subprojects")

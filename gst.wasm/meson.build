@@ -4,5 +4,9 @@ project(
   meson_version : '>= 1.4.1',
 )
 
+error(get_option('examples'))
+
 subproject('gst-plugins-web')
-subproject('samples')
+if not get_option('examples').disabled()
+  subproject('samples')
+endif
