@@ -57,11 +57,14 @@ init_pipeline ()
   pipeline = gst_parse_launch (
       "webstreamsrc "
       "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\""
-      " ! qtdemux name=demux ! multiqueue name=q"
-      " ! webcodecsviddech264sw ! webcanvassink"
+      " ! qtdemux name=demux multiqueue name=q"
+#if 1 // <-- change to 0 to disable video
+      " demux. ! video/x-h264 ! q. "
+      " q. ! webcodecsviddech264sw ! webcanvassink"
+#endif
 #if 1 // <-- change to 0 to disable audio
-      " demux. ! q. "
-      " q. ! audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink"
+      " demux. ! audio/mpeg ! q. "
+      " q. ! webcodecsauddecaacsw ! audioconvert ! openalsink"
 #endif
       ,
       NULL);
