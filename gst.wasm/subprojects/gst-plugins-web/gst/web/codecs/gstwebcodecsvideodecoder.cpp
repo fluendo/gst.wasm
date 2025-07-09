@@ -55,10 +55,6 @@ using namespace emscripten;
 
 #define GST_WEB_CODECS_VIDEO_DECODER_MAX_DEQUEUE 32
 
-#define GST_WEB_CODECS_VIDEO_DECODER_FROM_JS                                  \
-  reinterpret_cast<GstWebCodecsVideoDecoder *> (                              \
-      val::module_property ("self").as<int> ())
-
 #define GST_CAT_DEFAULT gst_web_codecs_video_decoder_debug_category
 GST_DEBUG_CATEGORY_STATIC (gst_web_codecs_video_decoder_debug_category);
 
@@ -159,9 +155,9 @@ done:
 }
 
 static void
-gst_web_codecs_video_decoder_on_output (val video_frame)
+gst_web_codecs_video_decoder_on_output (guintptr self_, val video_frame)
 {
-  GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER_FROM_JS;
+  GstWebCodecsVideoDecoder *self = (GstWebCodecsVideoDecoder *) self_;
   GstVideoDecoder *dec = GST_VIDEO_DECODER (self);
   GstVideoCodecFrame *frame;
   GstFlowReturn flow;
@@ -230,16 +226,18 @@ done:
 }
 
 static void
-gst_web_codecs_video_decoder_on_error (val error)
+gst_web_codecs_video_decoder_on_error (guintptr self_, val error)
 {
+  GstWebCodecsVideoDecoder *self = (GstWebCodecsVideoDecoder *) self_;
+
   /* TODO handle this */
   GST_ERROR ("Error received");
 }
 
 static void
-gst_web_codecs_video_decoder_on_dequeue (val event)
+gst_web_codecs_video_decoder_on_dequeue (guintptr self_, val event)
 {
-  GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER_FROM_JS;
+  GstWebCodecsVideoDecoder *self = (GstWebCodecsVideoDecoder *) self_;
   gint dequeue_size;
 
   dequeue_size = self->decoder["decodeQueueSize"].as<int> ();
@@ -351,19 +349,32 @@ gst_web_codecs_video_decoder_ctor (gpointer data)
   val mod = val::global ("Module");
   val options = val::object ();
 
-  /* We keep self in the new thread Module */
-  /* FIXME this will overwrite if other decoders/elements are handled
-   * in the same thread
-   */
-  mod.set ("self", reinterpret_cast<int> (self));
-  options.set ("output",
-      val::module_property ("gst_web_codecs_video_decoder_on_output"));
-  options.set (
-      "error", val::module_property ("gst_web_codecs_video_decoder_on_error"));
+  /* clang-format off */
+  EM_ASM ({
+    const self = $0;
+    const options = Emval.toValue ($1);
+    options["output"] = (data) => {
+      Module.gst_web_codecs_video_decoder_on_output (self, data);
+    };
+    options["error"] = (e) => {
+      Module.gst_web_codecs_video_decoder_on_error (self, e);
+    }
+  }, (guintptr) self, options.as_handle ());
+  /* clang-format on */
+
   self->decoder = vdecclass.new_ (options);
 
-  self->decoder.call<void> ("addEventListener", std::string ("dequeue"),
-      val::module_property ("gst_web_codecs_video_decoder_on_dequeue"));
+  /* clang-format off */
+  EM_ASM ({
+    const self = $0;
+    const decoder = Emval.toValue ($1);
+
+    decoder.addEventListener ("dequeue", (event) => {
+      Module.gst_web_codecs_video_decoder_on_dequeue (self, event);
+    });
+  }, (guintptr) self, self->decoder.as_handle ());
+  /* clang-format on */
+
   GST_DEBUG_OBJECT (self, "decoder created successfully");
 }
 
