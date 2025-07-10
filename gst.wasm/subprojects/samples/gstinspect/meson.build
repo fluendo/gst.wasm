@@ -4,8 +4,9 @@ html_code = executable_name + '-page.html'
 
 #FIXME: this is the ugliest thing I've ever seen. This is the consequence of gst-inspect-1.0 being a tool and not a library
 #Maybe converting GStreamer to a subproject?
-gstinspect_source_dir = '../../../../build/gst.wasm_web_wasm32/sources/local/gstreamer-1.0/subprojects/gstreamer/tools'
-gst_basics_source_dir = '../../../../build/gst.wasm_web_wasm32/sources/local/gstreamer-1.0/subprojects/gstreamer'
+sources_dir = join_paths(get_option('prefix'), '..', '..', 'sources')
+gst_basics_source_dir = join_paths(sources_dir, 'local', 'gstreamer-1.0', 'subprojects', 'gstreamer')
+gstinspect_source_dir = join_paths(gst_basics_source_dir, 'tools')
 gstreamer_includes = include_directories(gstinspect_source_dir, gst_basics_source_dir)
 
 executable(executable_name,
