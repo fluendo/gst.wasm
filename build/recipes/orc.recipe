@@ -3,24 +3,20 @@ from cerbero.tools.libtool import LibtoolLibrary
 
 class Recipe(recipe.Recipe):
     name = 'orc'
-    version = '0.4.40'
+    version = '0.4.41'
 
-    stype = SourceType.TARBALL
-    # These properties are only used when stype is TARBALL
-    url = 'https://gstreamer.freedesktop.org/src/orc/orc-%(version)s.tar.xz'
-    tarball_checksum = '3fc2bee78dfb7c41fd9605061fc69138db7df007eae2f669a1f56e8bacef74ab'
-    # These properties are only used when stype is GIT
-    remotes = {'origin': 'https://gitlab.freedesktop.org/gstreamer/orc.git'}
-    commit = 'origin/main'
-
-    patches = [
-        'orc//0001-opcodes-Use-MIN-instead-of-CLAMP-for-known-unsigned-.patch',
-    ]
+    stype = SourceType.GIT
+    remotes = {'fluendo': 'https://gitlab.freedesktop.org/fluendo/orc.git'}
+    # FIXME: change to gst.wasm
+    commit = 'fluendo/wasm-main-orc-support'
 
     btype = BuildType.MESON
     licenses = [{License.BSD_like: ['COPYING']}]
     meson_options = {'benchmarks': 'disabled', 'tests': 'disabled',
-                     'tools': 'enabled', 'orc-test': 'enabled'}
+                     'tools': 'enabled', 'orc-test': 'disabled',
+                     'orc-target': 'wasm', 'orc-backend': 'wasm',
+                     'examples': 'disabled',  'gtk_doc': 'disabled',
+                     }
 
     files_libs = ['liborc-0.4']
     files_devel = ['include/orc-0.4', '%(libdir)s/pkgconfig/orc-0.4.pc',
