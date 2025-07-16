@@ -207,6 +207,7 @@ gst_web_codecs_video_decoder_on_output (guintptr self_, val video_frame)
     b = gst_buffer_new ();
     gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
     frame->output_buffer = b;
+    gst_object_unref (runner);
   }
 
   flow = gst_video_decoder_finish_frame (dec, frame);
