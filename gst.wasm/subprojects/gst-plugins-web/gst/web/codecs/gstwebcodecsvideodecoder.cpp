@@ -441,7 +441,7 @@ gst_web_codecs_video_decoder_handle_frame (
   runner = gst_web_canvas_get_runner (self->canvas);
   gst_web_runner_send_message_async (
       runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
 
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
@@ -496,7 +496,7 @@ gst_web_codecs_video_decoder_set_format (
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
 
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
 
   return TRUE;
 }
@@ -548,7 +548,7 @@ gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
   ret = TRUE;
 
 done:
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
   return ret;
 }
 
