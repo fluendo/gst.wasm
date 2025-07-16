@@ -69,7 +69,7 @@ init_pipeline ()
 #if 0 // <--- change to 1 to swap the decoder
       " ! avdec_h264 max-threads=4"
 #else
-      " ! webcodecsviddech264sw ! webdownload ! videoconvert"
+      " ! webcodecsviddech264sw ! webdownload"
 #endif
       " ! lcevcdec"
       " ! videoconvert"

@@ -138,6 +138,11 @@ gst_web_video_frame_map_internal (
     val (typed_memory_view (size, (guint8 *)data));
   val options = val::object ();
 
+#if 0
+  // Setting the output format for CopyTo makes the browser think
+  // you need a convertion even if the subsampling format is the same.
+  // So downloading I420 will make it fail saying it only converts to RGBA.
+  // While not setting the format downloads I420 by copying just fine.
   if (info != NULL) {
     const char *format;
 
@@ -152,6 +157,7 @@ gst_web_video_frame_map_internal (
   } else {
     GST_DEBUG ("Use input format.");
   }
+#endif
 
   video_frame.call<val> ("copyTo", data_view, options).await ();
 

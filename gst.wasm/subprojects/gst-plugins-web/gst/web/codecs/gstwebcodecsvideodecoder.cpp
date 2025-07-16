@@ -135,9 +135,7 @@ gst_web_codecs_video_decoder_get_format (
     GST_ERROR_OBJECT (self, "Unsupported format %s", vf_format);
     goto done;
   }
-  self->output_format = g_strdup ("RGBA"); // g_strdup (vf_format);
-  format = GST_VIDEO_FORMAT_RGBA;          // FIXME, for now
-  // self->output_format = g_strdup (vf_format);
+  self->output_format = g_strdup (vf_format);
   width = video_frame["displayWidth"].as<int> ();
   height = video_frame["displayHeight"].as<int> ();
 
