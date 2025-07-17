@@ -18,5 +18,6 @@ class Recipe(original_recipe):
         self.meson_options.update({
             'auto_features' : 'disabled',
             'h264_decoder' : 'enabled',
+            'aac_decoder': 'enabled'
         });
         super().prepare()

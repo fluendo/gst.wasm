@@ -14,5 +14,5 @@ original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'gst-libav-1
 
 class Recipe(original_recipe):
     meson_options = {
-        'element_groups' : 'viddec',
+        'element_groups' : 'viddec, auddec',
     }
