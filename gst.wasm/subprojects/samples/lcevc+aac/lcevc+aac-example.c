@@ -41,7 +41,6 @@ register_elements ()
   GST_ELEMENT_REGISTER_DECLARE (lcevcdec);
   GST_ELEMENT_REGISTER_DECLARE (openalsink);
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
-  GST_ELEMENT_REGISTER_DECLARE (videoconvert);
   GST_PLUGIN_STATIC_DECLARE (coreelements);
   GST_PLUGIN_STATIC_DECLARE (libav);
   GST_PLUGIN_STATIC_DECLARE (web);
@@ -52,7 +51,6 @@ register_elements ()
   GST_ELEMENT_REGISTER (lcevcdec, NULL);
   GST_ELEMENT_REGISTER (openalsink, NULL);
   GST_ELEMENT_REGISTER (qtdemux, NULL);
-  GST_ELEMENT_REGISTER (videoconvert, NULL);
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (libav);
   GST_PLUGIN_STATIC_REGISTER (web);
@@ -72,7 +70,7 @@ init_pipeline ()
       " ! webcodecsviddech264sw ! webdownload"
 #endif
       " ! lcevcdec"
-      " ! videoconvert"
+      " ! webupload"
       " ! webcanvassink"
       " demux. ! q. "
       " q. ! audio/mpeg ! webcodecsauddecaacsw ! audioconvert ! openalsink"
