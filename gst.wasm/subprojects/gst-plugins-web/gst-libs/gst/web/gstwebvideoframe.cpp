@@ -98,11 +98,6 @@ typedef struct _GstWebVideoFrameAllocationSizeData
   gsize ret;
 } GstWebVideoFrameAllocationSizeData;
 
-typedef struct _GstWebVideoFrameCloseData
-{
-  val video_frame;
-} GstWebVideoFrameCloseData;
-
 static void
 gst_web_video_frame_allocation_size (gpointer data)
 {
@@ -115,8 +110,10 @@ gst_web_video_frame_allocation_size (gpointer data)
 static void
 gst_web_video_frame_close (gpointer data)
 {
-  GstWebVideoFrameCloseData *close_data = (GstWebVideoFrameCloseData *) data;
-  close_data->video_frame.call<void> ("close");
+  GstWebVideoFrame *self = (GstWebVideoFrame *)data;
+
+  self->priv->video_frame.call<void> ("close");
+  self->priv->video_frame = val::undefined ();
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstWebVideoFrame, gst_web_video_frame);
@@ -280,15 +277,12 @@ static void
 gst_web_video_frame_allocator_free (GstAllocator *allocator, GstMemory *memory)
 {
   GstWebVideoFrame *self = (GstWebVideoFrame *) memory;
-  GstWebVideoFrameCloseData close_data;
 
-  close_data.video_frame = self->priv->video_frame;
   /* FIXME can be async */
   gst_web_runner_send_message (
-      self->priv->runner, gst_web_video_frame_close, &close_data);
+      self->priv->runner, gst_web_video_frame_close, self);
 
   gst_object_unref (self->priv->runner);
-  self->priv->video_frame = val::undefined ();
   g_free (self->priv->data);
   g_free (self->priv);
 }
