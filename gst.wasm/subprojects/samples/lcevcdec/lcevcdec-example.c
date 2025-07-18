@@ -42,7 +42,6 @@ register_elements ()
   GST_ELEMENT_REGISTER_DECLARE (h264parse);
   GST_ELEMENT_REGISTER_DECLARE (lcevcdec);
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
-  GST_ELEMENT_REGISTER_DECLARE (videoconvert);
 
   GST_PLUGIN_STATIC_REGISTER (coreelements);
   GST_PLUGIN_STATIC_REGISTER (libav);
@@ -51,7 +50,6 @@ register_elements ()
   GST_ELEMENT_REGISTER (h264parse, NULL);
   GST_ELEMENT_REGISTER (lcevcdec, NULL);
   GST_ELEMENT_REGISTER (qtdemux, NULL);
-  GST_ELEMENT_REGISTER (videoconvert, NULL);
 }
 
 static void
@@ -60,7 +58,7 @@ init_pipeline ()
   pipeline = gst_parse_launch (
       "webstreamsrc "
       "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux ! h264parse ! "
-      "avdec_h264 ! lcevcdec ! videoconvert ! webcanvassink",
+      "avdec_h264 ! lcevcdec ! webupload ! webcanvassink",
       NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

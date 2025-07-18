@@ -35,6 +35,7 @@
 #include "gstwebcanvassink.h"
 #include "gstwebcanvassrc.h"
 #include "gstwebdownload.h"
+#include "gstwebupload.h"
 
 #include "codecs/gstwebcodecs.h"
 #include "transport/gstwebtransportsrc.h"
@@ -52,6 +53,7 @@ plugin_init (GstPlugin *plugin)
   gst_element_register_web_stream_src (plugin);
   gst_element_register_web_transport_src (plugin);
   gst_element_register_web_download (plugin);
+  gst_element_register_web_upload (plugin);
 
   return TRUE;
 }

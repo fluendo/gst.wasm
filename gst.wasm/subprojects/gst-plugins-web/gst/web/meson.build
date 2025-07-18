@@ -5,6 +5,7 @@ sources = [
   'gstwebdownload.c',
   'gstwebfetchsrc.c',
   'gstwebstreamsrc.cpp',
+  'gstwebupload.cpp',
   'codecs/gstwebcodecs.cpp',
   'codecs/gstwebcodecsaudiodecoder.cpp',
   'codecs/gstwebcodecsvideodecoder.cpp',

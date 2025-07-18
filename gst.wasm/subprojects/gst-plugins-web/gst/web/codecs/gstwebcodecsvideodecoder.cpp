@@ -135,9 +135,7 @@ gst_web_codecs_video_decoder_get_format (
     GST_ERROR_OBJECT (self, "Unsupported format %s", vf_format);
     goto done;
   }
-  self->output_format = g_strdup ("RGBA"); // g_strdup (vf_format);
-  format = GST_VIDEO_FORMAT_RGBA;          // FIXME, for now
-  // self->output_format = g_strdup (vf_format);
+  self->output_format = g_strdup (vf_format);
   width = video_frame["displayWidth"].as<int> ();
   height = video_frame["displayHeight"].as<int> ();
 
@@ -209,6 +207,7 @@ gst_web_codecs_video_decoder_on_output (guintptr self_, val video_frame)
     b = gst_buffer_new ();
     gst_buffer_insert_memory (b, -1, GST_MEMORY_CAST (memory));
     frame->output_buffer = b;
+    gst_object_unref (runner);
   }
 
   flow = gst_video_decoder_finish_frame (dec, frame);
@@ -442,7 +441,7 @@ gst_web_codecs_video_decoder_handle_frame (
   runner = gst_web_canvas_get_runner (self->canvas);
   gst_web_runner_send_message_async (
       runner, gst_web_codecs_video_decoder_decode, decode_data, g_free);
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
 
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
@@ -497,7 +496,7 @@ gst_web_codecs_video_decoder_set_format (
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
 
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
 
   return TRUE;
 }
@@ -549,7 +548,7 @@ gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
   ret = TRUE;
 
 done:
-  gst_object_unref (GST_OBJECT (runner));
+  gst_object_unref (runner);
   return ret;
 }
 
