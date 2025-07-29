@@ -163,8 +163,14 @@ gst_web_codecs_video_decoder_on_output (guintptr self_, val video_frame)
 
   GST_INFO_OBJECT (self, "VideoFrame Received");
 
+  if (self->stopping)
+     return;
+  
   GST_VIDEO_DECODER_STREAM_LOCK (self);
   frame = gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
+  if (frame == NULL)
+     goto done;
+  
   GST_DEBUG_OBJECT (self,
       "queued frame %" GST_TIME_FORMAT " decoded frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->pts),
@@ -416,6 +422,9 @@ gst_web_codecs_video_decoder_handle_frame (
   GstWebRunner *runner;
   GstFlowReturn res = GST_FLOW_OK;
 
+  if (frame == NULL)
+     return GST_FLOW_EOS;
+  
   GST_DEBUG_OBJECT (decoder, "Handling frame");
   /* Wait until there is nothing pending to be to dequeued or there is a buffer
    */
@@ -481,6 +490,8 @@ gst_web_codecs_video_decoder_set_format (
   /* TODO Check if downstream OpenGL is supported, if so, request the GL
    * context */
 
+  self->decoder = val::undefined();
+  
   /* Call constructor */
   runner = gst_web_canvas_get_runner (self->canvas);
   gst_web_runner_send_message (
@@ -538,6 +549,8 @@ gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
   GstWebRunner *runner;
   gboolean ret = FALSE;
 
+  self->stopping = FALSE;
+  
   GST_DEBUG_OBJECT (self, "Start");
   runner = gst_web_canvas_get_runner (self->canvas);
   if (!gst_web_runner_run (runner, NULL)) {
@@ -574,6 +587,8 @@ gst_web_codecs_video_decoder_stop (GstVideoDecoder *decoder)
     gst_video_codec_state_unref (self->output_state);
     self->output_state = NULL;
   }
+
+  self->stopping = TRUE;
 
   GST_DEBUG_OBJECT (self, "Stopped");
 

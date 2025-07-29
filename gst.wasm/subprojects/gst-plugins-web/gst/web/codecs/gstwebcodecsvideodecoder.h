@@ -71,6 +71,7 @@ struct _GstWebCodecsVideoDecoder
   gint height;
   GstVideoFormat format;
   gboolean need_negotiation;
+  gboolean stopping;
 
   emscripten::val decoder;
   /* Amount of the output frames pending to be dequeued */
