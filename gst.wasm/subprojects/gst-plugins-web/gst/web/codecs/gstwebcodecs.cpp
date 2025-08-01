@@ -217,7 +217,8 @@ scan_audio_decoders (GstPlugin *plugin)
 
   GstCaps *caps;
 
-  caps = gst_caps_from_string ("audio/mpeg");
+  caps = gst_caps_from_string ("audio/mpeg, stream-format=raw");
+  // TODO: Support adts: https://www.w3.org/TR/webcodecs-aac-codec-registration/#aac-bitstream-format
   // TODO: Check supported config and caps
   register_audio_decoder (plugin, "AACSW", caps, FALSE);
   gst_caps_unref (caps);
