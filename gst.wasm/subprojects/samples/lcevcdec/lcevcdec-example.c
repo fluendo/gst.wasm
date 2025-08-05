@@ -38,7 +38,7 @@ register_elements ()
   GST_PLUGIN_STATIC_DECLARE (libav);
   GST_PLUGIN_STATIC_DECLARE (web);
   GST_ELEMENT_REGISTER_DECLARE (
-      glimagesink); /* FIXME: Should not be needed. */
+      glimagesink); /* FIXME: Should not be needed (RDI-2866). */
   GST_ELEMENT_REGISTER_DECLARE (h264parse);
   GST_ELEMENT_REGISTER_DECLARE (lcevcdec);
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);

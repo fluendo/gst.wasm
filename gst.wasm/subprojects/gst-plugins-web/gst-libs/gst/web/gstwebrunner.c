@@ -356,8 +356,8 @@ gst_web_runner_new (const gchar *canvases)
   GstWebRunner *self;
 
   self = g_object_new (GST_TYPE_WEB_RUNNER, NULL);
-  /* FIXME use a property canvases */
-  /* FIXME create a new fundamental type GstWebStringList */
+  /* FIXME use a property canvases (RDI-2852) */
+  /* FIXME create a new fundamental type GstWebStringList (RDI-2852) */
   self->priv->canvases = g_strdup (canvases);
   gst_object_ref_sink (self);
 

@@ -82,7 +82,7 @@ typedef struct _GstWebTransportSrcRequestObjectMsgData
 
 /* FIXME we use this for setting/getting a single property. If there
  * are more properties to set, wrap the actual generic property_set/get
- * into a message, instead of doing it per property
+ * into a message, instead of doing it per property (RDI-2859)
  */
 typedef struct _GstWebTransportSrcDatagramsIncomingHighWaterMarkMsgData
 {
@@ -129,7 +129,7 @@ gst_web_transport_src_request_object_msg (
   if (!strncmp (object_name, "WebTransportReceiveStream/", 25)) {
     const gchar *stream_name =
         &object_name[26]; // the lenght of the above string
-    /* FIXME how to handle the case of a stream not found */
+    /* FIXME how to handle the case of a stream not found (RDI-2860) */
     object = self->streams[stream_name];
   } else {
     GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
@@ -313,7 +313,7 @@ gst_web_transport_src_create_stream (
   if (!g_strcmp0 (GST_PAD_NAME (pad), "datagram")) {
     stream = self->transport["datagrams"]["readable"];
   } else {
-    /* TODO support the sendOrder option */
+    /* TODO support the sendOrder option (RDI-2862) */
     stream = self->transport.call<val> ("createBidirectionalStream")
                  .await ()["readable"];
   }
@@ -492,8 +492,8 @@ static void
 gst_web_transport_src_destroy_connection (GstWebTransportSrc *self)
 {
   /* TODO
-   * close every stream
-   * close the transport
+   * close every stream (RDI-2861)
+   * close the transport (RDI-2861)
    */
   gst_web_transferable_unregister_on_message ((GstWebTransferable *) self);
 }
@@ -523,7 +523,7 @@ gst_web_transport_src_stop (GstWebTransportSrc *src)
   gst_web_runner_send_message (self->runner,
       (GstWebRunnerCB) gst_web_transport_src_destroy_connection, self);
   /* TODO
-   * destroy the runner
+   * destroy the runner (RDI-2861)
    */
 }
 
@@ -595,7 +595,7 @@ gst_web_transport_src_request_new_pad (GstElement *element,
       pad, "linked", (GCallback) gst_web_transport_src_stream_linked, self);
   gst_element_add_pad (element, pad);
   /* TODO handle the case of requesting a pad when the element has already
-   * established the connection
+   * established the connection (RDI-2863)
    */
   return pad;
 }
@@ -603,7 +603,7 @@ gst_web_transport_src_request_new_pad (GstElement *element,
 static void
 gst_web_transport_src_release_pad (GstElement *element, GstPad *pad)
 {
-  GST_FIXME_OBJECT (element, "Release pad");
+  GST_FIXME_OBJECT (element, "Release pad"); /* (RDI-2861) */
 }
 
 static GstStateChangeReturn

@@ -92,17 +92,17 @@ gst_web_canvas_new (const gchar *canvases)
   self = g_object_new (GST_TYPE_WEB_CANVAS, NULL);
   self->priv = gst_web_canvas_get_instance_private (self);
   self->priv->canvases = g_strdup (canvases);
-  /* FIXME use a property runner */
-  /* Create the runner with the passed in canvas */
+  /* FIXME use a property runner (RDI-2852) */
+  /* Create the runner with the passed in canvas (RDI-2852) */
   self->priv->runner = gst_web_runner_new (canvases);
   /* FIXME use a property canvases */
-  /* FIXME create a new fundamental type GstWebStringList */
+  /* FIXME create a new fundamental type GstWebStringList (RDI-2852) */
   gst_object_ref_sink (self);
 
   return self;
 }
 
-/* FIXME until we have the property */
+/* FIXME until we have the property (RDI-2852) */
 /**
  * gst_web_canvas_get_runner:
  * @self: The #GstWebCanvas

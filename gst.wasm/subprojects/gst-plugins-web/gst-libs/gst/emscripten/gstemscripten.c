@@ -33,7 +33,7 @@ GST_DEBUG_CATEGORY_STATIC (gstemscripten_dbg);
 
 static struct 
 {
-  /* FIXME: fix and use GMainContext instead!!! */
+  /* FIXME: fix and use GMainContext instead!!! (RDI-2851) */
   GSourceFunc just_one_func;
   gpointer just_one_data;
 } gst_emscripten_ui_context;
@@ -72,7 +72,7 @@ gst_emscripten_ui_main_loop_iteration ()
   
   GST_LOG ("UI dispatch");
   
-  /* FIXME: ugly hack to workaround broken GMainContext */
+  /* FIXME: ugly hack to workaround broken GMainContext (RDI-2851) */
   gst_emscripten_ui_context.just_one_func
       (gst_emscripten_ui_context.just_one_data);
 
