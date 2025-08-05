@@ -118,7 +118,7 @@ gst_sdl2_sink_create_window (gpointer data)
   
   SDL_Init (SDL_INIT_VIDEO);
 
-  /* FIXME: isn't it weird that we create a window here? */
+  /* FIXME: isn't it weird that we create a window here? (RDI-2865) */
   GST_DEBUG ("Create window");
   SDL_CreateWindowAndRenderer (self->info.width, self->info.height,
       0, &self->render.window, &self->render.target);

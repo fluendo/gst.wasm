@@ -34,7 +34,8 @@ register_elements ()
 {
   GST_ELEMENT_REGISTER_DECLARE (queue);
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
-  GST_ELEMENT_REGISTER_DECLARE (glimagesink);
+  GST_ELEMENT_REGISTER_DECLARE (
+      glimagesink); /* FIXME: Should not be needed. (RDI-2866) */
   GST_ELEMENT_REGISTER_DECLARE (web_canvas_sink);
   GST_ELEMENT_REGISTER_DECLARE (web_stream_src);
   GST_ELEMENT_REGISTER_DECLARE (videoconvert);

@@ -212,7 +212,7 @@ gst_web_canvas_sink_setup (gpointer data)
   GstWebCanvasSinkSetupData *setup_data = (GstWebCanvasSinkSetupData *) data;
   GstWebCanvasSink *self = setup_data->self;
 
-  /* FIXME how to handle the case of multiple canvases? */
+  /* FIXME how to handle the case of multiple canvases? (RDI-2858) */
   self->val_canvas = val::module_property ("canvas");
   self->val_context =
       self->val_canvas.call<val> ("getContext", std::string ("2d"));

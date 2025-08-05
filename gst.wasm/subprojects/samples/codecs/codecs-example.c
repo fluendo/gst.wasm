@@ -33,7 +33,8 @@ static void
 register_elements ()
 {
   GST_ELEMENT_REGISTER_DECLARE (qtdemux);
-  GST_ELEMENT_REGISTER_DECLARE (glimagesink);
+  GST_ELEMENT_REGISTER_DECLARE (
+      glimagesink); /* FIXME: Should not be needed. (RDI-2866) */
   GST_PLUGIN_STATIC_DECLARE (web);
   GST_PLUGIN_STATIC_DECLARE (coreelements);
   GST_ELEMENT_REGISTER_DECLARE (openalsink);

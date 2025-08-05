@@ -36,7 +36,7 @@ register_elements ()
 {
   GST_ELEMENT_REGISTER_DECLARE (audioconvert);
   GST_ELEMENT_REGISTER_DECLARE (
-      glimagesink); /* FIXME: Should not be needed. */
+      glimagesink); /* FIXME: Should not be needed. (RDI-2866) */
   GST_ELEMENT_REGISTER_DECLARE (h264parse);
   GST_ELEMENT_REGISTER_DECLARE (lcevcdec);
   GST_ELEMENT_REGISTER_DECLARE (openalsink);
@@ -85,7 +85,8 @@ main (int argc, char **argv)
 {
   gst_debug_set_default_threshold (1);
   gst_init (NULL, NULL);
-  GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "lcevcdec with aac wasm example");
+  GST_DEBUG_CATEGORY_INIT (
+      example_dbg, "example", 0, "lcevcdec with aac wasm example");
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
