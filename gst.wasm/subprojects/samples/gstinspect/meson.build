@@ -21,7 +21,7 @@ executable(executable_name,
       '-sASYNCIFY',
     ],
     c_args: ['-Wall', '-Werror', '-Wno-deprecated-declarations', '-Wno-unused-function'],
-    name_suffix: 'html',
+    name_suffix: 'js',
     install: true,
     install_dir: install_dir,
 )
