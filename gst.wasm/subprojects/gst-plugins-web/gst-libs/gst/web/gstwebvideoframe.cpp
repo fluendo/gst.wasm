@@ -278,7 +278,7 @@ gst_web_video_frame_allocator_free (GstAllocator *allocator, GstMemory *memory)
 {
   GstWebVideoFrame *self = (GstWebVideoFrame *) memory;
 
-  /* FIXME can be async */
+  /* FIXME can be async (RDI-2856) */
   gst_web_runner_send_message (
       self->priv->runner, gst_web_video_frame_close, self);
 
@@ -347,7 +347,7 @@ gst_web_video_frame_wrap (val &video_frame, GstWebRunner *runner)
   /* Create the AllocatorParams */
   /* TODO Create an gst_web_video_frame_allocation_parameters_init()
    * once we start sharing this among elements and it is actually
-   * needed
+   * needed (RDI-2855)
    */
   params.video_frame = video_frame;
   params.runner = runner;
@@ -359,7 +359,7 @@ gst_web_video_frame_wrap (val &video_frame, GstWebRunner *runner)
       runner, gst_web_video_frame_allocation_size, &allocation_size_data);
 
   /* FIXME this should be gst_allocator_alloc, but the params are not
-   * subclassable */
+   * subclassable (RDI-2854) */
   /* Allocate with this params and return the VideoFrame */
   allocator_class = GST_ALLOCATOR_GET_CLASS (gst_web_video_frame_allocator);
   mem = allocator_class->alloc (gst_web_video_frame_allocator,

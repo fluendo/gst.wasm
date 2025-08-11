@@ -20,7 +20,7 @@
 
 /* FIXME the following gst_codec_utils* functions should go to gstpbutils */
 /* In GStreamer the H264 flags (or constrained flags) are embedded into the
- * profile field of the GstCaps' GstStructure
+ * profile field of the GstCaps' GstStructure (RDI-2621)
  */
 static const gchar *gst_codec_utils_h264_profiles[] = { "constrained-baseline",
   "baseline", "main", "extended", "constrained-high", "progressive-high",
@@ -175,7 +175,8 @@ gst_codec_utils_h264_set_level_and_profile (
   return profile;
 #endif
 
-  /* FIXME probably, there are faster (and smarter) ways to handle this */
+  /* FIXME probably, there are faster (and smarter) ways to handle this
+   * (RDI-2621) */
   if (!g_strcmp0 (level, "1")) {
     sps[2] = 10;
   } else if (!g_strcmp0 (level, "1.b")) {
@@ -265,7 +266,7 @@ gst_web_codecs_utils_scan_video_h264_decoder (GstPlugin *plugin, val vdecclass)
         gboolean conf_supported;
 
         level_str = gst_codec_utils_h264_get_nth_level (level);
-        /* TODO avoid asking for the same level */
+        /* TODO avoid asking for the same level (RDI-2864) */
 
         /* Transform to a codec string */
         GST_LOG ("Checking for H.264 with profile: %s and level: %s",
@@ -288,7 +289,7 @@ gst_web_codecs_utils_scan_video_h264_decoder (GstPlugin *plugin, val vdecclass)
       GST_WARNING ("No H.264 decoder found for %s", codec_names[i]);
     } else {
       GST_INFO ("H.264 decoder found for %s", codec_names[i]);
-      /* TODO If valid append to the caps alternatives */
+      /* TODO If valid append to the caps alternatives (RDI-2864) */
       register_video_decoder (plugin, codec_names[i], gst_caps_ref (caps), i);
     }
 

@@ -16,7 +16,7 @@ executable(executable_name,
     ],
     link_args: common_link_args + [
       '-sASYNCIFY',
-      # This is giving problems when running the WebRunner at set_format
+      # This is giving problems when running the WebRunner at set_format (RDI-2850)
       '-sPROXY_TO_PTHREAD',
       '-lGL',
       '-sOFFSCREENCANVAS_SUPPORT'
