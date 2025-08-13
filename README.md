@@ -121,24 +121,12 @@ $ ls build/gst.wasm_web_wasm32/dist/web_wasm32
 bin  include  lib  share
 ```
 
-#### Compile samples
-
-```
-cd gst.wasm
-meson --cross-file=emscripten-crossfile.meson _builddir
-```
-
 #### Running the samples
 
-First, you'll need to install Emscripten tools from https://emscripten.org/docs/getting_started/downloads.html
-Then you can run the samples by doing:
-
-First, you'll need to install Emscripten tools from https://emscripten.org/docs/getting_started/downloads.html
-Then you can run the samples by doing:
-
 ```
-emrun _builddir/subprojects/samples/videotestsrc/videotestsrc-example.html
-emrun _builddir/subprojects/samples/openal/openal-example.html # Click to hear to a sound.
+poetry run cerbero -c build/gst.wasm.cbc shell
+emrun ./build/gst.wasm_web_wasm32/dist/web_wasm32/share/gst.wasm/samples/videotestsrc-example/videotestsrc-example.html
+emrun ./build/gst.wasm_web_wasm32/dist/web_wasm32/share/gst.wasm/samples/openal-example/openal-example.html # Click to hear to the sound.
 ```
 
 ## Development
