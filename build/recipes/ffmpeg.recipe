@@ -13,7 +13,7 @@ original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'ffmpeg.reci
 class Recipe(original_recipe):
     def recipe_dir(self):
         return recipes_path()
-    
+
     def prepare(self):
         self.meson_options.update({
             'auto_features' : 'disabled',
