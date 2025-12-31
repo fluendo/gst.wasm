@@ -16,3 +16,6 @@ class Recipe(recipe.Recipe):
         '../recipes/lcevc_dec/0001-threading-Prevent-compile-error-pthread_setname_np-o.patch',
         '../recipes/lcevc_dec/0001-emscripten-Fix-js-output.patch',
     ]
+
+    def prepare(self):
+        self.append_env('CFLAGS', '-Wno-user-defined-warnings')
