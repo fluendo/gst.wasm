@@ -14,7 +14,7 @@ class Recipe(recipe.Recipe):
         "gst-plugins-good-1.0",
         "gst-plugins-bad-1.0",
         "gst-libav-1.0",
-        "lcevc_dec"
+        "lcevcdec"
     ]
     meson_subprojects = [
         "gst-plugins-web",
