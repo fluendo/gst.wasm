@@ -51,7 +51,7 @@ remote = "fluendo"
 name = "packaging"
 summary = "Enable installation using pip with a git-https repository"
 pr = "https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1484"
-status = "pending"
+status = "integrated"
 
 [[features]]
 remote = "fluendo"
