@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: fluendo/llvm-project
-          ref: gst.wasm/emsdk/0.4.23
+          ref: emsdk/0.4.23
           fetch-depth: 0
       - name: Install lld
         run: sudo apt install -y lld
