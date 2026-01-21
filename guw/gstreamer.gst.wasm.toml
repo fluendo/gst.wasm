@@ -78,3 +78,8 @@ name = "libav-add-element-groups"
 summary = "Add element_groups meson option to gst-libav"
 status = "pending"
 pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8877"
+
+[[features]]
+name = "wasm-main-orc"
+remote = "origin"
+status = "pending"
