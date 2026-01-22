@@ -82,7 +82,7 @@ gst_emscripten_ui_main_loop_iteration ()
 void
 gst_emscripten_init ()
 {
-  emscripten_set_main_loop (gst_emscripten_ui_main_loop_iteration, 0, FALSE);
+  // emscripten_set_main_loop (gst_emscripten_ui_main_loop_iteration, 0, FALSE);
 }
 
 void
