@@ -64,7 +64,7 @@ gst_emscripten_ui_remove_callback (GSourceFunc cb, gpointer data)
 }
 
 static void
-gst_emscripten_ui_main_loop_iteration ()
+gst_emscripten_ui_main_loop_iteration (void)
 {
   if (gst_emscripten_ui_context.just_one_func == NULL) {
     return;
@@ -82,7 +82,7 @@ gst_emscripten_ui_main_loop_iteration ()
 void
 gst_emscripten_init ()
 {
-  // emscripten_set_main_loop (gst_emscripten_ui_main_loop_iteration, 0, FALSE);
+  emscripten_set_main_loop (gst_emscripten_ui_main_loop_iteration, 0, FALSE);
 }
 
 void
