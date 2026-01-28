@@ -11,7 +11,7 @@ external_recipes = {
 }
 
 gst_url = 'https://github.com/fluendo/gstreamer.git'
-gst_commit = 'fluendo/gst.wasm'
+gst_commit = 'fluendo/RDI-3208-without-function-pointer'
 
 recipes_remotes = {
     'gstreamer-1.0': {'fluendo': gst_url },

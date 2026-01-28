@@ -179,8 +179,6 @@ static GstFlowReturn
 gst_web_upload_transform (
     GstBaseTransform *bt, GstBuffer *inbuf, GstBuffer *outbuf)
 {
-  GstWebVideoFrame *vf;
-  GstMapInfo out_map;
   GstWebUpload *self = GST_WEB_UPLOAD (bt);
 
   GST_DEBUG_OBJECT (self, "Transform start");
