@@ -110,9 +110,10 @@ gst_web_codecs_video_decoder_get_format (
   const gchar *vf_format;
   gint width;
   gint height;
+  std::string vf_format_str = video_frame["format"].as<std::string> ();
 
   /* Get the video frame format */
-  vf_format = video_frame["format"].as<std::string> ().c_str ();
+  vf_format = vf_format_str.c_str ();
   if (!g_strcmp0 (vf_format, "I420")) {
     format = GST_VIDEO_FORMAT_I420;
   } else if (!g_strcmp0 (vf_format, "I420A")) {
@@ -227,8 +228,6 @@ done:
 static void
 gst_web_codecs_video_decoder_on_error (guintptr self_, val error)
 {
-  GstWebCodecsVideoDecoder *self = (GstWebCodecsVideoDecoder *) self_;
-
   /* TODO handle this */
   GST_ERROR ("Error received");
 }

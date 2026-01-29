@@ -6,7 +6,11 @@ import cerbero
 from cerbero.build import recipe
 
 def recipes_path():
-    return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share', 'recipes')
+    if os.environ.get('CERBERO_UNINSTALLED'):
+        return os.path.join(os.path.dirname(cerbero.__file__), '..',  'recipes')
+    else:
+        return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share', 'recipes')
+
 
 original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'ffmpeg.recipe'))
 

@@ -116,11 +116,8 @@ gst_web_runner_quit (GstWebRunner *self)
 static gpointer
 gst_web_runner_run_thread (GstWebRunner *self)
 {
-  GstWebRunnerClass *klass;
-
   GST_DEBUG_OBJECT (self, "Creating thread");
 
-  klass = GST_WEB_RUNNER_GET_CLASS (self);
   g_mutex_lock (&self->priv->create_lock);
 
   self->priv->alive = TRUE;
