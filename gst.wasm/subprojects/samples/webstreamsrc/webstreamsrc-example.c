@@ -69,7 +69,8 @@ init_pipeline ()
   GST_PLUGIN_STATIC_REGISTER (web);
 
   context.pipe = gst_parse_launch (
-      "webstreamsrc location=\"http://localhost:6931/webstreamsrc-example.js\""
+      "webstreamsrc "
+      "location=\"http://localhost:6931/webstreamsrc-example.html\""
       " ! fakesink name=fk signal-handoffs=true",
       NULL);
   g_assert (context.pipe);
