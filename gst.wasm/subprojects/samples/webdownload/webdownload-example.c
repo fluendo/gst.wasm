@@ -22,9 +22,7 @@
 
 #include <gst/emscripten/gstemscripten.h>
 
-#define DEFAULT_URL                                                           \
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/"        \
-  "BigBuckBunny.mp4"
+#define DEFAULT_URL "https://hbbtv-demo.fluendo.com/pip/bbb.mp4"
 
 #define GST_CAT_DEFAULT example_dbg
 GST_DEBUG_CATEGORY_STATIC (example_dbg);
