@@ -23,6 +23,13 @@ status = "integrated"
 
 [[features]]
 remote = "origin"
+name = "RDI-3208-thread-func-return"
+summary = "GThreadFunc return type fixes"
+pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10682"
+status = "pending" # TODO: Remove this feature after wasm-main-base sync with upstream.
+
+[[features]]
+remote = "origin"
 name = "wasm-main-function-pointer"
 summary = "Fix null function or function signature mismatch runtime errors"
 status = "pending"
