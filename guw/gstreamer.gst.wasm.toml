@@ -74,3 +74,10 @@ name = "libav-add-element-groups"
 summary = "Add element_groups meson option to gst-libav"
 status = "pending"
 pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8877"
+
+[[features]]
+remote = "origin"
+name = "fix-disable-mse"
+summary = "libs: mse: Disable if mse option disabled"
+status = "pending"
+pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11467"
