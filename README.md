@@ -64,16 +64,16 @@ We use the fork at [Fluendo](https://github.com/fluendo/gstreamer) in the [gst.w
 The [current status](https://github.com/fluendo/gstreamer/compare/main...fluendo:gst.wasm) is grouped in the next cumulative branches:
 <!-- START guw gstreamer.toml markdown -->
 * 🟢 `meson_fix_nls`: Use nls option to set ENABLE_NLS [(PR link)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7017)
-* ⏳ `wasm-main-function-pointer`: Fix null function or function signature mismatch runtime errors [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-function-pointer)
+* ⏳ `RDI-3208-thread-func-return`: GThreadFunc return type fixes [(PR link)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10682)
 * ⏳ `wasm-main-enable`: Enable support for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-enable)
 * ⏳ `wasm-main-test`: Enable unit tests for wasm [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-test)
 * ⏳ `wasm-main-openal`: Add emscripten support OpenAL to play audio [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-openal)
 * ⏳ `wasm-main-gl-support`: Add emscripten OpenGL backend [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-gl-support)
-* ⏳ `wasm-main-videodec` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-videodec)
 * ⏳ `wasm-main-webtransport` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-webtransport)
 * ⏳ `wasm-main-wip`: Commits in progress [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-wip)
 * ⏳ `wasm-main-dash` [(Branch link)](https://github.com/fluendo/gstreamer/tree/wasm-main-dash)
 * ⏳ `libav-add-element-groups`: Add element_groups meson option to gst-libav [(PR link)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8877)
+* ⏳ `fix-disable-mse`: libs: mse: Disable if mse option disabled [(PR link)](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11467)
 <!-- END guw gstreamer.toml markdown -->
 
 ### Cerbero
@@ -85,11 +85,11 @@ The [current status](https://github.com/fluendo/cerbero/compare/main...fluendo:c
 * 🟢 `tests2`: Update more tests. Second round [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1477)
 * 🟢 `tests3`: Tests update final round [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1482)
 * 🟢 `local_source`: New type of source that allows you to build a recipe without fetching or copying sources [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1483)
-* ⏳ `packaging`: Enable installation using pip with a git-https repository [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1484)
+* 🟢 `packaging`: Enable installation using pip with a git-https repository [(PR link)](https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1484)
 * ⏳ `emscripten`: Add support for building for wasm target with emscripten toolchain [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten)
 * ⏳ `emscripten-hbbtv`: Add 'hbbtv' variant with compatibility parameters to run on TV browsers [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-hbbtv)
 * ⏳ `emscripten-gl`: Add OpenGL support in gst-plugins-base through new Emscripten based WebGL backend [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-gl)
-
+* ⏳ `emscripten-fix-function-bitcasts`: Fixes needed to use custom llvm branch fixing function pointer issues [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-fix-function-bitcasts)
 <!-- END guw cerbero.toml markdown -->
 
 
