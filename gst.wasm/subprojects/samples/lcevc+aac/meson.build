@@ -30,6 +30,7 @@ executable(executable_name,
     link_args: common_link_args + [
       '-lGL',
       '-sASYNCIFY',
+      '-sASYNCIFY_STACK_SIZE=1048576',
       '-sOFFSCREENCANVAS_SUPPORT',
       '-sPROXY_TO_PTHREAD',
       '-sSTACK_SIZE=1048576'

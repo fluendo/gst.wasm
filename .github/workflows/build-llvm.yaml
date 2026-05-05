@@ -1,0 +1,41 @@
+name: Build LLVM
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build_llvm:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: fluendo/llvm-project
+          ref: gst.wasm/emsdk/4.0.22
+          fetch-depth: 0
+      - name: Install lld
+        run: sudo apt install -y lld
+      - name: Install ccache
+        run: sudo apt install -y ccache
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-gstwasm-llvm-${{ github.sha }}
+          restore-keys: |
+            ccache-gstwasm-llvm-
+      - run: |
+          export CCACHE_DIR=~/.cache/ccache
+          ccache -M 2G
+          ccache -s
+
+          mkdir build
+          cd build
+          cmake ../llvm -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DLLVM_TARGETS_TO_BUILD="WebAssembly;X86" -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DLLVM_ENABLE_ASSERTIONS=OFF -DLLVM_ENABLE_LIBXML2=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLDB_ENABLE_LIBEDIT=OFF -DLLVM_ENABLE_LIBEDIT=OFF -DLLVM_ENABLE_LIBPFM=OFF -DLLVM_ENABLE_PROJECTS="clang;lld" -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
+          cmake --build .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: llvm
+          path: |
+            build/bin
+            build/lib

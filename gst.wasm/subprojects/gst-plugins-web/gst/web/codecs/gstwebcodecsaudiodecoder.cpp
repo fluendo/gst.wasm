@@ -325,8 +325,6 @@ done:
 static void
 gst_web_codecs_audio_decoder_on_error (guintptr self_, val error)
 {
-  GstWebCodecsAudioDecoder *self = (GstWebCodecsAudioDecoder *) self_;
-
   GST_ERROR ("Error: %s", error.call<std::string> ("toString").c_str ());
 }
 

@@ -6,9 +6,15 @@ from cerbero.utils import imp_load_source
 from cerbero.build import recipe
 
 def recipes_path():
-    return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share', 'recipes')
+    if os.environ.get('CERBERO_UNINSTALLED'):
+        return os.path.join(os.path.dirname(cerbero.__file__), '..',  'recipes')
+    else:
+        return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share', 'recipes')
 
-custom = imp_load_source('custom', os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share','recipes', 'custom.py'))
+if os.environ.get('CERBERO_UNINSTALLED'):
+    custom = imp_load_source('custom', os.path.join(os.path.dirname(cerbero.__file__), '..','recipes', 'custom.py'))
+else:
+    custom = imp_load_source('custom', os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share','recipes', 'custom.py'))
 
 original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'gst-libav-1.0.recipe'))
 
