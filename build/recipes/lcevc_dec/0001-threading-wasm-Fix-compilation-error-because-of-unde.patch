@@ -1,0 +1,36 @@
+From e87e7f9169b2f177646fc8d342c4df67badbe88a Mon Sep 17 00:00:00 2001
+From: Fabian Orccon <cfoch.fabian@gmail.com>
+Date: Thu, 7 May 2026 16:02:38 +0200
+Subject: [PATCH] threading: wasm: Fix compilation error because of undefined
+ variable
+
+Prevents
+---
+ src/api_utility/src/threading.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/api_utility/src/threading.cpp b/src/api_utility/src/threading.cpp
+index aad21d5..20ac841 100644
+--- a/src/api_utility/src/threading.cpp
++++ b/src/api_utility/src/threading.cpp
+@@ -65,7 +65,8 @@ bool setThreadName(std::string_view name)
+     if (!name.empty()) {
+ #if defined(__EMSCRIPTEN__)
+         return true; // Don't set thread name in wasms
+-#elif defined(__ANDROID__) || defined(__linux__)
++#else
++#if defined(__ANDROID__) || defined(__linux__)
+         const int res = pthread_setname_np(pthread_self(), name.data());
+ #else // i.e. Apple
+         const int res = pthread_setname_np(name.data());
+@@ -73,6 +74,7 @@ bool setThreadName(std::string_view name)
+         if (res != 0) {
+             return false;
+         }
++#endif
+     }
+     return true;
+ }
+-- 
+2.43.0
+

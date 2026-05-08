@@ -1,0 +1,25 @@
+From 56c7abf845736d15ca982855647e370958b46fa2 Mon Sep 17 00:00:00 2001
+From: Fabian Orccon <cfoch.fabian@gmail.com>
+Date: Fri, 8 May 2026 13:32:11 +0200
+Subject: [PATCH] convert: Use planeConvertGetFunctionScalar
+
+---
+ src/pixel_processing/src/convert.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pixel_processing/src/convert.c b/src/pixel_processing/src/convert.c
+index 57c47ef..707d722 100644
+--- a/src/pixel_processing/src/convert.c
++++ b/src/pixel_processing/src/convert.c
+@@ -109,7 +109,7 @@ bool ldppPlaneConvert(LdcTaskPool* taskPool, LdcTask* parent, const uint32_t pla
+     }
+ 
+     const LdppConvertSlicedJobContext slicedJobContext = {
+-        planeConvertGetFunction(srcLayout->layoutInfo->fixedPoint,
++        planeConvertGetFunctionScalar(srcLayout->layoutInfo->fixedPoint,
+                                 dstLayout->layoutInfo->fixedPoint, planeIndex, isNV12),
+         *srcPlane,
+         *dstPlane,
+-- 
+2.43.0
+

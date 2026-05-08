@@ -6,16 +6,17 @@ class Recipe(recipe.Recipe):
     # licenses = [{License.BSD_like: ['LICENSE.txt']}]
     stype = SourceType.GIT
     remotes = {'origin': 'https://github.com/v-novaltd/LCEVCdec'}
-    commit = version = '3.3.7'
+    commit = version = '4.1.0'
     btype = BuildType.CMAKE
     static = True
     configure_options = (
-        # '-DVN_CORE_SIMD=disabled '
+        '-DVN_CORE_SIMD=enabled '
     )
     patches = [
-        '../recipes/lcevc_dec/0001-threading-Prevent-compile-error-pthread_setname_np-o.patch',
-        '../recipes/lcevc_dec/0001-emscripten-Fix-js-output.patch',
+        '../recipes/lcevc_dec/0001-threading-wasm-Fix-compilation-error-because-of-unde.patch',
+        '../recipes/lcevc_dec/0001-convert-Use-planeConvertGetFunctionScalar.patch',
     ]
 
     def prepare(self):
         self.append_env('CFLAGS', '-Wno-user-defined-warnings')
+        self.append_env('CXXFLAGS', '-Wno-user-defined-warnings')
