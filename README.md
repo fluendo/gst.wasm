@@ -109,6 +109,7 @@ To build an environment, you can use [steps from CI](.github/workflows/build.yam
 poetry install
 git config --global protocol.file.allow always
 poetry run cerbero -c build/gst.wasm.cbc bootstrap
+poetry run cerbero -c build/gst.wasm.cbc run emcc --clear-cache # Needed for our LLVM fork.
 poetry run cerbero -c build/gst.wasm.cbc build gst.wasm
 ```
 

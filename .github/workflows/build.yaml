@@ -43,12 +43,13 @@ jobs:
         run: |
           sudo apt-get update
           poetry run cerbero -c build/gst.wasm.cbc bootstrap
+          poetry run cerbero -c build/gst.wasm.cbc run emcc --clear-cache # Needed for our LLVM fork.
       - name: Build dependencies
         run: |
           poetry run cerbero -c build/gst.wasm.cbc build-deps gst.wasm
       - name: Build gst.wasm
         run: |
-          poetry run cerbero -c build/gst.wasm.cbc build gst.wasm
+          poetry run cerbero -c build/gst.wasm.cbc buildone gst.wasm
       - name: Create tarball
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
