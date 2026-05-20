@@ -6,6 +6,10 @@ url = "git@github.com:fluendo/gstreamer.git"
 name = "freedesktop"
 url = "git@ssh.gitlab.freedesktop.org:gstreamer/gstreamer.git"
 
+[upstream]
+remote = "freedesktop"
+branch = "main"
+
 [target]
 remote = "origin"
 branch = "gst.wasm"
@@ -26,7 +30,14 @@ remote = "origin"
 name = "RDI-3208-thread-func-return"
 summary = "GThreadFunc return type fixes"
 pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10682"
-status = "pending" # TODO: Remove this feature after wasm-main-base sync with upstream.
+status = "integrated"
+
+[[features]]
+remote = "origin"
+name = "fix-disable-mse"
+summary = "libs: mse: Disable if mse option disabled"
+status = "integrated"
+pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11467"
 
 [[features]]
 remote = "origin"
@@ -74,10 +85,3 @@ name = "libav-add-element-groups"
 summary = "Add element_groups meson option to gst-libav"
 status = "pending"
 pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8877"
-
-[[features]]
-remote = "origin"
-name = "fix-disable-mse"
-summary = "libs: mse: Disable if mse option disabled"
-status = "pending"
-pr = "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11467"

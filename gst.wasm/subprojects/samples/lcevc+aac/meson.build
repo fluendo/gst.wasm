@@ -4,10 +4,6 @@ c_code = executable_name + '.c'
 html_code = executable_name + '-page.html'
 
 cc = meson.get_compiler('c')
-lcevc_dec_api = cc.find_library('lcevc_dec_api')
-lcevc_dec_core = cc.find_library('lcevc_dec_core')
-lcevc_dec_core_sequencing = cc.find_library('lcevc_dec_core_sequencing')
-lcevc_dec_api_utility = cc.find_library('lcevc_dec_api_utility')
 
 executable(executable_name,
     c_code,
@@ -22,10 +18,6 @@ executable(executable_name,
       gstisomp4_dep,
       gstlibav_dep,
       gstwebplugin_dep,
-      lcevc_dec_api,
-      lcevc_dec_api_utility,
-      lcevc_dec_core,
-      lcevc_dec_core_sequencing,
     ],
     link_args: common_link_args + [
       '-lGL',
