@@ -26,23 +26,36 @@ executable(executable_name,
     install_dir: install_dir,
 )
 
-custom_target('js',
-  input: html_code,
-  output: html_code,
-  command: ['cp', '@INPUT@', '@OUTPUT@'],
-  install: true,
-  install_dir: install_dir)
+description_title = 'gst-inspect'
+description_content = (
+  'Lorem Ipsum is simply dummy text of the' +
+  'printing and typesetting industry. ' +
+  'Lorem Ipsum has been the industrys ' +
+  'standard dummy text ever since 1966 (...)'
+)
+stream_url = ''
 
-# This should be changed to something that works at compile time
-html_data = configuration_data()
-html_data.set('PAGE_NAME', html_code)
-html_data.set('EXECUTABLE_NAME', executable_name + '.js')
-html_data.set('CODE', fs.read(c_code).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace('\'', '&#39;').strip())
 
-configure_file(
-  input: '../template.html',
+custom_target(
+  executable_name + '.html',
+  input: [
+    '../template.html',
+    html_code,
+    c_code
+  ],
   output: executable_name + '.html',
-  configuration: html_data,
+  command: [
+    html_generator,
+    '@INPUT0@',
+    '@OUTPUT@',
+    'PAGE_NAME', 'Title',
+    'DESCRIPTION_TITLE',  description_title,
+    'DESCRIPTION_CONTENT', description_content,
+    'PAGE_CODE', '@INPUT1@',
+    'STREAM_URL', stream_url,
+    'CODE', '@INPUT2@',
+    'EXECUTABLE_NAME', executable_name + '.js'
+  ],
   install: true,
-  install_dir: install_dir
+  install_dir: install_dir,
 )
