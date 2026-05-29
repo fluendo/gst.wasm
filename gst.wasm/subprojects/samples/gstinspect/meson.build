@@ -11,7 +11,7 @@ gstreamer_includes = include_directories(gstinspect_source_dir, gst_basics_sourc
 
 executable(executable_name,
     'gstinspect-example.c',
-    dependencies: [common_deps, 
+    dependencies: [common_deps,
     dependency('gstweb'),
     dependency('gstsdl2'),
     ],
