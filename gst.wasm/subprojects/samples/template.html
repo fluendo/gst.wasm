@@ -34,6 +34,7 @@
     </style>
   </head>
   <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <div class="template-header">
       <h1>@DESCRIPTION_TITLE@</h1>
       <p id="description-content">@DESCRIPTION_CONTENT@</p>
@@ -42,39 +43,6 @@
         <a id="stream-url" href="@STREAM_URL@" target="_blank">@STREAM_URL@</a>
       </p>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script type="text/javascript">
-      var Module = {};
-
-      function onPageLoad(iframe) {
-        var page = document.getElementById("page").contentWindow;
-        var descriptionContent = document.getElementById("description-content");
-        if (descriptionContent?.textContent.trim() === "") {
-          descriptionContent.remove();
-        }
-        var streamUrlWrapper = document.getElementById("stream-url-wrapper");
-        var streamUrl = document.getElementById("stream-url");
-        if (streamUrlWrapper && (streamUrl?.textContent.trim() ?? "") === "") {
-          streamUrlWrapper.remove();
-        }
-        hljs.highlightAll();
-        // Set the Module canvas
-        Module["canvas"] = (() => {
-          var canvas = page.document.getElementById("canvas");
-          return canvas;
-        })();
-        iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
-      }
-    </script>
-    <iframe
-      id="page"
-      src="@PAGE_NAME@"
-      width="100%"
-      onload="onPageLoad(this)"
-      title="Page"
-      scrolling="no"
-    ></iframe>
     <pre id="page-raw">
       <code class="language-html">
 @PAGE_CODE@
@@ -105,6 +73,22 @@
           };
         })(console[verb], verb, log);
       });
+    </script>
+    <script>
+      const descEl = document.getElementById("description-content");
+      if (
+        !descEl.innerText.trim() ||
+        descEl.innerText.includes("@DESCRIPTION_CONTENT@")
+      ) {
+        descEl.style.display = "none";
+      }
+      const streamEl = document.getElementById("stream-url");
+      if (
+        !streamEl.getAttribute("href") ||
+        streamEl.getAttribute("href").includes("@STREAM_URL@")
+      ) {
+        document.getElementById("stream-url-wrapper").style.display = "none";
+      }
     </script>
     <script defer type="text/javascript" src="@EXECUTABLE_NAME@"></script>
   </body>

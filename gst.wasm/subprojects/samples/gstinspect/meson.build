@@ -40,7 +40,7 @@ custom_target(
     html_generator,
     '@INPUT0@',
     '@OUTPUT@',
-    'PAGE_NAME', 'Title',
+    'PAGE_NAME', description_title,
     'DESCRIPTION_TITLE',  description_title,
     'PAGE_CODE', '@INPUT1@',
     'CODE', '@INPUT2@',
