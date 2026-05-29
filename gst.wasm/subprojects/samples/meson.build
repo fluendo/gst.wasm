@@ -55,5 +55,7 @@ foreach example : examples
   subdir(example)
 endforeach
 
-install_data(sources: 'ci/static/index.html', install_dir: 'share/gst.wasm/samples/')
-install_data(sources: 'ci/static/enable-threads.js', install_dir: 'share/gst.wasm/samples/')
+install_subdir('ci/static/web/dist',
+  install_dir: 'share/gst.wasm/samples/',
+  strip_directory: true
+)
