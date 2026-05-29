@@ -1,11 +1,21 @@
 <!doctype html>
 <html>
   <head>
+    <title>@DESCRIPTION_TITLE@</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
     />
     <style type="text/css">
+      body {
+        font-family: sans-serif;
+      }
+      .template-header {
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #ddd;
+      }
       div#log {
         margin: 0;
         padding: 5px;
@@ -24,6 +34,15 @@
     </style>
   </head>
   <body>
+    <div class="template-header">
+      <h1>@DESCRIPTION_TITLE@</h1>
+      <p>@DESCRIPTION_CONTENT@</p>
+      <p>
+        <strong>Stream URL:</strong>
+        <a href="@STREAM_URL@" target="_blank">@STREAM_URL@</a>
+      </p>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script type="text/javascript">
       var Module = {};

@@ -25,6 +25,8 @@ gstpluginsweb = subproject('gst-plugins-web')
 gstsdl2_dep = gstpluginsweb.get_variable('gstsdl2_dep')
 gstwebplugin_dep = gstpluginsweb.get_variable('gstwebplugin_dep')
 
+html_generator = find_program('scripts/gen_page.py')
+
 examples = [
   'codecs',
   'codecs-avdec-h264',
