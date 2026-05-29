@@ -27,9 +27,6 @@ executable(executable_name,
 )
 
 description_title = 'gst-inspect'
-description_content = ''
-stream_url = ''
-
 
 custom_target(
   executable_name + '.html',
@@ -45,9 +42,7 @@ custom_target(
     '@OUTPUT@',
     'PAGE_NAME', 'Title',
     'DESCRIPTION_TITLE',  description_title,
-    'DESCRIPTION_CONTENT', description_content,
     'PAGE_CODE', '@INPUT1@',
-    'STREAM_URL', stream_url,
     'CODE', '@INPUT2@',
     'EXECUTABLE_NAME', executable_name + '.js'
   ],
