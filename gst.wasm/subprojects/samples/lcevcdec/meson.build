@@ -41,6 +41,7 @@ description_content = ''
 stream_url = ''
 
 custom_target(
+  executable_name + '.html',
   output: executable_name + '.html',
   input: [
     '../template.html',
