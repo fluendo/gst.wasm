@@ -27,12 +27,7 @@ executable(executable_name,
 )
 
 description_title = 'gst-inspect'
-description_content = (
-  'Lorem Ipsum is simply dummy text of the' +
-  'printing and typesetting industry. ' +
-  'Lorem Ipsum has been the industrys ' +
-  'standard dummy text ever since 1966 (...)'
-)
+description_content = ''
 stream_url = ''
 
 
