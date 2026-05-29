@@ -40,8 +40,6 @@ custom_target('js',
   install_dir: install_dir)
 
 description_title = executable_name.replace('-example', '')
-description_content = ''
-stream_url = ''
 
 custom_target(
   executable_name + '.html',
@@ -57,8 +55,8 @@ custom_target(
     '@OUTPUT@',
     'PAGE_NAME', html_code,
     'DESCRIPTION_TITLE', description_title,
-    'DESCRIPTION_CONTENT', description_content,
-    'STREAM_URL', stream_url,
+    'DESCRIPTION_CONTENT', '',
+    'STREAM_URL', '',
     'PAGE_CODE', '@INPUT1@',
     'CODE', '@INPUT2@',
     'EXECUTABLE_NAME', executable_name + '.js',
