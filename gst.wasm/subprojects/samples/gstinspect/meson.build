@@ -11,7 +11,7 @@ gstreamer_includes = include_directories(gstinspect_source_dir, gst_basics_sourc
 
 executable(executable_name,
     'gstinspect-example.c',
-    dependencies: [common_deps, 
+    dependencies: [common_deps,
     dependency('gstweb'),
     dependency('gstsdl2'),
     ],
@@ -27,14 +27,6 @@ executable(executable_name,
 )
 
 description_title = 'gst-inspect'
-description_content = (
-  'Lorem Ipsum is simply dummy text of the' +
-  'printing and typesetting industry. ' +
-  'Lorem Ipsum has been the industrys ' +
-  'standard dummy text ever since 1966 (...)'
-)
-stream_url = ''
-
 
 custom_target(
   executable_name + '.html',
@@ -48,11 +40,8 @@ custom_target(
     html_generator,
     '@INPUT0@',
     '@OUTPUT@',
-    'PAGE_NAME', 'Title',
+    'PAGE_NAME', description_title,
     'DESCRIPTION_TITLE',  description_title,
-    'DESCRIPTION_CONTENT', description_content,
-    'PAGE_CODE', '@INPUT1@',
-    'STREAM_URL', stream_url,
     'CODE', '@INPUT2@',
     'EXECUTABLE_NAME', executable_name + '.js'
   ],

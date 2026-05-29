@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>@DESCRIPTION_TITLE@</title>
+    <title>@PAGE_NAME@</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
@@ -33,44 +33,17 @@
       }
     </style>
   </head>
-  <body>
+  <body onload="onPageLoad(this)">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <div class="template-header">
       <h1>@DESCRIPTION_TITLE@</h1>
-      <p>@DESCRIPTION_CONTENT@</p>
-      <p>
+      <p id="description-content">@DESCRIPTION_CONTENT@</p>
+      <p id="stream-url-wrapper">
         <strong>Stream URL:</strong>
-        <a href="@STREAM_URL@" target="_blank">@STREAM_URL@</a>
+        <a id="stream-url" href="@STREAM_URL@" target="_blank">@STREAM_URL@</a>
       </p>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script type="text/javascript">
-      var Module = {};
-
-      function onPageLoad(iframe) {
-        var page = document.getElementById("page").contentWindow;
-        hljs.highlightAll();
-        // Set the Module canvas
-        Module["canvas"] = (() => {
-          var canvas = page.document.getElementById("canvas");
-          return canvas;
-        })();
-        iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
-      }
-    </script>
-    <iframe
-      id="page"
-      src="@PAGE_NAME@"
-      width="100%"
-      onload="onPageLoad(this)"
-      title="Page"
-      scrolling="no"
-    ></iframe>
-    <pre id="page-raw">
-      <code class="language-html">
-@PAGE_CODE@
-      </code>
-    </pre>
+    <canvas id="canvas" width="640px" height="480px"></canvas>
     <pre id="code">
       <code class="language-c">
 @CODE@
@@ -80,6 +53,7 @@
     <!-- Check https://stackoverflow.com/questions/6604192/showing-console-errors-and-alerts-in-a-div-inside-the-page -->
     <script type="module">
       import { AnsiUp } from "https://cdn.jsdelivr.net/gh/drudru/ansi_up/ansi_up.js";
+
       var ansi_up = new AnsiUp();
       var log = document.querySelector("#log");
       ["log", "debug", "info", "warn", "error"].forEach(function (verb) {
@@ -96,6 +70,32 @@
           };
         })(console[verb], verb, log);
       });
+    </script>
+    <script>
+      var Module = {};
+      function onPageLoad(el) {
+        hljs.highlightAll();
+        Module["canvas"] = (() => {
+          var canvas = document.getElementById("canvas");
+          return canvas;
+        })();
+      }
+    </script>
+    <script>
+      const descEl = document.getElementById("description-content");
+      if (
+        !descEl.innerText.trim() ||
+        descEl.innerText.includes("@DESCRIPTION_CONTENT@")
+      ) {
+        descEl.style.display = "none";
+      }
+      const streamEl = document.getElementById("stream-url");
+      if (
+        !streamEl.getAttribute("href") ||
+        streamEl.getAttribute("href").includes("@STREAM_URL@")
+      ) {
+        document.getElementById("stream-url-wrapper").style.display = "none";
+      }
     </script>
     <script defer type="text/javascript" src="@EXECUTABLE_NAME@"></script>
   </body>
