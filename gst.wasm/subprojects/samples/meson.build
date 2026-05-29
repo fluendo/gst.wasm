@@ -44,6 +44,8 @@ examples = [
   'dash',
 ]
 
+html_generator = find_program('html_generator.py')
+
 common_link_args = [
   '-sPTHREAD_POOL_SIZE=32',
   '-sINITIAL_MEMORY=536870912',
