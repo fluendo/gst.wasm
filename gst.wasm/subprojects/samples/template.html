@@ -36,10 +36,10 @@
   <body>
     <div class="template-header">
       <h1>@DESCRIPTION_TITLE@</h1>
-      <p>@DESCRIPTION_CONTENT@</p>
-      <p>
+      <p id="description-content">@DESCRIPTION_CONTENT@</p>
+      <p id="stream-url-wrapper">
         <strong>Stream URL:</strong>
-        <a href="@STREAM_URL@" target="_blank">@STREAM_URL@</a>
+        <a id="stream-url" href="@STREAM_URL@" target="_blank">@STREAM_URL@</a>
       </p>
     </div>
 
@@ -49,6 +49,15 @@
 
       function onPageLoad(iframe) {
         var page = document.getElementById("page").contentWindow;
+        var descriptionContent = document.getElementById("description-content");
+        if (descriptionContent?.textContent.trim() === "") {
+          descriptionContent.remove();
+        }
+        var streamUrlWrapper = document.getElementById("stream-url-wrapper");
+        var streamUrl = document.getElementById("stream-url");
+        if (streamUrlWrapper && (streamUrl?.textContent.trim() ?? "") === "") {
+          streamUrlWrapper.remove();
+        }
         hljs.highlightAll();
         // Set the Module canvas
         Module["canvas"] = (() => {
