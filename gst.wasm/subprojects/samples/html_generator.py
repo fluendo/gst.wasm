@@ -7,7 +7,10 @@ import sys
 
 def main() -> int:
     if len(sys.argv) < 5 or len(sys.argv[3:]) % 2 != 0:
-        print('Usage: html_generator.py <template> <output> <KEY VALUE>...', file=sys.stderr)
+        print(
+            'Usage: html_generator.py <template> <output> <KEY> <VALUE> [<KEY> <VALUE>]...',
+            file=sys.stderr,
+        )
         return 1
 
     template_path = pathlib.Path(sys.argv[1])
@@ -17,7 +20,11 @@ def main() -> int:
     for key in ('PAGE_CODE', 'CODE'):
         value = replacements.get(key)
         if value is not None:
-            replacements[key] = html.escape(pathlib.Path(value).read_text()).strip()
+            try:
+                replacements[key] = html.escape(pathlib.Path(value).read_text()).strip()
+            except FileNotFoundError:
+                print(f'Missing input file for {key}: {value}', file=sys.stderr)
+                return 1
 
     content = template_path.read_text()
     for key, value in replacements.items():
