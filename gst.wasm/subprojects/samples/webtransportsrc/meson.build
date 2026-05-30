@@ -29,27 +29,3 @@ custom_target('js',
   command: ['cp', '@INPUT@', '@OUTPUT@'],
   install: true,
   install_dir: install_dir)
-
-description_title = 'webtransportsrc'
-
-custom_target(
-  executable_name + '.html',
-  input: [
-    '../template.html',
-    html_code,
-    c_code,
-  ],
-  output: executable_name + '.html',
-  command: [
-    html_generator,
-    '@INPUT0@',
-    '@OUTPUT@',
-    'PAGE_NAME', description_title,
-    'DESCRIPTION_TITLE', description_title,
-    'PAGE_CODE', '@INPUT1@',
-    'CODE', '@INPUT2@',
-    'EXECUTABLE_NAME', executable_name + '.js',
-  ],
-  install: true,
-  install_dir: install_dir,
-)

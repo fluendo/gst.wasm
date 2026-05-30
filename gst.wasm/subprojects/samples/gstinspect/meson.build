@@ -1,6 +1,4 @@
 fs = import('fs')
-c_code = executable_name + '.c'
-html_code = executable_name + '-page.html'
 
 #FIXME: this is the ugliest thing I've ever seen. This is the consequence of gst-inspect-1.0 being a tool and not a library
 #Maybe converting GStreamer to a subproject?
@@ -24,27 +22,4 @@ executable(executable_name,
     name_suffix: 'js',
     install: true,
     install_dir: install_dir,
-)
-
-description_title = 'gst-inspect'
-
-custom_target(
-  executable_name + '.html',
-  input: [
-    '../template.html',
-    html_code,
-    c_code
-  ],
-  output: executable_name + '.html',
-  command: [
-    html_generator,
-    '@INPUT0@',
-    '@OUTPUT@',
-    'PAGE_NAME', description_title,
-    'DESCRIPTION_TITLE',  description_title,
-    'CODE', '@INPUT2@',
-    'EXECUTABLE_NAME', executable_name + '.js'
-  ],
-  install: true,
-  install_dir: install_dir,
 )
