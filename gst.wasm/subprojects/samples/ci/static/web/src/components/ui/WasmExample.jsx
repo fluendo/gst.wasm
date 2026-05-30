@@ -47,9 +47,12 @@ export function WasmExample({
     script.defer = true;
     let disposed = false;
     let moduleInstance = null;
-    let moduleInitPromise = null;
 
     script.onload = () => {
+      if (disposed) {
+        return;
+      }
+
       const moduleFactory = window.Module;
       if (typeof moduleFactory !== 'function') {
         console.error(`Loaded script is not modularized: ${executableName}`);
@@ -58,7 +61,7 @@ export function WasmExample({
 
       const initializedModule = moduleFactory(moduleConfig);
       if (initializedModule && typeof initializedModule.then === 'function') {
-        moduleInitPromise = initializedModule
+        initializedModule
           .then((instance) => {
             if (disposed && instance && typeof instance.quit === 'function') {
               instance.quit();
@@ -88,11 +91,6 @@ export function WasmExample({
       disposed = true;
       if (moduleInstance && typeof moduleInstance.quit === 'function') {
         moduleInstance.quit();
-      }
-      if (moduleInitPromise) {
-        moduleInitPromise.catch((error) => {
-          console.debug('Ignoring module initialization error during cleanup', error);
-        });
       }
       if (document.body.contains(script)) {
         document.body.removeChild(script);
