@@ -1,41 +1,45 @@
 // src/App.jsx
 import { useState } from 'react';
-import { Home } from './pages/Home';
-import { WasmExample } from './components/ui/WasmExample'; // Adjust path if needed
+import { examplesData } from './data/examples';
+import { Navbar } from './components/ui/Navbar';
+import { Sidebar } from './components/ui/Sidebar';
+import { Footer } from './components/ui/Footer';
+import { WasmExample } from './components/ui/WasmExample';
 import './App.css';
 
 function App() {
-  // This state holds the data of the currently clicked example.
-  // If it's null, we show the Home page.
-  const [activeExample, setActiveExample] = useState(null);
+  const [activeExample, setActiveExample] = useState(examplesData[0]);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   return (
-    <main>
-      {activeExample ? (
-        // If an example is selected, show the Wasm template
-        <div>
-          <button
-            onClick={() => setActiveExample(null)}
-            className="btn btn-secondary mb-3 ms-3 mt-3"
-            style={{ cursor: 'pointer' }}
-          >
-            ← Back to Home
-          </button>
+    <div className="app-layout">
+      <Navbar onToggleSidebar={() => setSidebarVisible((v) => !v)} />
 
-          <WasmExample
-            pageName={activeExample.pageName}
-            descriptionTitle={activeExample.descriptionTitle}
-            descriptionContent={activeExample.descriptionContent}
-            streamUrl={activeExample.streamUrl}
-            code={activeExample.code}
-            executableName={activeExample.executableName}
-          />
-        </div>
-      ) : (
-        // If no example is selected (null), show the Home list
-        <Home onSelectExample={setActiveExample} />
-      )}
-    </main>
+      <div className="app-body">
+        <Sidebar
+          examples={examplesData}
+          activeExample={activeExample}
+          onSelect={setActiveExample}
+          visible={sidebarVisible}
+          onClose={() => setSidebarVisible(false)}
+        />
+
+        <main className="app-main">
+          {activeExample && (
+            <WasmExample
+              pageName={activeExample.pageName}
+              descriptionTitle={activeExample.descriptionTitle}
+              descriptionContent={activeExample.descriptionContent}
+              streamUrl={activeExample.streamUrl}
+              code={activeExample.code}
+              executableName={activeExample.executableName}
+            />
+          )}
+        </main>
+      </div>
+
+      <Footer />
+    </div>
   );
 }
 
