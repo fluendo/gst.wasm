@@ -26,7 +26,11 @@ export function WasmExample({
   const [activeTab, setActiveTab] = useState('console');
 
   useEffect(() => {
+    let disposed = false;
     document.title = pageName;
+    if (logRef.current) {
+      logRef.current.textContent = '';
+    }
 
     const ansi_up = new AnsiUp();
     const originalConsole = {
@@ -53,10 +57,15 @@ export function WasmExample({
     script.async = true;
 
     script.onload = () => {
+      if (disposed) {
+        return;
+      }
+
       if (typeof window.Module === 'function') {
+        const moduleFactory = window.Module;
         const baseDir = executableName.substring(0, executableName.lastIndexOf('/'));
 
-        window.Module({
+        moduleFactory({
           canvas: canvasRef.current,
           mainScriptUrlOrBlob: executableName,
           locateFile: (path) => {
@@ -65,9 +74,13 @@ export function WasmExample({
           print: (...args) => console.log(...args),
           printErr: (...args) => console.error(...args)
         }).then(() => {
-          console.info(`[React] Successfully loaded and started ${pageName}`);
+          if (!disposed) {
+            console.info(`[React] Successfully loaded and started ${pageName}`);
+          }
         }).catch((err) => {
-          console.error(`[React] Failed to initialize WebAssembly module:`, err);
+          if (!disposed) {
+            console.error(`[React] Failed to initialize WebAssembly module:`, err);
+          }
         });
       } else {
         console.error("[React] Script loaded, but window.Module factory function is missing.");
@@ -77,10 +90,12 @@ export function WasmExample({
     document.body.appendChild(script);
 
     return () => {
+      disposed = true;
       Object.assign(console, originalConsole);
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
+      delete window.Module;
     };
   }, [executableName, pageName]);
 
@@ -211,4 +226,3 @@ export function WasmExample({
     </div>
   );
 }
-

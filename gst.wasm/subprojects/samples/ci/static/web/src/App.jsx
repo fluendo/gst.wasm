@@ -27,6 +27,7 @@ function App() {
         <main className="app-main">
           {activeExample && (
             <WasmExample
+              key={activeExample.id}
               pageName={activeExample.pageName}
               descriptionTitle={activeExample.descriptionTitle}
               descriptionContent={activeExample.descriptionContent}
