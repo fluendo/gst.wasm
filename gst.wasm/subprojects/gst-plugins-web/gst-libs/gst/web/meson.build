@@ -19,7 +19,7 @@ gstweb_headers = [
 link_args = [
   '-lembind',
   '-sAUTO_NATIVE_LIBRARIES=1',
-  '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap',
+  '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPU8',
 ]
 
 pkg_name = 'gstreamer-web-' + api_version
