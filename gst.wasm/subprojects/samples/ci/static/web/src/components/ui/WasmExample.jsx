@@ -86,17 +86,19 @@ export function WasmExample({
 
     return () => {
       disposed = true;
-      Object.assign(console, originalConsole);
       if (moduleInstance && typeof moduleInstance.quit === 'function') {
         moduleInstance.quit();
       }
       if (moduleInitPromise) {
-        moduleInitPromise.catch(() => { });
+        moduleInitPromise.catch((error) => {
+          console.debug('Ignoring module initialization error during cleanup', error);
+        });
       }
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
       delete window.Module;
+      Object.assign(console, originalConsole);
     };
   }, [executableName, pageName]);
 
