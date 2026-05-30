@@ -1,8 +1,9 @@
 // src/pages/Home.jsx
+import { examplesData } from '../data/examples'; // Adjust path to where your data file is
 
-export function Home() {
+export function Home({ onSelectExample }) {
   return (
-    <div className="container">
+    <div className="container mt-4">
       <p align="center">
         <img
           src="https://raw.githubusercontent.com/fluendo/gst.wasm/main/artwork/gst.wasm.svg"
@@ -16,36 +17,25 @@ export function Home() {
       </h1>
 
       <ul className="list-group">
-        <li className="list-group-item">
-          <a href="gstlaunch-example/gstlaunch-example.html">gstlaunch</a>
-        </li>
-        <li className="list-group-item">
-          <a href="openal-example/openal-example.html">openal</a>
-        </li>
-        <li className="list-group-item">
-          <a href="videotestsrc-example/videotestsrc-example.html">videotestsrc</a>
-        </li>
-        <li className="list-group-item">
-          <a href="webcanvassrc-example/webcanvassrc-animation-example.html">webcanvassrc (animation)</a>
-        </li>
-        <li className="list-group-item">
-          <a href="webcanvassrc-example/webcanvassrc-webcam-example.html">webcanvassrc (webcam)</a>
-        </li>
-        <li className="list-group-item">
-          <a href="codecs-example/codecs-example.html">webcodecs (webcanvassink)</a>
-        </li>
-        <li className="list-group-item">
-          <a href="webdownload-example/webdownload-example.html">webcodecs (webdownload)</a>
-        </li>
-        <li className="list-group-item">
-          <a href="gl-example/gl-example.html">OpenGL</a>
-        </li>
-        <li className="list-group-item">
-          <a href="gstinspect-example/gstinspect-example.html">gstinspect</a>
-        </li>
-        <li className="list-group-item">
-          <a href="lcevcdec-example/lcevcdec-example.html">lcevcdec</a>
-        </li>
+        {/* Loop through your data file to generate the list */}
+        {examplesData.map((example) => (
+          <li key={example.id} className="list-group-item">
+            <button
+              onClick={() => onSelectExample(example)}
+              // Styling it to look exactly like a standard Bootstrap link
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#0d6efd',
+                textDecoration: 'underline',
+                padding: 0,
+                cursor: 'pointer'
+              }}
+            >
+              {example.pageName}
+            </button>
+          </li>
+        ))}
       </ul>
     </div>
   );
