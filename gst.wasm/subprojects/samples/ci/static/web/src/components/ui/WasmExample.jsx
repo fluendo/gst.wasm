@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/default.css';
 import { AnsiUp } from 'ansi_up';
@@ -13,11 +13,10 @@ export function WasmExample({
 }) {
   const logRef = useRef(null);
   const canvasRef = useRef(null);
+  const [loadedCode, setLoadedCode] = useState({ path: null, text: '' });
 
   useEffect(() => {
     document.title = pageName;
-
-    hljs.highlightAll();
 
     const ansi_up = new AnsiUp();
     const originalConsole = {
@@ -57,6 +56,48 @@ export function WasmExample({
     };
   }, [executableName, pageName]);
 
+  useEffect(() => {
+    let active = true;
+
+    if (!code || !code.endsWith('.c')) {
+      return () => {
+        active = false;
+      };
+    }
+
+    fetch(code)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Unable to fetch ${code}`);
+        }
+        return response.text();
+      })
+      .then((text) => {
+        if (active) {
+          setLoadedCode({ path: code, text });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setLoadedCode({ path: code, text: '// Failed to load source code.' });
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [code]);
+
+  const sourceCode = !code
+    ? ''
+    : code.endsWith('.c')
+      ? (loadedCode.path === code ? loadedCode.text : '')
+      : code;
+
+  useEffect(() => {
+    hljs.highlightAll();
+  }, [sourceCode]);
+
   return (
     <div className="wasm-container p-4">
       {/* Header Section */}
@@ -88,7 +129,7 @@ export function WasmExample({
 
       {/* C Code Block */}
       <pre className="mb-4">
-        <code className="language-c">{code}</code>
+        <code className="language-c">{sourceCode}</code>
       </pre>
 
       {/* Custom Console Log UI */}
