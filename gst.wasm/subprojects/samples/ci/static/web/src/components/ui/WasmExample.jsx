@@ -41,29 +41,39 @@ export function WasmExample({
     const moduleConfig = {
       canvas: canvasRef.current,
     };
-    window.Module = moduleConfig;
 
     const script = document.createElement('script');
     script.src = executableName;
     script.defer = true;
+    let disposed = false;
     let moduleInstance = null;
+    let moduleInitPromise = null;
 
     script.onload = () => {
       const moduleFactory = window.Module;
       if (typeof moduleFactory !== 'function') {
+        console.error(`Loaded script is not modularized: ${executableName}`);
         return;
       }
 
       const initializedModule = moduleFactory(moduleConfig);
       if (initializedModule && typeof initializedModule.then === 'function') {
-        initializedModule
+        moduleInitPromise = initializedModule
           .then((instance) => {
+            if (disposed && instance && typeof instance.quit === 'function') {
+              instance.quit();
+              return;
+            }
             moduleInstance = instance;
           })
           .catch((error) => {
             console.error('Unable to initialize WebAssembly module', error);
           });
       } else {
+        if (disposed && initializedModule && typeof initializedModule.quit === 'function') {
+          initializedModule.quit();
+          return;
+        }
         moduleInstance = initializedModule;
       }
     };
@@ -75,9 +85,13 @@ export function WasmExample({
     document.body.appendChild(script);
 
     return () => {
+      disposed = true;
       Object.assign(console, originalConsole);
       if (moduleInstance && typeof moduleInstance.quit === 'function') {
         moduleInstance.quit();
+      }
+      if (moduleInitPromise) {
+        moduleInitPromise.catch(() => { });
       }
       if (document.body.contains(script)) {
         document.body.removeChild(script);
