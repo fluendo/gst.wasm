@@ -1,5 +1,4 @@
-// src/pages/Home.jsx
-import { examplesData } from '../data/examples'; // Adjust path to where your data file is
+import { examplesData } from '../data/examples';
 
 export function Home({ onSelectExample }) {
   return (
@@ -17,19 +16,18 @@ export function Home({ onSelectExample }) {
       </h1>
 
       <ul className="list-group">
-        {/* Loop through your data file to generate the list */}
         {examplesData.map((example) => (
           <li key={example.id} className="list-group-item">
             <button
-              onClick={() => onSelectExample(example)}
-              // Styling it to look exactly like a standard Bootstrap link
+              type="button"
+              onClick={() => onSelectExample(example.id)}
               style={{
                 background: 'none',
                 border: 'none',
                 color: '#0d6efd',
                 textDecoration: 'underline',
                 padding: 0,
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               {example.pageName}

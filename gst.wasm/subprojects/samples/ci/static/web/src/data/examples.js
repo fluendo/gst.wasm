@@ -1,157 +1,28 @@
-// src/data/examples.js
+const exampleModules = import.meta.glob('../examples/*.js', { eager: true });
 
-export const examplesData = [
-  {
-    id: "codecs",
-    pageName: "Codecs",
-    descriptionTitle: "Codecs",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/codecs-example/codecs-example.js",
-    code: "/samples/code/codecs-example.c",
-  },
-  {
-    id: "codecs-avdec-h264",
-    pageName: "Codecs avdec h264",
-    descriptionTitle: "Codecs avdec h264",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/codecs-avdec-h264-example/codecs-avdec-h264-example.js",
-    code: "/samples/code/codecs-avdec-h264-example.c",
-  },
-  {
-    id: "lcevc+aac",
-    pageName: "Lcevc+aac",
-    descriptionTitle: "Lcevc+aac",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/lcevc+aac-example/lcevc+aac-example.js",
-    code: "/samples/code/lcevc+aac-example.c",
-  },
-  {
-    id: "lcevcdec",
-    pageName: "Lcevcdec",
-    descriptionTitle: "Lcevcdec",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/lcevcdec-example/lcevcdec-example.js",
-    code: "/samples/code/lcevcdec-example.c",
-  },
-  {
-    id: "gl",
-    pageName: "GL",
-    descriptionTitle: "GL",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/gl-example/gl-example.js",
-    code: "/samples/code/gl-example.c",
-  },
-  {
-    id: "gstlaunch",
-    pageName: "Gstlaunch",
-    descriptionTitle: "Gstlaunch",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/gstlaunch-example/gstlaunch-example.js",
-    code: "/samples/code/gstlaunch-example.c",
-  },
-  {
-    id: "openal",
-    pageName: "OpenAL",
-    descriptionTitle: "OpenAL",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/openal-example/openal-example.js",
-    code: "/samples/code/openal-example.c",
-  },
-  {
-    id: "videotestsrc",
-    pageName: "Videotestsrc",
-    descriptionTitle: "Videotestsrc",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/videotestsrc-example/videotestsrc-example.js",
-    code: "/samples/code/videotestsrc-example.c",
-  },
-  {
-    id: "webcanvassrc-animation",
-    pageName: "Webcanvassrc Animation",
-    descriptionTitle: "Webcanvassrc Animation",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webcanvassrc-example/webcanvassrc-animation-example.js",
-    code: "/samples/code/webcanvassrc-animation-example.c",
-  },
-  {
-    id: "webcanvassrc-webcam",
-    pageName: "Webcanvassrc Webcam",
-    descriptionTitle: "Webcanvassrc Webcam",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webcanvassrc-example/webcanvassrc-webcam-example.js",
-    code: "/samples/code/webcanvassrc-webcam-example.c",
-  },
-  {
-    id: "webdownload",
-    pageName: "Webdownload",
-    descriptionTitle: "Webdownload",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webdownload-example/webdownload-example.js",
-    code: "/samples/code/webdownload-example.c",
-  },
-  {
-    id: "webfetchsrc",
-    pageName: "Webfetchsrc",
-    descriptionTitle: "Webfetchsrc",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webfetchsrc-example/index.js",
-    code: "/samples/code/webfetchsrc-example.c",
-  },
-  {
-    id: "webstreamsrc",
-    pageName: "Webstreamsrc",
-    descriptionTitle: "Webstreamsrc",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webstreamsrc-example/webstreamsrc-example.js",
-    code: "/samples/code/webstreamsrc-example.c",
-  },
-  {
-    id: "webtransportsrc",
-    pageName: "Webtransportsrc",
-    descriptionTitle: "Webtransportsrc",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webtransportsrc-example/webtransportsrc-example.js",
-    code: "/samples/code/webtransportsrc-example.c",
-  },
-  {
-    id: "webtransportsrc-streams",
-    pageName: "Webtransportsrc Streams",
-    descriptionTitle: "Webtransportsrc Streams",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/webtransportsrc-streams-example/webtransportsrc-streams-example.js",
-    code: "/samples/code/webtransportsrc-streams-example.c",
-  },
-  {
-    id: "gstinspect",
-    pageName: "Gstinspect",
-    descriptionTitle: "Gstinspect",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/gstinspect-example/gstinspect-example.js",
-    code: "/samples/code/gstinspect-example.c",
-  },
-  {
-    id: "dash",
-    pageName: "Dash",
-    descriptionTitle: "Dash",
-    descriptionContent: null,
-    streamUrl: null,
-    executableName: "/dash-example/dash-example.js",
-    code: "/samples/code/dash-example.c",
-  },
-];
+const compareExamples = (left, right) => {
+  if (left.order !== right.order) {
+    return left.order - right.order;
+  }
+
+  return left.pageName.localeCompare(right.pageName);
+};
+
+export const examplesData = Object.values(exampleModules)
+  .flatMap(({ default: example }) => Array.isArray(example) ? example : [example])
+  .filter((example) => example?.id)
+  .sort(compareExamples);
+
+export const examplesById = Object.fromEntries(
+  examplesData.map((example) => [example.id, example]),
+);
+
+export function getExampleHash(exampleId) {
+  return `#/examples/${exampleId}`;
+}
+
+export function getExampleIdFromHash(hash) {
+  return hash.startsWith('#/examples/')
+    ? hash.slice('#/examples/'.length)
+    : null;
+}

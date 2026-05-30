@@ -1,21 +1,50 @@
-// src/App.jsx
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Home } from './pages/Home';
-import { WasmExample } from './components/ui/WasmExample'; // Adjust path if needed
+import { WasmExample } from './components/ui/WasmExample';
+import { examplesById, getExampleHash, getExampleIdFromHash } from './data/examples';
 import './App.css';
 
 function App() {
-  // This state holds the data of the currently clicked example.
-  // If it's null, we show the Home page.
-  const [activeExample, setActiveExample] = useState(null);
+  const [activeExampleId, setActiveExampleId] = useState(() => getExampleIdFromHash(window.location.hash));
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setActiveExampleId(getExampleIdFromHash(window.location.hash));
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
+  const activeExample = useMemo(
+    () => (activeExampleId ? examplesById[activeExampleId] ?? null : null),
+    [activeExampleId],
+  );
+
+  useEffect(() => {
+    if (!activeExample) {
+      document.title = 'gst.wasm Samples';
+    }
+  }, [activeExample]);
+
+  const handleSelectExample = useCallback((exampleId) => {
+    window.location.hash = getExampleHash(exampleId);
+  }, []);
+
+  const handleBackToHome = useCallback(() => {
+    window.location.hash = '#/';
+  }, []);
 
   return (
     <main>
       {activeExample ? (
-        // If an example is selected, show the Wasm template
         <div>
           <button
-            onClick={() => setActiveExample(null)}
+            onClick={handleBackToHome}
             className="btn btn-secondary mb-3 ms-3 mt-3"
             style={{ cursor: 'pointer' }}
           >
@@ -23,6 +52,7 @@ function App() {
           </button>
 
           <WasmExample
+            key={activeExample.id}
             pageName={activeExample.pageName}
             descriptionTitle={activeExample.descriptionTitle}
             descriptionContent={activeExample.descriptionContent}
@@ -32,8 +62,7 @@ function App() {
           />
         </div>
       ) : (
-        // If no example is selected (null), show the Home list
-        <Home onSelectExample={setActiveExample} />
+        <Home onSelectExample={handleSelectExample} />
       )}
     </main>
   );
