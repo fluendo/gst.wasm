@@ -12,47 +12,46 @@ export function WasmExample({
   executableName
 }) {
   const logRef = useRef(null);
-  const canvasRef = useRef(null);
+  const frameRef = useRef(null);
   const [loadedCode, setLoadedCode] = useState({ path: null, text: '' });
 
   useEffect(() => {
     document.title = pageName;
+  }, [pageName]);
 
+  useEffect(() => {
     const ansi_up = new AnsiUp();
-    const originalConsole = {
-      log: console.log, debug: console.debug, info: console.info,
-      warn: console.warn, error: console.error
+    const appendLog = (verb, args) => {
+      if (!logRef.current) {
+        return;
+      }
+
+      const msg = document.createElement('div');
+      msg.className = verb;
+      msg.innerHTML = ansi_up.ansi_to_html(args.join(' '));
+      logRef.current.appendChild(msg);
     };
 
-    ['log', 'debug', 'info', 'warn', 'error'].forEach((verb) => {
-      console[verb] = (...args) => {
-        originalConsole[verb](...args); // Keep logging to real browser console
+    if (logRef.current) {
+      logRef.current.innerHTML = '';
+    }
 
-        if (logRef.current) {
-          const msg = document.createElement("div");
-          msg.className = verb;
-          const html = ansi_up.ansi_to_html(args.join(" "));
-          msg.innerHTML = html;
-          logRef.current.appendChild(msg);
-        }
-      };
-    });
+    const handleMessage = (event) => {
+      if (event.source !== frameRef.current?.contentWindow) {
+        return;
+      }
 
-    window.Module = {
-      canvas: canvasRef.current,
+      if (event.data?.type !== 'wasm-example-log') {
+        return;
+      }
+
+      appendLog(event.data.verb, event.data.args ?? []);
     };
 
-    const script = document.createElement('script');
-    script.src = executableName;
-    script.defer = true;
-    document.body.appendChild(script);
+    window.addEventListener('message', handleMessage);
 
     return () => {
-      Object.assign(console, originalConsole);
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-      delete window.Module;
+      window.removeEventListener('message', handleMessage);
     };
   }, [executableName, pageName]);
 
@@ -98,6 +97,59 @@ export function WasmExample({
     hljs.highlightAll();
   }, [sourceCode]);
 
+  const runnerHtml = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html, body {
+        margin: 0;
+        background: black;
+        overflow: hidden;
+      }
+
+      canvas {
+        display: block;
+        width: 640px;
+        height: 480px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <script>
+      const forwardConsole = (verb, args) => {
+        window.parent.postMessage({
+          type: 'wasm-example-log',
+          verb,
+          args: args.map((arg) => String(arg)),
+        }, '*');
+      };
+
+      ['log', 'debug', 'info', 'warn', 'error'].forEach((verb) => {
+        const original = console[verb].bind(console);
+        console[verb] = (...args) => {
+          original(...args);
+          forwardConsole(verb, args);
+        };
+      });
+
+      window.addEventListener('error', (event) => {
+        forwardConsole('error', [event.message]);
+      });
+
+      window.Module = {
+        canvas: document.getElementById('canvas'),
+      };
+
+      const script = document.createElement('script');
+      script.src = ${JSON.stringify(executableName)};
+      script.defer = true;
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>`;
+
   return (
     <div className="wasm-container p-4">
       {/* Header Section */}
@@ -118,13 +170,14 @@ export function WasmExample({
         )}
       </div>
 
-      {/* Emscripten Canvas */}
-      <canvas
-        ref={canvasRef}
-        id="canvas"
+      <iframe
+        key={executableName}
+        ref={frameRef}
+        title={`${pageName} runner`}
+        srcDoc={runnerHtml}
+        className="block mb-4 border bg-black"
         width="640"
         height="480"
-        className="block mb-4 border bg-black"
       />
 
       {/* C Code Block */}
