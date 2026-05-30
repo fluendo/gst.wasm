@@ -25,8 +25,6 @@ gstpluginsweb = subproject('gst-plugins-web')
 gstsdl2_dep = gstpluginsweb.get_variable('gstsdl2_dep')
 gstwebplugin_dep = gstpluginsweb.get_variable('gstwebplugin_dep')
 
-html_generator = find_program('scripts/gen_page.py')
-
 examples = [
   'codecs',
   'codecs-avdec-h264',
@@ -52,10 +50,18 @@ common_link_args = [
   '-sINITIAL_MEMORY=536870912',
 ]
 
+sample_code_output_dir = join_paths(meson.current_source_dir(),
+    'ci', 'static', 'web', 'public', 'samples', 'code')
+
 foreach example : examples
   executable_name = '@0@-example'.format(example)
   install_dir = 'share/gst.wasm/samples/@0@'.format(executable_name)
+
   subdir(example)
+  # Put .c files in the scope of the samples web site.
+  # TODO: Do not use shopt, but a portable solution.
+  run_command('bash', '-c', 'shopt -s nullglob; cp @0@/*-example.{c,cpp} @1@'.format(
+      example, sample_code_output_dir), check: true)
 endforeach
 
 install_subdir('ci/static/web/dist',
