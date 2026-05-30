@@ -11,6 +11,7 @@ executable('webstreamsrc-example',
   c_args: ['-DHAVE_CONFIG_H=1'],
   link_args: [
       '-sASYNCIFY',
+      '-sMODULARIZE',
   ],
   name_suffix: 'html'
 )

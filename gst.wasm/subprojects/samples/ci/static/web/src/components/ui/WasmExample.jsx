@@ -38,17 +38,47 @@ export function WasmExample({
       };
     });
 
-    window.Module = {
+    const moduleConfig = {
       canvas: canvasRef.current,
     };
+    window.Module = moduleConfig;
 
     const script = document.createElement('script');
     script.src = executableName;
     script.defer = true;
+    let moduleInstance = null;
+
+    script.onload = () => {
+      const moduleFactory = window.Module;
+      if (typeof moduleFactory !== 'function') {
+        return;
+      }
+
+      const initializedModule = moduleFactory(moduleConfig);
+      if (initializedModule && typeof initializedModule.then === 'function') {
+        initializedModule
+          .then((instance) => {
+            moduleInstance = instance;
+          })
+          .catch((error) => {
+            console.error('Unable to initialize WebAssembly module', error);
+          });
+      } else {
+        moduleInstance = initializedModule;
+      }
+    };
+
+    script.onerror = () => {
+      console.error(`Unable to load executable script: ${executableName}`);
+    };
+
     document.body.appendChild(script);
 
     return () => {
       Object.assign(console, originalConsole);
+      if (moduleInstance && typeof moduleInstance.quit === 'function') {
+        moduleInstance.quit();
+      }
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }

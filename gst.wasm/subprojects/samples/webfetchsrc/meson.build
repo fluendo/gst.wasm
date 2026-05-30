@@ -12,6 +12,7 @@ executable('index',
   link_args: [
       '-sPTHREAD_POOL_SIZE=4',
       '-sASYNCIFY',
+      '-sMODULARIZE',
   ],
   name_suffix: 'html'
 )
