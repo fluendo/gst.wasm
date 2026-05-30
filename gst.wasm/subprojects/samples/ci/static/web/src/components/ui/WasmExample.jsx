@@ -3,6 +3,15 @@ import hljs from 'highlight.js';
 import 'highlight.js/styles/default.css';
 import { AnsiUp } from 'ansi_up';
 
+function GearIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
 export function WasmExample({
   pageName,
   descriptionTitle,
@@ -14,9 +23,14 @@ export function WasmExample({
   const logRef = useRef(null);
   const canvasRef = useRef(null);
   const [loadedCode, setLoadedCode] = useState({ path: null, text: '' });
+  const [activeTab, setActiveTab] = useState('console');
 
   useEffect(() => {
+    let disposed = false;
     document.title = pageName;
+    if (logRef.current) {
+      logRef.current.textContent = '';
+    }
 
     const ansi_up = new AnsiUp();
     const originalConsole = {
@@ -26,7 +40,7 @@ export function WasmExample({
 
     ['log', 'debug', 'info', 'warn', 'error'].forEach((verb) => {
       console[verb] = (...args) => {
-        originalConsole[verb](...args); // Keep logging to real browser console
+        originalConsole[verb](...args);
 
         if (logRef.current) {
           const msg = document.createElement("div");
@@ -42,29 +56,31 @@ export function WasmExample({
     script.src = executableName;
     script.async = true;
 
-    // Wait for JS to load, then initialize the Modularized environment
     script.onload = () => {
+      if (disposed) {
+        return;
+      }
+
       if (typeof window.Module === 'function') {
+        const moduleFactory = window.Module;
         const baseDir = executableName.substring(0, executableName.lastIndexOf('/'));
 
-        // Call the Emscripten factory function
-        window.Module({
+        moduleFactory({
           canvas: canvasRef.current,
-
-          // CRITICAL FOR THREADS (-sPROXY_TO_PTHREAD)
           mainScriptUrlOrBlob: executableName,
-
-          // Tells the module where to find the .wasm file
           locateFile: (path) => {
             return `${baseDir}/${path}`;
           },
-
           print: (...args) => console.log(...args),
           printErr: (...args) => console.error(...args)
-        }).then((instance) => {
-          console.info(`[React] Successfully loaded and started ${pageName}`);
+        }).then(() => {
+          if (!disposed) {
+            console.info(`[React] Successfully loaded and started ${pageName}`);
+          }
         }).catch((err) => {
-          console.error(`[React] Failed to initialize WebAssembly module:`, err);
+          if (!disposed) {
+            console.error(`[React] Failed to initialize WebAssembly module:`, err);
+          }
         });
       } else {
         console.error("[React] Script loaded, but window.Module factory function is missing.");
@@ -73,8 +89,8 @@ export function WasmExample({
 
     document.body.appendChild(script);
 
-    // Cleanup when the user navigates away
     return () => {
+      disposed = true;
       Object.assign(console, originalConsole);
       if (document.body.contains(script)) {
         document.body.removeChild(script);
@@ -126,45 +142,87 @@ export function WasmExample({
   }, [sourceCode]);
 
   return (
-    <div className="wasm-container p-4">
-      {/* Header Section */}
-      <div className="mb-5 p-3 bg-gray-100 border-b border-gray-300">
-        <h1 className="text-2xl font-bold">{descriptionTitle}</h1>
+    <div className="wasm-example">
+      {/* Top two-column row */}
+      <div className="wasm-top-row">
+        {/* Left: Example Information */}
+        <div>
+          <h2 className="section-heading">Example Information</h2>
 
-        {descriptionContent && (
-          <p className="mt-2">{descriptionContent}</p>
-        )}
+          {/* System Configuration card */}
+          <div className="info-card">
+            <div className="info-card-title">
+              <GearIcon /> System Configuration
+            </div>
+            <p className="info-card-row">Current Example: [{pageName}]</p>
+            {streamUrl && (
+              <code className="info-card-url">{streamUrl}</code>
+            )}
+          </div>
 
-        {streamUrl && (
-          <p className="mt-2">
-            <strong>Stream URL:</strong>{' '}
-            <a href={streamUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline">
-              {streamUrl}
-            </a>
-          </p>
-        )}
+          {/* Example Description card */}
+          <div className="info-card">
+            <div className="info-card-title">Example Description</div>
+            {(descriptionTitle || descriptionContent) && (
+              <p className="info-card-description">
+                {descriptionTitle && <strong>About {descriptionTitle}:</strong>}
+                {descriptionTitle && descriptionContent && ' '}
+                {descriptionContent}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Output & Status */}
+        <div>
+          <h2 className="section-heading">Output &amp; Status</h2>
+          <div className="canvas-panel">
+            <div className="canvas-panel-header">
+              <span className="canvas-panel-label">Primary Render Canvas</span>
+              <span className="canvas-panel-optional">Optional</span>
+            </div>
+            <div className="canvas-panel-body">
+              <canvas
+                ref={canvasRef}
+                id="canvas"
+                width="640"
+                height="480"
+                className="wasm-canvas"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Emscripten Canvas */}
-      <canvas
-        ref={canvasRef}
-        id="canvas"
-        width="640"
-        height="480"
-        className="block mb-4 border bg-black"
-      />
+      {/* Bottom: Console / Source tabs */}
+      <div className="tabs-section">
+        <div className="tabs-bar">
+          <button
+            className={`tab-btn${activeTab === 'console' ? ' active' : ''}`}
+            onClick={() => setActiveTab('console')}
+          >
+            Console Log
+          </button>
+          <button
+            className={`tab-btn${activeTab === 'source' ? ' active' : ''}`}
+            onClick={() => setActiveTab('source')}
+          >
+            Source Code
+          </button>
+        </div>
 
-      {/* C Code Block */}
-      <pre className="mb-4">
-        <code className="language-c">{sourceCode}</code>
-      </pre>
-
-      {/* Custom Console Log UI */}
-      <div
-        ref={logRef}
-        id="log"
-        className="m-0 p-2 font-mono text-xs bg-black text-white min-w-[640px] min-h-[480px] whitespace-pre-wrap overflow-y-auto"
-      />
+        {activeTab === 'console' ? (
+          <div
+            ref={logRef}
+            id="log"
+            className="console-log"
+          />
+        ) : (
+          <pre className="source-code-block">
+            <code className="language-c">{sourceCode}</code>
+          </pre>
+        )}
+      </div>
     </div>
   );
 }
