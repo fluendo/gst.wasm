@@ -38,21 +38,48 @@ export function WasmExample({
       };
     });
 
-    window.Module = {
-      canvas: canvasRef.current,
-    };
-
     const script = document.createElement('script');
     script.src = executableName;
-    script.defer = true;
+    script.async = true;
+
+    // Wait for JS to load, then initialize the Modularized environment
+    script.onload = () => {
+      if (typeof window.Module === 'function') {
+        const baseDir = executableName.substring(0, executableName.lastIndexOf('/'));
+
+        // Call the Emscripten factory function
+        window.Module({
+          canvas: canvasRef.current,
+
+          // CRITICAL FOR THREADS (-sPROXY_TO_PTHREAD)
+          mainScriptUrlOrBlob: executableName,
+
+          // Tells the module where to find the .wasm file
+          locateFile: (path) => {
+            return `${baseDir}/${path}`;
+          },
+
+          print: (...args) => console.log(...args),
+          printErr: (...args) => console.error(...args)
+        }).then((instance) => {
+          console.info(`[React] Successfully loaded and started ${pageName}`);
+        }).catch((err) => {
+          console.error(`[React] Failed to initialize WebAssembly module:`, err);
+        });
+      } else {
+        console.error("[React] Script loaded, but window.Module factory function is missing.");
+      }
+    };
+
     document.body.appendChild(script);
 
+    // Cleanup when the user navigates away
     return () => {
       Object.assign(console, originalConsole);
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
-      delete window.Module;
+      // delete window.Module;
     };
   }, [executableName, pageName]);
 
