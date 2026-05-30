@@ -403,7 +403,7 @@ gst_web_utils_copy_data_from_js (const val &data)
   ret.len = data["length"].as<gsize> ();
   ret.data = (guint8 *) g_malloc (ret.len);
 
-  val memory_view = val::global ("HEAPU8").call<val> (
+  val memory_view = val::module_property ("HEAPU8").call<val> (
       "subarray", (guintptr) ret.data, (guintptr) ret.data + ret.len);
 
   memory_view.call<void> ("set", data);

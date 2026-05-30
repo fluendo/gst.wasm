@@ -48,6 +48,7 @@ examples = [
 common_link_args = [
   '-sPTHREAD_POOL_SIZE=32',
   '-sINITIAL_MEMORY=536870912',
+  '-sMODULARIZE=1',
 ]
 
 sample_code_output_dir = join_paths(meson.current_source_dir(),
