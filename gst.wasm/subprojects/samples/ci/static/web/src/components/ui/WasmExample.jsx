@@ -97,6 +97,10 @@ export function WasmExample({
 
     return () => {
       disposed = true;
+      const mod = moduleRef.current;
+      if (mod && typeof mod._stop_pipeline === 'function') {
+        mod._stop_pipeline();
+      }
       moduleRef.current = null;
       Object.assign(console, originalConsole);
       if (document.body.contains(script)) {

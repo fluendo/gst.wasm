@@ -20,6 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <emscripten.h>
 #include <gst/emscripten/gstemscripten.h>
 
 #define GST_CAT_DEFAULT example_dbg
@@ -37,9 +38,19 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (sdl2);
 }
 
+void
+stop_pipeline ()
+{
+  if (pipeline) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_clear_pointer (&pipeline, gst_object_unref);
+  }
+}
+
 static void
 init_pipeline ()
 {
+  stop_pipeline ();
   pipeline = gst_parse_launch ("videotestsrc pattern=ball ! sdl2sink", NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
@@ -54,6 +65,9 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "videotestsrc wasm example");
   gst_debug_set_threshold_for_name ("example", 5);
+
+  EM_ASM (
+      { Module._stop_pipeline = Module.cwrap ('stop_pipeline', null, []); });
 
   init_pipeline ();
 

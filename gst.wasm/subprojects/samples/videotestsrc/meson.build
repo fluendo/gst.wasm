@@ -6,6 +6,7 @@ executable(executable_name,
                    dependency('gstsdl2')
                    ],
     link_args: common_link_args + [
+      '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
       '-lhtml5',
       '-sASYNCIFY',
     ],
