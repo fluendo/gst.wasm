@@ -52,6 +52,11 @@ export const examplesData = [
     streamUrl: null,
     executableName: "/gstlaunch-example/gstlaunch-example.js",
     code: "/samples/code/gstlaunch-example.c",
+    inputEnabled: true,
+    inputId: "pipeline",
+    inputPlaceholder: "Enter a GStreamer pipeline",
+    inputInitialValue: "videotestsrc ! sdl2sink",
+    inputSubmitFunction: "_init_pipeline",
   },
   {
     id: "openal",

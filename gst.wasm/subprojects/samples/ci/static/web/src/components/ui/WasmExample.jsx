@@ -18,12 +18,23 @@ export function WasmExample({
   descriptionContent,
   streamUrl,
   code,
-  executableName
+  executableName,
+  inputEnabled = false,
+  inputId = 'wasm-example-input',
+  inputPlaceholder = '',
+  inputInitialValue = '',
+  inputSubmitFunction = ''
 }) {
   const logRef = useRef(null);
   const canvasRef = useRef(null);
+  const moduleRef = useRef(null);
   const [loadedCode, setLoadedCode] = useState({ path: null, text: '' });
   const [activeTab, setActiveTab] = useState('console');
+  const [inputValue, setInputValue] = useState(inputInitialValue);
+
+  useEffect(() => {
+    setInputValue(inputInitialValue);
+  }, [inputInitialValue]);
 
   useEffect(() => {
     let disposed = false;
@@ -73,7 +84,8 @@ export function WasmExample({
           },
           print: (...args) => console.log(...args),
           printErr: (...args) => console.error(...args)
-        }).then(() => {
+        }).then((moduleInstance) => {
+          moduleRef.current = moduleInstance;
           if (!disposed) {
             console.info(`[React] Successfully loaded and started ${pageName}`);
           }
@@ -91,6 +103,7 @@ export function WasmExample({
 
     return () => {
       disposed = true;
+      moduleRef.current = null;
       Object.assign(console, originalConsole);
       if (document.body.contains(script)) {
         document.body.removeChild(script);
@@ -140,6 +153,19 @@ export function WasmExample({
   useEffect(() => {
     hljs.highlightAll();
   }, [sourceCode]);
+
+  const handleInputSubmit = () => {
+    if (!inputEnabled || !inputSubmitFunction) {
+      return;
+    }
+
+    const submittedFunction = moduleRef.current?.[inputSubmitFunction];
+    if (typeof submittedFunction === 'function') {
+      submittedFunction();
+    } else {
+      console.error(`[React] Input function "${inputSubmitFunction}" is not available.`);
+    }
+  };
 
   return (
     <div className="wasm-example">
@@ -209,6 +235,13 @@ export function WasmExample({
           >
             Source Code
           </button>
+          <button
+            className={`tab-btn${activeTab === 'input' ? ' active' : ''}`}
+            onClick={() => setActiveTab('input')}
+            disabled={!inputEnabled}
+          >
+            Input
+          </button>
         </div>
 
         {activeTab === 'console' ? (
@@ -217,10 +250,30 @@ export function WasmExample({
             id="log"
             className="console-log"
           />
-        ) : (
+        ) : activeTab === 'source' ? (
           <pre className="source-code-block">
             <code className="language-c">{sourceCode}</code>
           </pre>
+        ) : (
+          <div className="input-console">
+            <textarea
+              id={inputId}
+              className="input-console-field"
+              value={inputValue}
+              placeholder={inputPlaceholder}
+              onChange={(event) => setInputValue(event.target.value)}
+              disabled={!inputEnabled}
+            />
+            <div className="input-console-actions">
+              <button
+                className="input-console-submit"
+                onClick={handleInputSubmit}
+                disabled={!inputEnabled}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

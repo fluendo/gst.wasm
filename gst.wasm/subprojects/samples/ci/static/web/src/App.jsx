@@ -34,6 +34,11 @@ function App() {
               streamUrl={activeExample.streamUrl}
               code={activeExample.code}
               executableName={activeExample.executableName}
+              inputEnabled={activeExample.inputEnabled}
+              inputId={activeExample.inputId}
+              inputPlaceholder={activeExample.inputPlaceholder}
+              inputInitialValue={activeExample.inputInitialValue}
+              inputSubmitFunction={activeExample.inputSubmitFunction}
             />
           )}
         </main>
