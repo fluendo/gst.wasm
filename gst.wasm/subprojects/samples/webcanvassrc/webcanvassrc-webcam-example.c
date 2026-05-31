@@ -121,9 +121,6 @@ EM_JS (void, add_new_canvas, (), {
 int
 main (int argc, char **argv)
 {
-  EM_ASM (
-      { Module._init_pipeline = Module.cwrap ('init_pipeline', null, []); });
-
   add_new_canvas ();
 
   gst_init (NULL, NULL);

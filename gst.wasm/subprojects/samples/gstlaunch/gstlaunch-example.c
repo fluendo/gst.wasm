@@ -75,8 +75,5 @@ main (int argc, char **argv)
       example_dbg, "example", 0, "gstlaunch wasm example");
   gst_debug_set_threshold_from_string ("example:5, *:3", TRUE);
 
-  EM_ASM (
-      { Module._init_pipeline = Module.cwrap ('init_pipeline', null, []); });
-
   return 0;
 }
