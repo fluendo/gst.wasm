@@ -292,6 +292,14 @@
   border: none;
 }
 
+.wasm-canvas-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c7c7c7;
+  font-size: 14px;
+}
+
 /* ── Console / Source tabs ──────────────────────────────────────────────── */
 .tabs-section {
   background: var(--card-bg);

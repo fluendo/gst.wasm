@@ -113,6 +113,7 @@ export const examplesData = [
     streamUrl: null,
     executableName: "/webdownload-example/webdownload-example.js",
     code: "/samples/code/webdownload-example.c",
+    previewEnabled: false,
   },
   {
     id: "webstreamsrc",
@@ -123,6 +124,7 @@ export const examplesData = [
     streamUrl: null,
     executableName: "/webstreamsrc-example/webstreamsrc-example.js",
     code: "/samples/code/webstreamsrc-example.c",
+    previewEnabled: false,
   },
   {
     id: "gstinspect",
@@ -133,6 +135,7 @@ export const examplesData = [
     streamUrl: null,
     executableName: "/gstinspect-example/gstinspect-example.js",
     code: "/samples/code/gstinspect-example.c",
+    previewEnabled: false,
   },
   {
     id: "dash",
