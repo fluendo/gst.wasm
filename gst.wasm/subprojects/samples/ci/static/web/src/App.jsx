@@ -28,12 +28,18 @@ function App() {
           {activeExample && (
             <WasmExample
               key={activeExample.id}
+              exampleId={activeExample.id}
               pageName={activeExample.pageName}
               descriptionTitle={activeExample.descriptionTitle}
               descriptionContent={activeExample.descriptionContent}
               streamUrl={activeExample.streamUrl}
               code={activeExample.code}
               executableName={activeExample.executableName}
+              inputEnabled={activeExample.inputEnabled}
+              inputId={activeExample.inputId}
+              inputPlaceholder={activeExample.inputPlaceholder}
+              inputInitialValue={activeExample.inputInitialValue}
+              inputSubmitFunction={activeExample.inputSubmitFunction}
             />
           )}
         </main>
