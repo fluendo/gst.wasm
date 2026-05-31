@@ -10,8 +10,7 @@ executable(executable_name,
     link_args: common_link_args + [
       '-sEXPORTED_FUNCTIONS=_init_pipeline,_main,cwrap',
       '-lhtml5',
-      '-sASYNCIFY',
-      '--shell-file=@0@/html/index.html'.format(meson.current_source_dir())
+      '-sASYNCIFY'
     ],
     c_args: ['-DHAVE_CONFIG_H', '-Wall', '-Werror'],
     name_suffix: 'html',
