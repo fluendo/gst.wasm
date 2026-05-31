@@ -40,9 +40,19 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (openal);
 }
 
+void
+stop_pipeline ()
+{
+  if (pipeline) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_clear_pointer (&pipeline, gst_object_unref);
+  }
+}
+
 static void
 init_pipeline ()
 {
+  stop_pipeline ();
   GST_DEBUG ("Init pipeline");
   pipeline = gst_parse_launch ("audiotestsrc ! openalsink", NULL);
   g_assert (pipeline);
@@ -60,6 +70,9 @@ main (int argc, char **argv)
 
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
   gst_debug_set_threshold_from_string ("*:2,example:5", TRUE);
+
+  EM_ASM (
+      { Module._stop_pipeline = Module.cwrap ('stop_pipeline', null, []); });
 
   init_pipeline ();
 
