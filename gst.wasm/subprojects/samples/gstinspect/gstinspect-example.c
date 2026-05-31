@@ -45,6 +45,7 @@ int
 main (int argc, char *argv[])
 {
   gst_init (NULL, NULL);
+  gst_emscripten_init ();
   GST_DEBUG_CATEGORY_STATIC (example_dbg);
   GST_DEBUG_CATEGORY_INIT (
     example_dbg, "example", 0, "gstinspect wasm example");
