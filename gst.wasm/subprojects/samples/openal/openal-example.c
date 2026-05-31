@@ -71,9 +71,6 @@ main (int argc, char **argv)
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
   gst_debug_set_threshold_from_string ("*:2,example:5", TRUE);
 
-  EM_ASM (
-      { Module._stop_pipeline = Module.cwrap ('stop_pipeline', null, []); });
-
   init_pipeline ();
 
   return 0;

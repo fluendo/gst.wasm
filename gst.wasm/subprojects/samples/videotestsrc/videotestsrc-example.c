@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <emscripten.h>
 #include <gst/emscripten/gstemscripten.h>
 
 #define GST_CAT_DEFAULT example_dbg
@@ -65,9 +64,6 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "videotestsrc wasm example");
   gst_debug_set_threshold_for_name ("example", 5);
-
-  EM_ASM (
-      { Module._stop_pipeline = Module.cwrap ('stop_pipeline', null, []); });
 
   init_pipeline ();
 
