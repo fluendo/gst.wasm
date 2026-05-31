@@ -20,6 +20,7 @@ export function WasmExample({
   streamUrl,
   code,
   executableName,
+  previewEnabled = true,
   inputEnabled = false,
   inputId = 'wasm-example-input',
   inputPlaceholder = '',
@@ -207,13 +208,19 @@ export function WasmExample({
               <span className="canvas-panel-optional">Optional</span>
             </div>
             <div className="canvas-panel-body">
-              <canvas
-                ref={canvasRef}
-                id="canvas"
-                width="640"
-                height="480"
-                className="wasm-canvas"
-              />
+              {previewEnabled ? (
+                <canvas
+                  ref={canvasRef}
+                  id="canvas"
+                  width="640"
+                  height="480"
+                  className="wasm-canvas"
+                />
+              ) : (
+                <div className="wasm-canvas wasm-canvas-placeholder">
+                  Nothing to preview
+                </div>
+              )}
             </div>
           </div>
         </div>
