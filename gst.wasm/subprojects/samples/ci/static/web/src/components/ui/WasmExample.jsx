@@ -37,7 +37,6 @@ export function WasmExample({
   useEffect(() => {
     let disposed = false;
     document.title = pageName;
-    setLogEntries([]);
 
     const ansi_up = new AnsiUp();
     const originalConsole = {
