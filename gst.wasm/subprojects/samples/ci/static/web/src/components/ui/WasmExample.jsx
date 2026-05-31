@@ -31,14 +31,13 @@ export function WasmExample({
   const moduleRef = useRef(null);
   const [loadedCode, setLoadedCode] = useState({ path: null, text: '' });
   const [activeTab, setActiveTab] = useState('console');
+  const [logEntries, setLogEntries] = useState([]);
   const [inputValue, setInputValue] = useState(() => inputInitialValue);
 
   useEffect(() => {
     let disposed = false;
     document.title = pageName;
-    if (logRef.current) {
-      logRef.current.textContent = '';
-    }
+    setLogEntries([]);
 
     const ansi_up = new AnsiUp();
     const originalConsole = {
@@ -50,13 +49,11 @@ export function WasmExample({
       console[verb] = (...args) => {
         originalConsole[verb](...args);
 
-        if (logRef.current) {
-          const msg = document.createElement("div");
-          msg.className = verb;
-          const html = ansi_up.ansi_to_html(args.join(" "));
-          msg.innerHTML = html;
-          logRef.current.appendChild(msg);
-        }
+        const html = ansi_up.ansi_to_html(args.join(' '));
+        setLogEntries((previousEntries) => [
+          ...previousEntries,
+          { id: `${verb}-${previousEntries.length}`, verb, html }
+        ]);
       };
     });
 
@@ -150,6 +147,12 @@ export function WasmExample({
   useEffect(() => {
     hljs.highlightAll();
   }, [sourceCode]);
+
+  useEffect(() => {
+    if (activeTab === 'console' && logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [activeTab, logEntries]);
 
   const handleInputSubmit = () => {
     if (!inputEnabled || !inputSubmitFunction) {
@@ -247,7 +250,15 @@ export function WasmExample({
             ref={logRef}
             id="log"
             className="console-log"
-          />
+          >
+            {logEntries.map(({ id, verb, html }) => (
+              <div
+                key={id}
+                className={verb}
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            ))}
+          </div>
         ) : activeTab === 'source' ? (
           <pre className="source-code-block">
             <code className="language-c">{sourceCode}</code>
