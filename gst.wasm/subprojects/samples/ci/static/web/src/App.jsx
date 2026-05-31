@@ -28,6 +28,7 @@ function App() {
           {activeExample && (
             <WasmExample
               key={activeExample.id}
+              exampleId={activeExample.id}
               pageName={activeExample.pageName}
               descriptionTitle={activeExample.descriptionTitle}
               descriptionContent={activeExample.descriptionContent}

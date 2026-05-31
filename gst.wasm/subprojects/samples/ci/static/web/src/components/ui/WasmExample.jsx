@@ -13,6 +13,7 @@ function GearIcon() {
 }
 
 export function WasmExample({
+  exampleId,
   pageName,
   descriptionTitle,
   descriptionContent,
@@ -30,7 +31,7 @@ export function WasmExample({
   const moduleRef = useRef(null);
   const [loadedCode, setLoadedCode] = useState({ path: null, text: '' });
   const [activeTab, setActiveTab] = useState('console');
-  const [inputValue, setInputValue] = useState(inputInitialValue);
+  const [inputValue, setInputValue] = useState(() => inputInitialValue);
 
   useEffect(() => {
     let disposed = false;
@@ -231,13 +232,14 @@ export function WasmExample({
           >
             Source Code
           </button>
+          {inputEnabled && (
           <button
             className={`tab-btn${activeTab === 'input' ? ' active' : ''}`}
             onClick={() => setActiveTab('input')}
-            disabled={!inputEnabled}
           >
             Input
           </button>
+          )}
         </div>
 
         {activeTab === 'console' ? (
@@ -250,9 +252,10 @@ export function WasmExample({
           <pre className="source-code-block">
             <code className="language-c">{sourceCode}</code>
           </pre>
-        ) : (
+        ) : inputEnabled ? (
           <div className="input-console">
             <textarea
+              key={`${exampleId}-${inputId}`}
               id={inputId}
               className="input-console-field"
               value={inputValue}
