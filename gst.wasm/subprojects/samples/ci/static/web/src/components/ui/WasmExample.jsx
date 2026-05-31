@@ -33,10 +33,6 @@ export function WasmExample({
   const [inputValue, setInputValue] = useState(inputInitialValue);
 
   useEffect(() => {
-    setInputValue(inputInitialValue);
-  }, [inputInitialValue]);
-
-  useEffect(() => {
     let disposed = false;
     document.title = pageName;
     if (logRef.current) {
