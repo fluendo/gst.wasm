@@ -35,6 +35,7 @@ function App() {
               streamUrl={activeExample.streamUrl}
               code={activeExample.code}
               executableName={activeExample.executableName}
+              previewEnabled={activeExample.previewEnabled}
               inputEnabled={activeExample.inputEnabled}
               inputId={activeExample.inputId}
               inputPlaceholder={activeExample.inputPlaceholder}
