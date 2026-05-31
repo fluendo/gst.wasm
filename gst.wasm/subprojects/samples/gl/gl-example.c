@@ -35,9 +35,19 @@ register_elements ()
   GST_PLUGIN_STATIC_REGISTER (opengl);
 }
 
+void
+stop_pipeline ()
+{
+  if (pipeline) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_clear_pointer (&pipeline, gst_object_unref);
+  }
+}
+
 static void
 init_pipeline ()
 {
+  stop_pipeline ();
   pipeline = gst_parse_launch ("gltestsrc ! glimagesink sync=false", NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }

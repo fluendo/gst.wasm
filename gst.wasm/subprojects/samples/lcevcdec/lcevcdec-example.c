@@ -52,9 +52,19 @@ register_elements ()
   GST_ELEMENT_REGISTER (qtdemux, NULL);
 }
 
+void
+stop_pipeline ()
+{
+  if (pipeline) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_clear_pointer (&pipeline, gst_object_unref);
+  }
+}
+
 static void
 init_pipeline ()
 {
+  stop_pipeline ();
   pipeline = gst_parse_launch (
       "webstreamsrc "
       "location=\"" GSTWASM_LCEVCDEC_EXAMPLE_SRC "\" ! qtdemux ! h264parse ! "

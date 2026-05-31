@@ -8,7 +8,7 @@ executable(executable_name,
                    dependency('gstvideotestsrc'),
                    dependency('gstaudiotestsrc')],
     link_args: common_link_args + [
-      '-sEXPORTED_FUNCTIONS=_init_pipeline,_main',
+      '-sEXPORTED_FUNCTIONS=_init_pipeline,_stop_pipeline,_main',
       '-lhtml5',
       '-sASYNCIFY'
     ],

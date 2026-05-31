@@ -50,6 +50,15 @@ fakesink_handoff_cb (
   gst_buffer_unmap (buffer, &info);
 }
 
+void
+stop_pipeline ()
+{
+  if (context.pipe) {
+    gst_element_set_state (context.pipe, GST_STATE_NULL);
+    g_clear_pointer (&context.pipe, gst_object_unref);
+  }
+}
+
 void static play ()
 {
   gst_element_set_state (context.pipe, GST_STATE_PLAYING);
@@ -58,6 +67,7 @@ void static play ()
 static void
 init_pipeline ()
 {
+  stop_pipeline ();
   GstElement *fakesink;
 
   GST_DEBUG ("Init pipeline");

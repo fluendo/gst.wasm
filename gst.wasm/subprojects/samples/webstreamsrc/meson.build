@@ -10,6 +10,7 @@ executable('webstreamsrc-example',
   include_directories: include_directories('.'),
   c_args: ['-DHAVE_CONFIG_H=1'],
   link_args: [
+      '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
       '-sASYNCIFY',
   ],
   name_suffix: 'html'

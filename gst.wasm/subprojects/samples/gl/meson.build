@@ -6,6 +6,7 @@ executable(executable_name,
     dependencies: [common_deps,
                    dependency('gstopengl')],
     link_args: common_link_args + [
+      '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
       '-lhtml5',
       '-lGL',
       '-sOFFSCREENCANVAS_SUPPORT', # To manipulate the gl context from a thread

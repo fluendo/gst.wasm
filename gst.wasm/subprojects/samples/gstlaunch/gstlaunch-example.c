@@ -49,12 +49,18 @@ register_elements ()
 }
 
 void
-init_pipeline ()
+stop_pipeline ()
 {
   if (pipeline) {
     gst_element_set_state (pipeline, GST_STATE_NULL);
     g_clear_pointer (&pipeline, gst_object_unref);
   }
+}
+
+void
+init_pipeline ()
+{
+  stop_pipeline ();
 
   const char *value = emscripten_run_script_string (
       "document.getElementById('" PIPELINE_INPUT_ID "').value");

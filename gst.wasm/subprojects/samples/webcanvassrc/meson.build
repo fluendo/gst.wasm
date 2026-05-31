@@ -1,4 +1,5 @@
 webcanvassrc_example_common_link_args = common_link_args + [
+  '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
   '-sASYNCIFY',
   # Required by webfetchsrc, this should be brought directly by the dep
   '-sFETCH=1',
@@ -31,7 +32,7 @@ executable('webcanvassrc-webcam-example',
   include_directories: include_directories('.'),
   cpp_args: ['-DHAVE_CONFIG_H=1'],
   link_args: webcanvassrc_example_common_link_args + [
-    '-sEXPORTED_FUNCTIONS=_init_pipeline,_main',
+    '-sEXPORTED_FUNCTIONS=_init_pipeline,_stop_pipeline,_main',
     '-lhtml5',
     '-sINITIAL_MEMORY=536870912'
   ],

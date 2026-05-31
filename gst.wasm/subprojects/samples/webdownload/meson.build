@@ -11,6 +11,7 @@ executable(executable_name,
       dependency('gstdebugutilsbad')
     ],
     link_args: common_link_args + [
+      '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
       '-sASYNCIFY',
       '-sASYNCIFY_STACK_SIZE=1048576',
       # This is giving problems when running the WebRunner at set_format (RDI-2850)

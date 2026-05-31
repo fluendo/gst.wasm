@@ -44,8 +44,18 @@ register_elements ()
 }
 
 void
+stop_pipeline ()
+{
+  if (pipeline) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    g_clear_pointer (&pipeline, gst_object_unref);
+  }
+}
+
+void
 init_pipeline ()
 {
+  stop_pipeline ();
   GST_DEBUG ("Init pipeline");
 
   pipeline = gst_parse_launch (

@@ -18,6 +18,7 @@ executable(executable_name,
       gstwebplugin_dep,
     ],
     link_args: common_link_args + [
+      '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
       '-lGL',
       '-sASYNCIFY',
       '-sASYNCIFY_STACK_SIZE=1048576',

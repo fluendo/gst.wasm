@@ -16,6 +16,7 @@ executable(executable_name,
       dependency('gstlcevcdecoder'),
     ],
     link_args: common_link_args + [
+      '-sEXPORTED_FUNCTIONS=_stop_pipeline,_main',
       '-sASYNCIFY',
       '-sPROXY_TO_PTHREAD',
       '-lGL',
