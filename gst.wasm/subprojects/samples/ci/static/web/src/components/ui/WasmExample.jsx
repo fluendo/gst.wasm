@@ -233,12 +233,12 @@ export function WasmExample({
             Source Code
           </button>
           {inputEnabled && (
-          <button
-            className={`tab-btn${activeTab === 'input' ? ' active' : ''}`}
-            onClick={() => setActiveTab('input')}
-          >
-            Input
-          </button>
+            <button
+              className={`tab-btn${activeTab === 'input' ? ' active' : ''}`}
+              onClick={() => setActiveTab('input')}
+            >
+              Input
+            </button>
           )}
         </div>
 
@@ -273,7 +273,7 @@ export function WasmExample({
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
