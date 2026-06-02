@@ -1,5 +1,5 @@
 /*
- * GStreamer - GStreamer Web Fetch HTTP source
+ * GStreamer - GStreamer Web Emscripten Fetch HTTP source
  *
  * Copyright 2024 Fluendo S.A.
  *  @author: Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
@@ -20,13 +20,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_WEB_FETCH_SRC_H__
-#define __GST_WEB_FETCH_SRC_H__
+#ifndef __GST_WEB_EM_FETCH_SRC_H__
+#define __GST_WEB_EM_FETCH_SRC_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-GST_ELEMENT_REGISTER_DECLARE (web_fetch_src)
+GST_ELEMENT_REGISTER_DECLARE (web_em_fetch_src)
 
-#endif /* __GST_WEB_FETCH_SRC_H__ */
+#endif /* __GST_WEB_EM_FETCH_SRC_H__ */

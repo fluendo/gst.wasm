@@ -1,5 +1,5 @@
 /*
- * GStreamer - gst.wasm Web Fetch HTTP source
+ * GStreamer - gst.wasm Web Emscripten Fetch HTTP source
  *
  * Copyright 2024 Fluendo S.A.
  *  @author: Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
@@ -29,14 +29,14 @@
 #include <stdio.h>
 #include <string.h>
 
-static void gst_web_fetch_src_uri_handler_init (
+static void gst_web_em_fetch_src_uri_handler_init (
     gpointer g_iface, gpointer iface_data);
 
-#define GST_TYPE_WEB_FETCH_SRC (gst_web_fetch_src_get_type ())
-#define GST_CAT_DEFAULT gst_web_fetch_src_debug
-#define parent_class gst_web_fetch_src_parent_class
+#define GST_TYPE_WEB_EM_FETCH_SRC (gst_web_em_fetch_src_get_type ())
+#define GST_CAT_DEFAULT gst_web_em_fetch_src_debug
+#define parent_class gst_web_em_fetch_src_parent_class
 
-#define GST_WEB_FETCH_SRC_BYTES_CR " bytes "
+#define GST_WEB_EM_FETCH_SRC_BYTES_CR " bytes "
 #define CHUNK_SIZE 1048576
 
 #define PROP_LOCATION_DEFAULT NULL
@@ -48,7 +48,7 @@ enum
   PROP_MAX
 };
 
-typedef struct _GstWebFetchSrc
+typedef struct _GstWebEmFetchSrc
 {
   GstPushSrc element;
 
@@ -57,25 +57,26 @@ typedef struct _GstWebFetchSrc
   gsize download_offset;
   gsize download_end;
   gsize resource_size;
-} GstWebFetchSrc;
+} GstWebEmFetchSrc;
 
 G_DECLARE_FINAL_TYPE (
-    GstWebFetchSrc, gst_web_fetch_src, GST, WEB_FETCH_SRC, GstPushSrc)
-G_DEFINE_TYPE_WITH_CODE (GstWebFetchSrc, gst_web_fetch_src, GST_TYPE_PUSH_SRC,
+    GstWebEmFetchSrc, gst_web_em_fetch_src, GST, WEB_EM_FETCH_SRC, GstPushSrc)
+G_DEFINE_TYPE_WITH_CODE (GstWebEmFetchSrc, gst_web_em_fetch_src,
+    GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (
-        GST_TYPE_URI_HANDLER, gst_web_fetch_src_uri_handler_init));
-GST_ELEMENT_REGISTER_DEFINE (
-    web_fetch_src, "webfetchsrc", GST_RANK_SECONDARY, GST_TYPE_WEB_FETCH_SRC);
-GST_DEBUG_CATEGORY_STATIC (gst_web_fetch_src_debug);
+        GST_TYPE_URI_HANDLER, gst_web_em_fetch_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (web_em_fetch_src, "webemfetchsrc",
+    GST_RANK_SECONDARY, GST_TYPE_WEB_EM_FETCH_SRC);
+GST_DEBUG_CATEGORY_STATIC (gst_web_em_fetch_src_debug);
 
 static guint
-gst_web_fetch_src_urihandler_get_type (GType type)
+gst_web_em_fetch_src_urihandler_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static const gchar *const *
-gst_web_fetch_src_urihandler_get_protocols (GType type)
+gst_web_em_fetch_src_urihandler_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "http", "https", NULL };
 
@@ -83,10 +84,10 @@ gst_web_fetch_src_urihandler_get_protocols (GType type)
 }
 
 static gboolean
-gst_web_fetch_src_urihandler_set_uri (
+gst_web_em_fetch_src_urihandler_set_uri (
     GstURIHandler *handler, const gchar *uri, GError **error)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (handler);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (handler);
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (uri != NULL, FALSE);
@@ -106,13 +107,13 @@ gst_web_fetch_src_urihandler_set_uri (
 }
 
 static gchar *
-gst_web_fetch_src_urihandler_get_uri (GstURIHandler *handler)
+gst_web_em_fetch_src_urihandler_get_uri (GstURIHandler *handler)
 {
   gchar *ret;
-  GstWebFetchSrc *self;
+  GstWebEmFetchSrc *self;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
-  self = GST_WEB_FETCH_SRC (handler);
+  self = GST_WEB_EM_FETCH_SRC (handler);
 
   GST_OBJECT_LOCK (self);
   ret = g_strdup (self->uri);
@@ -122,24 +123,24 @@ gst_web_fetch_src_urihandler_get_uri (GstURIHandler *handler)
 }
 
 static void
-gst_web_fetch_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_web_em_fetch_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *uri_iface = (GstURIHandlerInterface *) g_iface;
 
-  uri_iface->get_type = gst_web_fetch_src_urihandler_get_type;
-  uri_iface->get_protocols = gst_web_fetch_src_urihandler_get_protocols;
-  uri_iface->get_uri = gst_web_fetch_src_urihandler_get_uri;
-  uri_iface->set_uri = gst_web_fetch_src_urihandler_set_uri;
+  uri_iface->get_type = gst_web_em_fetch_src_urihandler_get_type;
+  uri_iface->get_protocols = gst_web_em_fetch_src_urihandler_get_protocols;
+  uri_iface->get_uri = gst_web_em_fetch_src_urihandler_get_uri;
+  uri_iface->set_uri = gst_web_em_fetch_src_urihandler_set_uri;
 }
 
 static void
-gst_web_fetch_src_init (GstWebFetchSrc *src)
+gst_web_em_fetch_src_init (GstWebEmFetchSrc *src)
 {
 }
 
 static gsize
-gst_web_fetch_src_parse_content_size_field (
-    GstWebFetchSrc *self, emscripten_fetch_t *fetch)
+gst_web_em_fetch_src_parse_content_size_field (
+    GstWebEmFetchSrc *self, emscripten_fetch_t *fetch)
 {
   gsize length, ret = 0;
 
@@ -164,8 +165,8 @@ gst_web_fetch_src_parse_content_size_field (
           ptr = header[1];
 
           GST_LOG_OBJECT (self, "content-range value: [%s]", ptr);
-          if (g_str_has_prefix (ptr, GST_WEB_FETCH_SRC_BYTES_CR)) {
-            ptr += sizeof (GST_WEB_FETCH_SRC_BYTES_CR);
+          if (g_str_has_prefix (ptr, GST_WEB_EM_FETCH_SRC_BYTES_CR)) {
+            ptr += sizeof (GST_WEB_EM_FETCH_SRC_BYTES_CR);
             ptr = strchr (ptr, '/');
             if (ptr && ptr[0]) {
               ret = atoll (&ptr[1]);
@@ -187,8 +188,8 @@ gst_web_fetch_src_parse_content_size_field (
 
 /* Called with the GST_OBJECT_LOCK taken */
 static GstBuffer *
-gst_web_fetch_src_fetch_range (
-    GstWebFetchSrc *self, gchar *uri, gsize range_start, gsize range_end)
+gst_web_em_fetch_src_fetch_range (
+    GstWebEmFetchSrc *self, gchar *uri, gsize range_start, gsize range_end)
 {
   gchar range_field[256];
   gchar *headers[] = { "Range", range_field, NULL };
@@ -198,9 +199,9 @@ gst_web_fetch_src_fetch_range (
   gboolean request_again = FALSE;
   enum
   {
-    GST_WEB_FETCH_SRC_HTTP_OK = 200,
-    GST_WEB_FETCH_SRC_HTTP_PARTIAL_CONTENT = 206,
-    GST_WEB_FETCH_SRC_HTTP_RANGE_NOT_SATISFIABLE = 416,
+    GST_WEB_EM_FETCH_SRC_HTTP_OK = 200,
+    GST_WEB_EM_FETCH_SRC_HTTP_PARTIAL_CONTENT = 206,
+    GST_WEB_EM_FETCH_SRC_HTTP_RANGE_NOT_SATISFIABLE = 416,
   };
 
   g_return_val_if_fail (range_start < range_end, NULL);
@@ -230,8 +231,8 @@ gst_web_fetch_src_fetch_range (
     fetch = emscripten_fetch (&attr, uri);
 
     switch (fetch->status) {
-      case GST_WEB_FETCH_SRC_HTTP_OK:
-      case GST_WEB_FETCH_SRC_HTTP_PARTIAL_CONTENT:
+      case GST_WEB_EM_FETCH_SRC_HTTP_OK:
+      case GST_WEB_EM_FETCH_SRC_HTTP_PARTIAL_CONTENT:
         GST_DEBUG_OBJECT (
             self, "Downloaded %" G_GINT64_FORMAT " bytes", fetch->numBytes);
 
@@ -247,7 +248,7 @@ gst_web_fetch_src_fetch_range (
         GST_OBJECT_LOCK (self);
         if (self->resource_size == 0) {
           self->resource_size =
-              gst_web_fetch_src_parse_content_size_field (self, fetch);
+              gst_web_em_fetch_src_parse_content_size_field (self, fetch);
           GST_INFO_OBJECT (
               self, "Resource size: %" G_GSIZE_FORMAT, self->resource_size);
         }
@@ -260,7 +261,7 @@ gst_web_fetch_src_fetch_range (
         }
         GST_OBJECT_UNLOCK (self);
         break;
-      case GST_WEB_FETCH_SRC_HTTP_RANGE_NOT_SATISFIABLE:
+      case GST_WEB_EM_FETCH_SRC_HTTP_RANGE_NOT_SATISFIABLE:
         if (request_again) {
           /* This is a weird case, but since it comes from the server, we must
            * handle it. Just decide it's an EOS. */
@@ -300,9 +301,9 @@ gst_web_fetch_src_fetch_range (
 }
 
 static GstFlowReturn
-gst_web_fetch_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
+gst_web_em_fetch_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (psrc);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (psrc);
   GstFlowReturn ret = GST_FLOW_OK;
   gchar *uri;
 
@@ -317,7 +318,7 @@ gst_web_fetch_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
   GST_PAD_STREAM_UNLOCK (GST_BASE_SRC (self)->srcpad);
   /* Simple workaround to avoid replacing uri and not having it locked */
   uri = g_strdup (self->uri);
-  *outbuf = gst_web_fetch_src_fetch_range (
+  *outbuf = gst_web_em_fetch_src_fetch_range (
       self, uri, self->download_offset, self->download_offset + CHUNK_SIZE);
   g_free (uri);
 
@@ -334,10 +335,11 @@ done:
 }
 
 static GstStateChangeReturn
-gst_web_fetch_src_change_state (GstElement *element, GstStateChange transition)
+gst_web_em_fetch_src_change_state (
+    GstElement *element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (element);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -370,9 +372,9 @@ gst_web_fetch_src_change_state (GstElement *element, GstStateChange transition)
 }
 
 static gboolean
-gst_web_fetch_src_get_size (GstBaseSrc *bsrc, guint64 *size)
+gst_web_em_fetch_src_get_size (GstBaseSrc *bsrc, guint64 *size)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (bsrc);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (bsrc);
   gboolean ret = FALSE;
 
   GST_OBJECT_LOCK (self);
@@ -389,17 +391,17 @@ done:
 }
 
 static gboolean
-gst_web_fetch_src_is_seekable (GstBaseSrc *bsrc)
+gst_web_em_fetch_src_is_seekable (GstBaseSrc *bsrc)
 {
   return TRUE;
 }
 
 static gboolean
-gst_web_fetch_src_do_seek (GstBaseSrc *bsrc, GstSegment *segment)
+gst_web_em_fetch_src_do_seek (GstBaseSrc *bsrc, GstSegment *segment)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (bsrc);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (bsrc);
 
-  g_return_val_if_fail (gst_web_fetch_src_is_seekable (bsrc), FALSE);
+  g_return_val_if_fail (gst_web_em_fetch_src_is_seekable (bsrc), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (segment->start), FALSE);
 
   if (segment->format != GST_FORMAT_BYTES) {
@@ -417,14 +419,14 @@ gst_web_fetch_src_do_seek (GstBaseSrc *bsrc, GstSegment *segment)
 }
 
 static void
-gst_web_fetch_src_set_property (
+gst_web_em_fetch_src_set_property (
     GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (object);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
-      gst_web_fetch_src_urihandler_set_uri (
+      gst_web_em_fetch_src_urihandler_set_uri (
           GST_URI_HANDLER (self), g_value_get_string (value), NULL);
       break;
     default:
@@ -434,15 +436,15 @@ gst_web_fetch_src_set_property (
 }
 
 static void
-gst_web_fetch_src_get_property (
+gst_web_em_fetch_src_get_property (
     GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (object);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
       g_value_take_string (value,
-          gst_web_fetch_src_urihandler_get_uri (GST_URI_HANDLER (self)));
+          gst_web_em_fetch_src_urihandler_get_uri (GST_URI_HANDLER (self)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -451,17 +453,17 @@ gst_web_fetch_src_get_property (
 }
 
 static void
-gst_web_fetch_src_finalize (GObject *obj)
+gst_web_em_fetch_src_finalize (GObject *obj)
 {
-  GstWebFetchSrc *self = GST_WEB_FETCH_SRC (obj);
+  GstWebEmFetchSrc *self = GST_WEB_EM_FETCH_SRC (obj);
 
   g_free (self->uri);
 
-  G_OBJECT_CLASS (gst_web_fetch_src_parent_class)->finalize (obj);
+  G_OBJECT_CLASS (gst_web_em_fetch_src_parent_class)->finalize (obj);
 }
 
 static void
-gst_web_fetch_src_class_init (GstWebFetchSrcClass *klass)
+gst_web_em_fetch_src_class_init (GstWebEmFetchSrcClass *klass)
 {
   static GstStaticPadTemplate srcpadtemplate = GST_STATIC_PAD_TEMPLATE (
       "src", GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
@@ -471,32 +473,33 @@ gst_web_fetch_src_class_init (GstWebFetchSrcClass *klass)
   GstBaseSrcClass *basesrc_class = (GstBaseSrcClass *) klass;
   GstPushSrcClass *pushsrc_class = (GstPushSrcClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_web_fetch_src_debug, "webfetchsrc", 0,
-      "HTTP Client Source using Web Fetch API");
+  GST_DEBUG_CATEGORY_INIT (gst_web_em_fetch_src_debug, "webemfetchsrc", 0,
+      "HTTP Client Source using Emscripten Fetch API");
 
   // parent_class = g_type_class_peek_parent (klass);
 
-  element_class->change_state = gst_web_fetch_src_change_state;
+  element_class->change_state = gst_web_em_fetch_src_change_state;
 
-  pushsrc_class->create = gst_web_fetch_src_create;
+  pushsrc_class->create = gst_web_em_fetch_src_create;
 
-  basesrc_class->is_seekable = gst_web_fetch_src_is_seekable;
-  basesrc_class->get_size = gst_web_fetch_src_get_size;
-  basesrc_class->do_seek = gst_web_fetch_src_do_seek;
+  basesrc_class->is_seekable = gst_web_em_fetch_src_is_seekable;
+  basesrc_class->get_size = gst_web_em_fetch_src_get_size;
+  basesrc_class->do_seek = gst_web_em_fetch_src_do_seek;
 
   gst_element_class_add_pad_template (
       element_class, gst_static_pad_template_get (&srcpadtemplate));
 
-  gobject_class->set_property = gst_web_fetch_src_set_property;
-  gobject_class->get_property = gst_web_fetch_src_get_property;
-  gobject_class->finalize = gst_web_fetch_src_finalize;
+  gobject_class->set_property = gst_web_em_fetch_src_set_property;
+  gobject_class->get_property = gst_web_em_fetch_src_get_property;
+  gobject_class->finalize = gst_web_em_fetch_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location", "URI of resource to read",
           PROP_LOCATION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
-      "HTTP Client Source using Web Fetch API", "Source/Network",
-      "Receiver data as a client over a network via HTTP using Web Fetch API",
+      "HTTP Client Source using Emscripten Fetch API", "Source/Network",
+      "Receiver data as a client over a network via HTTP using Emscripten "
+      "Fetch API",
       "Alexander Slobodeniuk <aslobodeniuk@fluendo.com>");
 }

@@ -1,5 +1,5 @@
 sources = [
-  'webfetchsrc-example.c'
+  'webemfetchsrc-example.c'
 ]
 
 executable('index',

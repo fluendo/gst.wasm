@@ -30,7 +30,7 @@
 #include <gst/web/gstwebvideoframe.h>
 
 #include "gstweb.h"
-#include "gstwebfetchsrc.h"
+#include "gstwebemfetchsrc.h"
 #include "gstwebstreamsrc.h"
 #include "gstwebcanvassink.h"
 #include "gstwebcanvassrc.h"
@@ -49,7 +49,7 @@ plugin_init (GstPlugin *plugin)
 
   gst_element_register_web_canvas_sink (plugin);
   gst_element_register_web_canvas_src (plugin);
-  gst_element_register_web_fetch_src (plugin);
+  gst_element_register_web_em_fetch_src (plugin);
   gst_element_register_web_stream_src (plugin);
   gst_element_register_web_transport_src (plugin);
   gst_element_register_web_download (plugin);
