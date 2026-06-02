@@ -53,15 +53,10 @@ typedef struct _GstWebFetchSrc
   GstBin base;
   gchar *uri;
   GstWebRunner *runner;
+  GstWebTransferableThread owner_thread;
 
   val stream;
 } GstWebFetchSrc;
-
-typedef struct _GstWebFetchSrcRequestObjectMsgData
-{
-  GstWebFetchSrc *self;
-  GstMessage *msg;
-} GstWebFetchSrcRequestObjectMsgData;
 
 enum
 {
@@ -74,35 +69,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_web_fetch_src_debug);
 
 G_DECLARE_FINAL_TYPE (
     GstWebFetchSrc, gst_web_fetch_src, GST, WEB_FETCH_SRC, GstBin)
-
-static void
-gst_web_fetch_src_request_object_msg_data_free (
-    GstWebFetchSrcRequestObjectMsgData *data)
-{
-  gst_message_unref (data->msg);
-  g_free (data);
-}
-
-static void
-gst_web_fetch_src_request_object_msg (GstWebFetchSrcRequestObjectMsgData *data)
-{
-  GstWebFetchSrc *self = data->self;
-  const GstStructure *s = gst_message_get_structure (data->msg);
-  const gchar *object_name;
-  val object;
-
-  object_name = gst_structure_get_string (s, "object-name");
-  GST_DEBUG_OBJECT (
-      data->self, "Processing the request object of '%s'", object_name);
-  if (!strncmp (object_name, "ReadableStream/", 15)) {
-    object = self->stream;
-  } else {
-    GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
-    return;
-  }
-  gst_web_transferable_transfer_object (
-      (GstWebTransferable *) self, data->msg, (guintptr) object.as_handle ());
-}
 
 static GstURIType
 gst_web_fetch_src_urihandler_get_type (GType type)
@@ -162,21 +128,20 @@ gst_web_fetch_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   uri_iface->set_uri = gst_web_fetch_src_urihandler_set_uri;
 }
 
-static gboolean
+static GstWebTransferableThread *
 gst_web_fetch_src_transferable_can_transfer (
     GstWebTransferable *transferable, const gchar *object_name)
 {
   GstWebFetchSrc *self;
 
-  g_return_val_if_fail (GST_IS_WEB_TRANSFERABLE (transferable), FALSE);
+  g_return_val_if_fail (GST_IS_WEB_TRANSFERABLE (transferable), NULL);
   self = GST_WEB_FETCH_SRC (transferable);
 
   GST_DEBUG_OBJECT (self, "Requesting object %s", object_name);
-  /* Check if the requested object corresponds to us */
   if (strncmp (object_name, "ReadableStream/", 15))
-    return FALSE;
+    return NULL;
 
-  return TRUE;
+  return &self->owner_thread;
 }
 
 static void
@@ -184,18 +149,20 @@ gst_web_fetch_src_transferable_transfer (GstWebTransferable *transferable,
     const gchar *object_name, GstMessage *msg)
 {
   GstWebFetchSrc *self;
-  GstWebFetchSrcRequestObjectMsgData *data;
+  val object;
 
   g_return_if_fail (GST_IS_WEB_TRANSFERABLE (transferable));
   self = GST_WEB_FETCH_SRC (transferable);
 
-  data = g_new0 (GstWebFetchSrcRequestObjectMsgData, 1);
-  data->msg = gst_message_ref (msg);
-  data->self = self;
-
-  gst_web_runner_send_message_async (self->runner,
-      (GstWebRunnerCB) gst_web_fetch_src_request_object_msg, data,
-      (GDestroyNotify) gst_web_fetch_src_request_object_msg_data_free);
+  /* Always called on the owner thread by handle_request_object */
+  if (!strncmp (object_name, "ReadableStream/", 15)) {
+    object = self->stream;
+  } else {
+    GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
+    return;
+  }
+  gst_web_transferable_transfer_object (
+      (GstWebTransferable *) self, msg, (guintptr) object.as_handle ());
 }
 
 static void
@@ -246,14 +213,15 @@ gst_web_fetch_src_create_stream (GstWebFetchSrc *self)
 
   GST_INFO_OBJECT (self, "Stream created for %s", self->uri);
 
-  /* Register for transferable messages on the current thread */
-  gst_web_transferable_register_on_message ((GstWebTransferable *) self);
+  self->owner_thread =
+      gst_web_transferable_register_on_message ((GstWebTransferable *) self);
 }
 
 static void
 gst_web_fetch_src_destroy_stream (GstWebFetchSrc *self)
 {
-  gst_web_transferable_unregister_on_message ((GstWebTransferable *) self);
+  gst_web_transferable_unregister_on_message (
+      (GstWebTransferable *) self, self->owner_thread);
 }
 
 static gboolean

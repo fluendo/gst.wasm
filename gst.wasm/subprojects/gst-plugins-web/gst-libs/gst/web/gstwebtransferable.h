@@ -24,8 +24,11 @@
 #define __GST_WEB_TRANSFERABLE_H__
 
 #include <gst/gst.h>
+#include <pthread.h>
 
 G_BEGIN_DECLS
+
+typedef pthread_t GstWebTransferableThread;
 
 #define GST_TYPE_WEB_TRANSFERABLE (gst_web_transferable_get_type ())
 #define GST_WEB_TRANSFERABLE(obj)                                             \
@@ -45,6 +48,8 @@ G_BEGIN_DECLS
 typedef struct _GstWebTransferable GstWebTransferable; /* dummy object */
 typedef struct _GstWebTransferableInterface GstWebTransferableInterface;
 
+#define GST_WEB_TRANSFERABLE_THREAD_NONE ((GstWebTransferableThread) 0)
+
 /**
  * GstWebTransferableInterface:
  * @parent: parent interface type.
@@ -55,16 +60,22 @@ struct _GstWebTransferableInterface
 {
   GTypeInterface parent;
 
-  gboolean (*can_transfer) (
+  /* Returns a pointer to the owner thread for the requested object, or NULL
+   * if this element cannot transfer it. The pointed-to thread must be
+   * cooperative (i.e. yield to the JS worker event loop). */
+  GstWebTransferableThread *(*can_transfer) (
       GstWebTransferable *self, const gchar *object_name);
+  /* Always called on the thread returned by can_transfer for this object. */
   void (*transfer) (
       GstWebTransferable *self, const gchar *object_name, GstMessage *msg);
   gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_web_transferable_get_type (void);
-void gst_web_transferable_register_on_message (GstWebTransferable *self);
-void gst_web_transferable_unregister_on_message (GstWebTransferable *self);
+GstWebTransferableThread gst_web_transferable_register_on_message (
+    GstWebTransferable *self);
+void gst_web_transferable_unregister_on_message (
+    GstWebTransferable *self, GstWebTransferableThread thread);
 gboolean gst_web_transferable_request_object (GstWebTransferable *self,
     const gchar *object_name, const gchar *js_cb, gpointer user_data);
 gboolean gst_web_transferable_handle_request_object (

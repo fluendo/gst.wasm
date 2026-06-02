@@ -14,12 +14,40 @@ If you need to share them you'll need to transfer them to the corresponding
 
 Transferring objects
 --------------------
-We have a mechanism to transfer JS objects from one WebWorker to another.
-Call `gst_web_utils_message_new_request_object` for requesting a JS object
-to be trasnferred to the calling thread. As it is a `GstMessage`, it is the
-application or the parent's object who are in charge of processing the message
-and call `gst_web_utils_element_process_request_object` to do the actual
-transfer.
+We have a mechanism to transfer JS objects from one WebWorker to another via
+the [GstWebTransferable][GstWebTransferable] interface.
+
+An element that owns a transferable JS object (e.g. a `ReadableStream`)
+implements the interface and exposes two vfuncs:
+
+* `can_transfer` vfunc — returns a pointer to a
+  `GstWebTransferableThread` (a `pthread_t`) if the element owns the named
+  object, or `NULL` otherwise. The pointed-to thread is the **owner thread**:
+  the thread on which `gst_web_transferable_register_on_message` was called
+  and which must remain cooperative (i.e. yield to the JS worker event loop
+  periodically).
+* `transfer` vfunc — performs the actual JS transfer. Always
+  invoked on the owner thread (dispatched there automatically by
+  `gst_web_transferable_handle_request_object`).
+
+The typical flow for a requester element is:
+
+1. Call `gst_web_transferable_request_object` from the streaming thread.
+   This creates a `GstMessage` carrying the requesting thread's `pthread_t`.
+2. The message bubbles up the bin hierarchy until a parent calls
+   `gst_web_transferable_handle_request_object`.
+3. `gst_web_transferable_handle_request_object` calls `can_transfer` to find
+   the owner thread. If the caller is already on that thread the `transfer`
+   vfunc is invoked directly; otherwise it is dispatched asynchronously via
+   `emscripten_dispatch_to_thread_async`.
+4. The owner's `transfer` implementation calls `gst_web_transferable_transfer_object`,
+   which posts the JS object back to the requesting thread's Web Worker via
+   the browser's `postMessage` / `addEventListener("message")` mechanism.
+
+The owner element must call `gst_web_transferable_register_on_message` from
+its owner thread before any transfers can occur; the returned
+`GstWebTransferableThread` value must be stored and passed to
+`gst_web_transferable_unregister_on_message` on teardown.
 
 JS Callbacks
 ============
@@ -133,6 +161,7 @@ transferrable object Emscripten does transfer if required.
 [GstWebCanvas]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebcanvas.h
 [GstWebTask]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebtask.h
 [GstWebTaskPool]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebtaskpool.h
+[GstWebTransferable]: https://github.com/fluendo/gst.wasm/blob/main/gst.wasm/subprojects/gst-plugins-web/gst-libs/gst/web/gstwebtransferable.h
 
 Other advises
 =============

@@ -63,6 +63,7 @@ typedef struct _GstWebTransportSrc
   gchar *uri;
   GValue hashes;
   GstWebRunner *runner;
+  GstWebTransferableThread owner_thread;
 
   /* temporary property values until the connection is created */
   gint incoming_high_water_mark;
@@ -73,12 +74,6 @@ typedef struct _GstWebTransportSrc
   val stream_promises[2];                       // owner: runner
   gint nstreams[2];                             // owner: runner
 } GstWebTransportSrc;
-
-typedef struct _GstWebTransportSrcRequestObjectMsgData
-{
-  GstWebTransportSrc *self;
-  GstMessage *msg;
-} GstWebTransportSrcRequestObjectMsgData;
 
 /* FIXME we use this for setting/getting a single property. If there
  * are more properties to set, wrap the actual generic property_set/get
@@ -105,39 +100,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_web_transport_src_debug);
 
 G_DECLARE_FINAL_TYPE (
     GstWebTransportSrc, gst_web_transport_src, GST, WEB_TRANSPORT_SRC, GstBin)
-
-static void
-gst_web_transport_src_request_object_msg_data_free (
-    GstWebTransportSrcRequestObjectMsgData *data)
-{
-  gst_message_unref (data->msg);
-  g_free (data);
-}
-
-static void
-gst_web_transport_src_request_object_msg (
-    GstWebTransportSrcRequestObjectMsgData *data)
-{
-  GstWebTransportSrc *self = data->self;
-  const GstStructure *s = gst_message_get_structure (data->msg);
-  const gchar *object_name;
-  val object;
-
-  object_name = gst_structure_get_string (s, "object-name");
-  GST_DEBUG_OBJECT (
-      data->self, "Processing the request object of '%s'", object_name);
-  if (!strncmp (object_name, "ReadableStream/", 15)) {
-    const gchar *stream_name =
-        &object_name[16]; // the length of the above string
-    /* FIXME how to handle the case of a stream not found (RDI-2860) */
-    object = self->streams[stream_name];
-  } else {
-    GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
-    return;
-  }
-  gst_web_transferable_transfer_object (
-      (GstWebTransferable *) self, data->msg, (guintptr) object.as_handle ());
-}
 
 static void
 gst_web_transport_src_set_datagrams_incoming_high_water_mark_msg (
@@ -216,21 +178,20 @@ gst_web_transport_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   uri_iface->set_uri = gst_web_transport_src_urihandler_set_uri;
 }
 
-static gboolean
+static GstWebTransferableThread *
 gst_web_transport_src_transferable_can_transfer (
     GstWebTransferable *transferable, const gchar *object_name)
 {
   GstWebTransportSrc *self;
 
-  g_return_val_if_fail (GST_IS_WEB_TRANSFERABLE (transferable), FALSE);
+  g_return_val_if_fail (GST_IS_WEB_TRANSFERABLE (transferable), NULL);
   self = GST_WEB_TRANSPORT_SRC (transferable);
 
   GST_DEBUG_OBJECT (self, "Requesting object %s", object_name);
-  /* Check if the requested object corresponds to us */
   if (strncmp (object_name, "ReadableStream/", 15))
-    return FALSE;
+    return NULL;
 
-  return TRUE;
+  return &self->owner_thread;
 }
 
 static void
@@ -238,17 +199,22 @@ gst_web_transport_src_transferable_transfer (GstWebTransferable *transferable,
     const gchar *object_name, GstMessage *msg)
 {
   GstWebTransportSrc *self;
-  GstWebTransportSrcRequestObjectMsgData *data;
+  val object;
 
   g_return_if_fail (GST_IS_WEB_TRANSFERABLE (transferable));
   self = GST_WEB_TRANSPORT_SRC (transferable);
 
-  data = g_new0 (GstWebTransportSrcRequestObjectMsgData, 1);
-  data->msg = gst_message_ref (msg);
-  data->self = self;
-  gst_web_runner_send_message_async (self->runner,
-      (GstWebRunnerCB) gst_web_transport_src_request_object_msg, data,
-      (GDestroyNotify) gst_web_transport_src_request_object_msg_data_free);
+  /* Always called on the owner thread by handle_request_object */
+  if (!strncmp (object_name, "ReadableStream/", 15)) {
+    const gchar *stream_name = &object_name[16];
+    /* FIXME how to handle the case of a stream not found (RDI-2860) */
+    object = self->streams[stream_name];
+  } else {
+    GST_ERROR_OBJECT (self, "Unsupported object '%s'", object_name);
+    return;
+  }
+  gst_web_transferable_transfer_object (
+      (GstWebTransferable *) self, msg, (guintptr) object.as_handle ());
 }
 
 static void
@@ -484,7 +450,8 @@ gst_web_transport_src_create_connection (GstWebTransportSrc *self)
   for (i = 0; i < 2; i++) {
     self->stream_promises[i] = self->stream_readers[i].call<val> ("read");
   }
-  gst_web_transferable_register_on_message ((GstWebTransferable *) self);
+  self->owner_thread =
+      gst_web_transferable_register_on_message ((GstWebTransferable *) self);
   gst_web_transport_src_check_streams (self);
 }
 
@@ -495,7 +462,8 @@ gst_web_transport_src_destroy_connection (GstWebTransportSrc *self)
    * close every stream (RDI-2861)
    * close the transport (RDI-2861)
    */
-  gst_web_transferable_unregister_on_message ((GstWebTransferable *) self);
+  gst_web_transferable_unregister_on_message (
+      (GstWebTransferable *) self, self->owner_thread);
 }
 
 static gboolean
