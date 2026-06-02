@@ -4,6 +4,7 @@ sources = [
   'gstwebcanvassrc.cpp',
   'gstwebdownload.c',
   'gstwebemfetchsrc.c',
+  'gstwebfetchsrc.cpp',
   'gstwebstreamsrc.cpp',
   'gstwebupload.cpp',
   'codecs/gstwebcodecs.cpp',
