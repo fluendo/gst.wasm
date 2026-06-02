@@ -9,8 +9,8 @@ sources = [
   'codecs/gstwebcodecs.cpp',
   'codecs/gstwebcodecsaudiodecoder.cpp',
   'codecs/gstwebcodecsvideodecoder.cpp',
-  'transport/gstwebtransportsrc.cpp',
-  'transport/gstwebtransportstreamsrc.cpp'
+  'stream/gstwebstreamreadersrc.cpp',
+  'transport/gstwebtransportsrc.cpp'
 ]
 
 # Codecs deps

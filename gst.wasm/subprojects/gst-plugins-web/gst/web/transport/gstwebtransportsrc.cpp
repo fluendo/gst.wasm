@@ -39,9 +39,9 @@
 #include <gst/web/gstwebtask.h>
 #include <gst/web/gstwebtaskpool.h>
 
-#include "gstwebtransportsrc.h"
-#include "gstwebtransportstreamsrc.h"
+#include "stream/gstwebstreamreadersrc.h"
 #include "gstweb.h"
+#include "gstwebtransportsrc.h"
 
 using namespace emscripten;
 
@@ -126,9 +126,9 @@ gst_web_transport_src_request_object_msg (
   object_name = gst_structure_get_string (s, "object-name");
   GST_DEBUG_OBJECT (
       data->self, "Processing the request object of '%s'", object_name);
-  if (!strncmp (object_name, "WebTransportReceiveStream/", 25)) {
+  if (!strncmp (object_name, "ReadableStream/", 15)) {
     const gchar *stream_name =
-        &object_name[26]; // the lenght of the above string
+        &object_name[16]; // the length of the above string
     /* FIXME how to handle the case of a stream not found (RDI-2860) */
     object = self->streams[stream_name];
   } else {
@@ -227,7 +227,7 @@ gst_web_transport_src_transferable_can_transfer (
 
   GST_DEBUG_OBJECT (self, "Requesting object %s", object_name);
   /* Check if the requested object corresponds to us */
-  if (strncmp (object_name, "WebTransportReceiveStream/", 25))
+  if (strncmp (object_name, "ReadableStream/", 15))
     return FALSE;
 
   return TRUE;
@@ -296,7 +296,7 @@ gst_web_transport_src_stream_linked (
 
   GST_DEBUG_OBJECT (self, "Stream linked to %s, setup the stream src",
       GST_OBJECT_NAME (pad));
-  src = gst_web_transport_stream_src_new (GST_OBJECT_NAME (pad));
+  src = gst_web_stream_reader_src_new (GST_OBJECT_NAME (pad));
   gst_bin_add (GST_BIN (self), src);
   target = gst_element_get_static_pad (src, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (pad), target);
