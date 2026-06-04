@@ -43,6 +43,7 @@ typedef struct _GstWebStreamReaderSrc
 {
   GstPushSrc base;
   gchar *name;
+  gboolean registered;
   val stream;
   val reader;
 } GstWebStreamReaderSrc;
@@ -93,10 +94,9 @@ static GstFlowReturn
 gst_web_stream_reader_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 {
   GstWebStreamReaderSrc *self = GST_WEB_STREAM_READER_SRC (psrc);
-  static gboolean registered = FALSE;
 
   /* We have the stream lock taken */
-  if (!registered) {
+  if (!self->registered) {
     gboolean requested;
     gchar *object_name;
 
@@ -113,7 +113,7 @@ gst_web_stream_reader_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
       GST_ERROR_OBJECT (self, "Requesting object failed");
       return GST_FLOW_ERROR;
     }
-    registered = TRUE;
+    self->registered = TRUE;
     return GST_FLOW_CUSTOM_SUCCESS;
   }
 
@@ -150,6 +150,7 @@ gst_web_stream_reader_src_init (GstWebStreamReaderSrc *src)
 {
   /* configure basesrc to be a live source */
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
+  src->registered = FALSE;
 }
 
 static void
