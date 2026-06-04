@@ -253,7 +253,7 @@ static GstStaticPadTemplate gst_web_transport_src_datagram_template =
         "datagram", GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
 
 static void
-gst_web_transport_src_stream_linked (
+gst_web_transport_src_stream_linked_cb (
     GstPad *pad, GstPad *peer, gpointer user_data)
 {
   GstWebTransportSrc *self = GST_WEB_TRANSPORT_SRC (user_data);
@@ -266,6 +266,7 @@ gst_web_transport_src_stream_linked (
   gst_bin_add (GST_BIN (self), src);
   target = gst_element_get_static_pad (src, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (pad), target);
+  gst_object_unref (target);
   gst_element_sync_state_with_parent (src);
 }
 
@@ -314,7 +315,7 @@ gst_web_transport_src_add_stream (gint self_ptr, gint type_int, val stream)
   self->streams.insert ({ stream_name, stream });
   pad = gst_ghost_pad_new_no_target (stream_name.c_str (), GST_PAD_SRC);
   g_signal_connect (
-      pad, "linked", (GCallback) gst_web_transport_src_stream_linked, self);
+      pad, "linked", (GCallback) gst_web_transport_src_stream_linked_cb, self);
   gst_element_add_pad (GST_ELEMENT (self), pad);
   /* Check for new streams again */
   gst_web_transport_src_check_streams (self);
@@ -560,7 +561,7 @@ gst_web_transport_src_request_new_pad (GstElement *element,
   GST_INFO_OBJECT (self, "Requesting new pad %s", name);
   pad = gst_ghost_pad_new_no_target (name, GST_PAD_SRC);
   g_signal_connect (
-      pad, "linked", (GCallback) gst_web_transport_src_stream_linked, self);
+      pad, "linked", (GCallback) gst_web_transport_src_stream_linked_cb, self);
   gst_element_add_pad (element, pad);
   /* TODO handle the case of requesting a pad when the element has already
    * established the connection (RDI-2863)
@@ -680,7 +681,7 @@ gst_web_transport_src_init (GstWebTransportSrc *self)
       gst_element_class_get_pad_template (element_class, "datagram");
   pad = gst_ghost_pad_new_no_target_from_template ("datagram", pad_template);
   g_signal_connect (
-      pad, "linked", (GCallback) gst_web_transport_src_stream_linked, self);
+      pad, "linked", (GCallback) gst_web_transport_src_stream_linked_cb, self);
   gst_element_add_pad (GST_ELEMENT_CAST (self), pad);
 
   g_value_init (&self->hashes, GST_TYPE_ARRAY);

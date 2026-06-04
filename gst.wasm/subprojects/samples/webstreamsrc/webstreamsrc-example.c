@@ -50,7 +50,8 @@ fakesink_handoff_cb (
   gst_buffer_unmap (buffer, &info);
 }
 
-void static play ()
+static void
+play ()
 {
   gst_element_set_state (context.pipe, GST_STATE_PLAYING);
 }
@@ -91,7 +92,7 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "HTTPsrc example");
 
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
-  gst_debug_set_threshold_from_string ("*:2,webstreamsrc:6,example:5", TRUE);
+  gst_debug_set_threshold_from_string ("*:2,webstreamsrc:3,example:5", TRUE);
 
   init_pipeline ();
   play ();
