@@ -142,6 +142,7 @@ Refer to the [Coding Style guide ](CONTRIBUTING.md)
 * Blog post [GstWASM: GStreamer for the web](https://fluendo.com/en/blog/gstwasm-gstreamer-for-the-web/)
 * GstConf2023 presentation [GstWASM: Gstreamer for the web](https://gstconf.ubicast.tv/videos/gstwasm-gstreamer-for-the-web/)
 * GstConf2024 presentation [Gst.WASM Launched](https://gstconf.ubicast.tv/videos/gstwasm-launched/)
+* GstConf2025 presentation [Gst.WASM Season 3](https://gstconf.ubicast.tv/videos/gstwasm-season-3/)
 
 ## Aknowledgements
 * Special thanks to [Fluendo](https://fluendo.com) for promoting and funding this project
