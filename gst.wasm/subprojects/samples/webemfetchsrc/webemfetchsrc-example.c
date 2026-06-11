@@ -70,9 +70,8 @@ init_pipeline ()
   GST_PLUGIN_STATIC_REGISTER (web);
 
   context.pipe = gst_parse_launch (
-      "webstreamsrc "
-      "location=\"http://localhost:6931/webstreamsrc-example.html\""
-      " ! fakesink name=fk signal-handoffs=true",
+      "webemfetchsrc location=\"http://localhost:3000/hello.txt\" ! fakesink "
+      "name=fk signal-handoffs=true",
       NULL);
   g_assert (context.pipe);
 
@@ -92,7 +91,7 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "HTTPsrc example");
 
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
-  gst_debug_set_threshold_from_string ("*:2,webstreamsrc:3,example:5", TRUE);
+  gst_debug_set_threshold_from_string ("*:2,webemfetchsrc:3,example:5", TRUE);
 
   init_pipeline ();
   play ();

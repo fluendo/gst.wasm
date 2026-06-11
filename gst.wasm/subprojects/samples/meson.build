@@ -36,6 +36,7 @@ examples = [
   'videotestsrc',
   'webcanvassrc',
   'webdownload',
+  'webemfetchsrc',
   'webfetchsrc',
   'webstreamsrc',
   'webtransportsrc',

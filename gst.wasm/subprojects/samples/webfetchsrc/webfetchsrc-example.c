@@ -1,8 +1,8 @@
 /*
- * GStreamer - gst.wasm Emscripten HTTP source example
+ * GStreamer - gst.wasm Fetch API with ReadableStream example
  *
- * Copyright 2024 Fluendo S.A.
- *  @author: Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
+ * Copyright 2026 Fluendo S.A.
+ *  @author: Jorge Zapata <jzapata@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -50,7 +50,8 @@ fakesink_handoff_cb (
   gst_buffer_unmap (buffer, &info);
 }
 
-void static play ()
+static void
+play ()
 {
   gst_element_set_state (context.pipe, GST_STATE_PLAYING);
 }
@@ -69,7 +70,7 @@ init_pipeline ()
   GST_PLUGIN_STATIC_REGISTER (web);
 
   context.pipe = gst_parse_launch (
-      "webfetchsrc location=\"http://localhost:3000/hello.txt\" ! fakesink "
+      "webfetchsrc location=\"http://localhost:6931/index.html\" ! fakesink "
       "name=fk signal-handoffs=true",
       NULL);
   g_assert (context.pipe);
@@ -87,10 +88,11 @@ int
 main (int argc, char **argv)
 {
   gst_init (NULL, NULL);
-  GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "HTTPsrc example");
+  GST_DEBUG_CATEGORY_INIT (example_dbg, "example", 0, "GstWASM example debug");
 
   gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
-  gst_debug_set_threshold_from_string ("*:2,webfetchsrc:8,example:5", TRUE);
+  gst_debug_set_threshold_from_string (
+      "*:2,webfetchsrc:3,webstreamreadersrc:3,example:5", TRUE);
 
   init_pipeline ();
   play ();

@@ -3,14 +3,15 @@ sources = [
   'gstwebcanvassink.cpp',
   'gstwebcanvassrc.cpp',
   'gstwebdownload.c',
-  'gstwebfetchsrc.c',
+  'gstwebemfetchsrc.c',
+  'gstwebfetchsrc.cpp',
   'gstwebstreamsrc.cpp',
   'gstwebupload.cpp',
   'codecs/gstwebcodecs.cpp',
   'codecs/gstwebcodecsaudiodecoder.cpp',
   'codecs/gstwebcodecsvideodecoder.cpp',
-  'transport/gstwebtransportsrc.cpp',
-  'transport/gstwebtransportstreamsrc.cpp'
+  'stream/gstwebstreamreadersrc.cpp',
+  'transport/gstwebtransportsrc.cpp'
 ]
 
 # Codecs deps

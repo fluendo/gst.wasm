@@ -28,6 +28,7 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten/threading.h>
 
 #include "gstwebtransferable.h"
 
@@ -157,10 +158,11 @@ gst_web_transferable_get_type (void)
   return type;
 }
 
-void
+GstWebTransferableThread
 gst_web_transferable_register_on_message (GstWebTransferable *self)
 {
-  g_return_if_fail (GST_IS_WEB_TRANSFERABLE (self));
+  g_return_val_if_fail (
+      GST_IS_WEB_TRANSFERABLE (self), GST_WEB_TRANSFERABLE_THREAD_NONE);
 
   /* Just register our own message event handler to support the 'transferred'
    * event
@@ -181,10 +183,13 @@ gst_web_transferable_register_on_message (GstWebTransferable *self)
     worker.addEventListener ("message", gst_web_transferable_js_main_thread_handle_message);
   }, pthread_self());
   /* clang-format on */
+
+  return pthread_self ();
 }
 
 void
-gst_web_transferable_unregister_on_message (GstWebTransferable *self)
+gst_web_transferable_unregister_on_message (
+    GstWebTransferable *self, GstWebTransferableThread thread)
 {
   g_return_if_fail (GST_IS_WEB_TRANSFERABLE (self));
 
@@ -201,7 +206,7 @@ gst_web_transferable_unregister_on_message (GstWebTransferable *self)
   MAIN_THREAD_EM_ASM ({
     var worker = PThread.pthreads[$0];
     worker.removeEventListener ("message", gst_web_transferable_js_main_thread_handle_message);
-  }, pthread_self());
+  }, thread);
   /* clang-format on */
 }
 
@@ -230,6 +235,26 @@ gst_web_transferable_request_object (GstWebTransferable *self,
   return TRUE;
 }
 
+/* Data for dispatching a transfer call to the owner thread */
+typedef struct _GstWebTransferableTransferData
+{
+  GstWebTransferable *self;
+  gchar *object_name;
+  GstMessage *msg;
+} GstWebTransferableTransferData;
+
+static void
+gst_web_transferable_do_transfer (GstWebTransferableTransferData *data)
+{
+  GstWebTransferableInterface *iface =
+      GST_WEB_TRANSFERABLE_GET_INTERFACE (data->self);
+  if (iface->transfer)
+    iface->transfer (data->self, data->object_name, data->msg);
+  g_free (data->object_name);
+  gst_message_unref (data->msg);
+  g_free (data);
+}
+
 gboolean
 gst_web_transferable_handle_request_object (
     GstWebTransferable *self, GstMessage *msg)
@@ -256,12 +281,29 @@ gst_web_transferable_handle_request_object (
       "Handling the request of object to '%s' to element %s'", object_name,
       GST_OBJECT_NAME (GST_MESSAGE_SRC (msg)));
 
-  /* check if the rquested object is one of the transferable objects */
+  /* check if the requested object is one of the transferable objects */
   iface = GST_WEB_TRANSFERABLE_GET_INTERFACE (self);
-  if (iface->can_transfer && iface->can_transfer (self, object_name)) {
-    /* if so, transfer it */
+  if (iface->can_transfer) {
+    GstWebTransferableThread *owner = iface->can_transfer (self, object_name);
+    if (!owner)
+      return FALSE;
     if (iface->transfer) {
-      iface->transfer (self, object_name, msg);
+      if (pthread_equal (*owner, pthread_self ())) {
+        /* Already on the owner thread, call directly */
+        iface->transfer (self, object_name, msg);
+      } else {
+        /* Dispatch to the owner thread asynchronously.
+         * The owner thread must be cooperative (yield to the JS event loop).
+         */
+        GstWebTransferableTransferData *data =
+            g_new0 (GstWebTransferableTransferData, 1);
+        data->self = self;
+        data->object_name = g_strdup (object_name);
+        data->msg = gst_message_ref (msg);
+        emscripten_dispatch_to_thread_async (*owner, EM_FUNC_SIG_VI,
+            (void *) gst_web_transferable_do_transfer, NULL,
+            (int) (uintptr_t) data);
+      }
     }
     return TRUE;
   } else {

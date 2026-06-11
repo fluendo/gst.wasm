@@ -1,5 +1,5 @@
 /*
- * GStreamer - gst.wasm Web Fetch HTTP source (bin)
+ * GStreamer - gst.wasm WebStream Reader source
  *
  * Copyright 2024 Fluendo S.A.
  * @author: Jorge Zapata <jzapata@fluendo.com>
@@ -20,13 +20,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_WEB_FETCH_SRC_H__
-#define __GST_WEB_FETCH_SRC_H__
+#ifndef __GST_WEB_STREAM_READER_SRC_H__
+#define __GST_WEB_STREAM_READER_SRC_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-GST_ELEMENT_REGISTER_DECLARE (web_fetch_src)
+G_BEGIN_DECLS
 
-#endif /* __GST_WEB_FETCH_SRC_H__ */
+GstElement *gst_web_stream_reader_src_new (const gchar *name);
+
+G_END_DECLS
+
+#endif /* __GST_WEB_STREAM_READER_SRC_H__ */

@@ -1,5 +1,5 @@
 sources = [
-  'webfetchsrc-example.c'
+  'webemfetchsrc-example.c'
 ]
 
 executable('index',
@@ -11,7 +11,6 @@ executable('index',
   c_args: ['-DHAVE_CONFIG_H=1'],
   link_args: [
       '-sPTHREAD_POOL_SIZE=4',
-      '-sPROXY_TO_PTHREAD',
       '-sASYNCIFY',
   ],
   name_suffix: 'html'

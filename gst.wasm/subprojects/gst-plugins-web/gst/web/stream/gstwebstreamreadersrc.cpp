@@ -1,5 +1,5 @@
 /*
- * GStreamer - gst.wasm WebTransportStream source
+ * GStreamer - gst.wasm WebStream Reader source
  *
  * Copyright 2024 Fluendo S.A.
  * @author: Jorge Zapata <jzapata@fluendo.com>
@@ -31,55 +31,55 @@
 #include <emscripten/val.h>
 #include <gst/web/gstwebtransferable.h>
 
-#include "gstwebtransportstreamsrc.h"
+#include "gstwebstreamreadersrc.h"
 
 using namespace emscripten;
 
-#define GST_TYPE_WEB_TRANSPORT_STREAM_SRC                                     \
-  (gst_web_transport_stream_src_get_type ())
-#define parent_class gst_web_transport_stream_src_parent_class
-#define GST_CAT_DEFAULT gst_web_transport_stream_src_debug
+#define GST_TYPE_WEB_STREAM_READER_SRC (gst_web_stream_reader_src_get_type ())
+#define parent_class gst_web_stream_reader_src_parent_class
+#define GST_CAT_DEFAULT gst_web_stream_reader_src_debug
 
-typedef struct _GstWebTransportStreamSrc
+typedef struct _GstWebStreamReaderSrc
 {
   GstPushSrc base;
   gchar *name;
+  gboolean registered;
   val stream;
   val reader;
-} GstWebTransportStreamSrc;
+} GstWebStreamReaderSrc;
 
-G_DECLARE_FINAL_TYPE (GstWebTransportStreamSrc, gst_web_transport_stream_src,
-    GST, WEB_TRANSPORT_STREAM_SRC, GstPushSrc)
+G_DECLARE_FINAL_TYPE (GstWebStreamReaderSrc, gst_web_stream_reader_src, GST,
+    WEB_STREAM_READER_SRC, GstPushSrc)
 
 static void
-gst_web_transport_stream_src_transferable_init (
+gst_web_stream_reader_src_transferable_init (
     gpointer g_iface, gpointer iface_data)
 {
 }
 
-G_DEFINE_TYPE_WITH_CODE (GstWebTransportStreamSrc,
-    gst_web_transport_stream_src, GST_TYPE_PUSH_SRC,
+G_DEFINE_TYPE_WITH_CODE (GstWebStreamReaderSrc, gst_web_stream_reader_src,
+    GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_WEB_TRANSFERABLE,
-        gst_web_transport_stream_src_transferable_init));
+        gst_web_stream_reader_src_transferable_init));
 
-GST_DEBUG_CATEGORY_STATIC (gst_web_transport_stream_src_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_web_stream_reader_src_debug);
 
 static void
-gst_web_transport_stream_resume_streaming_thread (
+gst_web_stream_reader_src_resume_streaming_thread (
     GstElement *e, gpointer user_data)
 {
-  GstWebTransportStreamSrc *self = GST_WEB_TRANSPORT_STREAM_SRC (e);
+  GstWebStreamReaderSrc *self = GST_WEB_STREAM_READER_SRC (e);
   GST_DEBUG_OBJECT (self, "Resuming Streaming thread");
   gst_pad_resume_task (GST_BASE_SRC_PAD (GST_BASE_SRC_CAST (self)));
   GST_DEBUG_OBJECT (self, "Streaming thread resumed");
 }
 
 static void
-gst_web_transport_stream_src_on_stream (
+gst_web_stream_reader_src_on_stream (
     gint sender_tid, val object_name, val object, guintptr user_data)
 {
-  GstWebTransportStreamSrc *self =
-      reinterpret_cast<GstWebTransportStreamSrc *> (user_data);
+  GstWebStreamReaderSrc *self =
+      reinterpret_cast<GstWebStreamReaderSrc *> (user_data);
 
   GST_DEBUG_OBJECT (self, "Stream %s (%s) received",
       object_name.as<std::string> ().c_str (),
@@ -87,34 +87,33 @@ gst_web_transport_stream_src_on_stream (
   self->reader = object.call<val> ("getReader");
   /* We shouldn't resume from the thread itself, but from other thread */
   gst_element_call_async (GST_ELEMENT_CAST (self),
-      gst_web_transport_stream_resume_streaming_thread, NULL, NULL);
+      gst_web_stream_reader_src_resume_streaming_thread, NULL, NULL);
 }
 
 static GstFlowReturn
-gst_web_transport_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
+gst_web_stream_reader_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 {
-  GstWebTransportStreamSrc *self = GST_WEB_TRANSPORT_STREAM_SRC (psrc);
-  static gboolean registered = FALSE;
+  GstWebStreamReaderSrc *self = GST_WEB_STREAM_READER_SRC (psrc);
 
   /* We have the stream lock taken */
-  if (!registered) {
+  if (!self->registered) {
     gboolean requested;
     gchar *object_name;
 
     /* Register our own JS event handler */
     GST_DEBUG_OBJECT (self, "Requesting stream %s", self->name);
-    object_name = g_strdup_printf ("WebTransportReceiveStream/%s", self->name);
+    object_name = g_strdup_printf ("ReadableStream/%s", self->name);
     gst_web_transferable_register_on_message ((GstWebTransferable *) self);
-    /* Request the WebTransportReceiveStream */
+    /* Request the ReadableStream */
     requested =
         gst_web_transferable_request_object ((GstWebTransferable *) self,
-            object_name, "gst_web_transport_stream_src_on_stream", self);
+            object_name, "gst_web_stream_reader_src_on_stream", self);
     g_free (object_name);
     if (!requested) {
       GST_ERROR_OBJECT (self, "Requesting object failed");
       return GST_FLOW_ERROR;
     }
-    registered = TRUE;
+    self->registered = TRUE;
     return GST_FLOW_CUSTOM_SUCCESS;
   }
 
@@ -138,23 +137,24 @@ gst_web_transport_stream_src_create (GstPushSrc *psrc, GstBuffer **outbuf)
 }
 
 static void
-gst_web_transport_stream_src_finalize (GObject *obj)
+gst_web_stream_reader_src_finalize (GObject *obj)
 {
-  GstWebTransportStreamSrc *self = GST_WEB_TRANSPORT_STREAM_SRC (obj);
+  GstWebStreamReaderSrc *self = GST_WEB_STREAM_READER_SRC (obj);
 
   g_free (self->name);
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
-gst_web_transport_stream_src_init (GstWebTransportStreamSrc *src)
+gst_web_stream_reader_src_init (GstWebStreamReaderSrc *src)
 {
   /* configure basesrc to be a live source */
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
+  src->registered = FALSE;
 }
 
 static void
-gst_web_transport_stream_src_class_init (GstWebTransportStreamSrcClass *klass)
+gst_web_stream_reader_src_class_init (GstWebStreamReaderSrcClass *klass)
 {
 
   static GstStaticPadTemplate srcpadtemplate = GST_STATIC_PAD_TEMPLATE (
@@ -164,31 +164,31 @@ gst_web_transport_stream_src_class_init (GstWebTransportStreamSrcClass *klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstPushSrcClass *pushsrc_class = (GstPushSrcClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_web_transport_stream_src_debug,
-      "webtransportstreamsrc", 0, "WebTransport Stream Source");
+  GST_DEBUG_CATEGORY_INIT (gst_web_stream_reader_src_debug,
+      "webstreamreadersrc", 0, "WebStream Reader Source");
 
-  pushsrc_class->create = gst_web_transport_stream_src_create;
+  pushsrc_class->create = gst_web_stream_reader_src_create;
   gst_element_class_add_pad_template (
       element_class, gst_static_pad_template_get (&srcpadtemplate));
 
-  gobject_class->finalize = gst_web_transport_stream_src_finalize;
+  gobject_class->finalize = gst_web_stream_reader_src_finalize;
 
   gst_element_class_set_static_metadata (element_class,
-      "WebTransport Stream Source", "Source/Network",
-      "Receives data from the network using WebTransport API",
+      "WebStream Reader Source", "Source/Network",
+      "Receives data from ReadableStream via transferable object",
       "Jorge Zapata <jzapata@fluendo.com>");
 }
 
 GstElement *
-gst_web_transport_stream_src_new (const gchar *name)
+gst_web_stream_reader_src_new (const gchar *name)
 {
-  GstWebTransportStreamSrc *self;
+  GstWebStreamReaderSrc *self;
 
-  self = GST_WEB_TRANSPORT_STREAM_SRC (
-      g_object_new (GST_TYPE_WEB_TRANSPORT_STREAM_SRC, "name", name, NULL));
+  self = GST_WEB_STREAM_READER_SRC (
+      g_object_new (GST_TYPE_WEB_STREAM_READER_SRC, "name", name, NULL));
   self->name = g_strdup (name);
-  GST_DEBUG_OBJECT (self, "gst_web_transport_stream_src_new with name %s",
-      self->name);
+  GST_DEBUG_OBJECT (
+      self, "gst_web_stream_reader_src_new with name %s", self->name);
   if (g_strcmp0 (self->name, "datagram")) {
     gst_base_src_set_live (GST_BASE_SRC (self), FALSE);
   } else {
@@ -197,8 +197,8 @@ gst_web_transport_stream_src_new (const gchar *name)
   return GST_ELEMENT_CAST (self);
 }
 
-EMSCRIPTEN_BINDINGS (gst_web_transport_stream_src)
+EMSCRIPTEN_BINDINGS (gst_web_stream_reader_src)
 {
-  function ("gst_web_transport_stream_src_on_stream",
-      &gst_web_transport_stream_src_on_stream);
+  function ("gst_web_stream_reader_src_on_stream",
+      &gst_web_stream_reader_src_on_stream);
 }
