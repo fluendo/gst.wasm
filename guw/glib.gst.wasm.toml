@@ -30,11 +30,6 @@ status = "pending"
 
 [[features]]
 remote = "origin"
-name = "wasm-2.76.0-function-pointer"
-status = "pending"
-
-[[features]]
-remote = "origin"
 name = "wasm-2.76.0-wasm-vs-emscripten"
 status = "pending"
 
@@ -46,9 +41,4 @@ status = "pending"
 [[features]]
 remote = "origin"
 name = "wasm-2.76.0-main-loop-support"
-status = "pending"
-
-[[features]]
-remote = "origin"
-name = "wasm-2.76.0-garray-fixes"
 status = "pending"
