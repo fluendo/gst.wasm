@@ -1,0 +1,26 @@
+[[remotes]]
+name = "fluendo"
+url = "git@github.com:fluendo/orc.git"
+
+[[remotes]]
+name = "origin"
+url = "git@ssh.gitlab.freedesktop.org:fluendo/orc.git"
+
+[target]
+remote = "fluendo"
+branch = "gst.wasm"
+
+[source]
+remote = "fluendo"
+branch = "main"
+
+[upstream]
+remote = "origin"
+branch = "main"
+
+[[features]]
+remote = "fluendo"
+name = "wasm-main-orc-support"
+summary = "ORC: add wasm support"
+pr = "https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/234/diffs"
+status = "pending"

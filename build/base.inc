@@ -24,7 +24,9 @@ recipes_remotes = {
 
 recipes_commits = {
     'gstreamer-1.0': gst_commit,
-    'gst-plugins-base-1.0': gst_commit,
+    # DO NOT MERGE
+    'gst-plugins-base-1.0': 'wasm-main-orc',
+    # -----------
     'gst-plugins-good-1.0': gst_commit,
     'gst-plugins-bad-1.0': gst_commit,
     'gst-plugins-ugly-1.0': gst_commit,
