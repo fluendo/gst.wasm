@@ -261,7 +261,6 @@ gst_web_codecs_audio_decoder_on_output (guintptr self_, val audio_data)
   GstWebCodecsAudioDecoder *self = (GstWebCodecsAudioDecoder *) self_;
   GstAudioDecoder *dec = GST_AUDIO_DECODER (self);
   GstBuffer *buffer = nullptr;
-  GstFlowReturn flow;
 
   GST_INFO_OBJECT (self, "AudioFrame received");
 
@@ -311,11 +310,13 @@ gst_web_codecs_audio_decoder_on_output (guintptr self_, val audio_data)
   gst_web_codecs_audio_decoder_audio_data_to_buffer (
       self, audio_data, buffer, total_size);
 
-  flow = gst_audio_decoder_finish_frame (dec, buffer, 1);
-  if (flow != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (
-        self, "Failed to finish frame: %s", gst_flow_get_name (flow));
-    gst_buffer_unref (buffer);
+  self->downstream_flow_ret = gst_audio_decoder_finish_frame (dec, buffer, 1);
+
+  if (self->downstream_flow_ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Failed to finish frame: %s",
+        gst_flow_get_name (self->downstream_flow_ret));
+    self->decoder.call<void> ("close");
+    // gst_buffer_unref (buffer);
   }
 
 done:
@@ -370,6 +371,12 @@ gst_web_codecs_audio_decoder_decode (gpointer data)
       "Decoding frame at %" GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+  if (self->downstream_flow_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self, "Nothing to decode. Last flow status: '%s'",
+        gst_flow_get_name (self->downstream_flow_ret));
+    return;
+  }
 
   /* TODO use 'transfer' option in case we provide an allocator to avoid
    * the copy. For that, we need to create the memory in JS and give the
@@ -555,7 +562,6 @@ gst_web_codecs_audio_decoder_handle_frame (
 {
   GstWebCodecsAudioDecoder *self = GST_WEB_CODECS_AUDIO_DECODER (decoder);
   GstWebCodecsAudioDecoderDecodeData *decode_data;
-  GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (self,
       "Handling frame with buffer at %" GST_TIME_FORMAT
@@ -576,6 +582,9 @@ gst_web_codecs_audio_decoder_handle_frame (
   g_mutex_unlock (&self->dequeue_lock);
   GST_AUDIO_DECODER_STREAM_LOCK (self);
 
+  if (self->downstream_flow_ret != GST_FLOW_OK)
+    return self->downstream_flow_ret;
+
   GST_DEBUG_OBJECT (self, "Ready to process more data");
   decode_data = g_new (GstWebCodecsAudioDecoderDecodeData, 1);
   decode_data->self = self;
@@ -587,7 +596,7 @@ gst_web_codecs_audio_decoder_handle_frame (
 
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
-  return res;
+  return self->downstream_flow_ret;
 }
 
 static gboolean
@@ -634,6 +643,8 @@ gst_web_codecs_audio_decoder_start (GstAudioDecoder *decoder)
   gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (self, "Start");
+
+  self->downstream_flow_ret = GST_FLOW_OK;
   runner = gst_web_runner_new (NULL);
   if (!gst_web_runner_run (runner, NULL)) {
     GST_ERROR_OBJECT (self, "Impossible to run the runner");

@@ -76,6 +76,8 @@ struct _GstWebCodecsAudioDecoder
   gint dequeue_size;
   GMutex dequeue_lock;
   GCond dequeue_cond;
+
+  GstFlowReturn downstream_flow_ret;
 };
 
 struct _GstWebCodecsAudioDecoderClass
