@@ -282,6 +282,36 @@
   background: #f9f9f9;
 }
 
+.canvas-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 14px;
+  border-top: 1px solid var(--card-border);
+}
+
+.stop-btn {
+  border: 1px solid #e74c3c;
+  background: #ffffff;
+  color: #e74c3c;
+  border-radius: 4px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+
+.stop-btn:hover:not(:disabled) {
+  background: #e74c3c;
+  color: #ffffff;
+}
+
+.stop-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .wasm-canvas {
   display: block;
   width: 100%;

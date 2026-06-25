@@ -34,6 +34,7 @@ export function WasmExample({
   const [activeTab, setActiveTab] = useState('console');
   const [logEntries, setLogEntries] = useState([]);
   const [inputValue, setInputValue] = useState(() => inputInitialValue);
+  const [moduleLoaded, setModuleLoaded] = useState(false);
 
   useEffect(() => {
     let disposed = false;
@@ -81,6 +82,7 @@ export function WasmExample({
         }).then((moduleInstance) => {
           moduleRef.current = moduleInstance;
           if (!disposed) {
+            setModuleLoaded(true);
             console.info(`[React] Successfully loaded and started ${pageName}`);
           }
         }).catch((err) => {
@@ -97,7 +99,11 @@ export function WasmExample({
 
     return () => {
       disposed = true;
+      if (moduleRef.current && typeof moduleRef.current._stop === 'function') {
+        moduleRef.current._stop();
+      }
       moduleRef.current = null;
+      setModuleLoaded(false);
       Object.assign(console, originalConsole);
       if (document.body.contains(script)) {
         document.body.removeChild(script);
@@ -153,6 +159,15 @@ export function WasmExample({
       logRef.current.scrollTop = logRef.current.scrollHeight;
     }
   }, [activeTab, logEntries]);
+
+  const handleStop = () => {
+    if (moduleRef.current && typeof moduleRef.current._stop === 'function') {
+      moduleRef.current._stop();
+      console.info(`[React] Stopped ${pageName}`);
+    } else {
+      console.warn(`[React] _stop function is not available for ${pageName}`);
+    }
+  };
 
   const handleInputSubmit = () => {
     if (!inputEnabled || !inputSubmitFunction) {
@@ -221,6 +236,15 @@ export function WasmExample({
                   Nothing to preview
                 </div>
               )}
+            </div>
+            <div className="canvas-panel-footer">
+              <button
+                className="stop-btn"
+                onClick={handleStop}
+                disabled={!moduleLoaded}
+              >
+                Stop
+              </button>
             </div>
           </div>
         </div>
