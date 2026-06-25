@@ -72,6 +72,26 @@ init_pipeline ()
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
+static gpointer
+_stop_thread (gpointer data)
+{
+  GstElement *pipeline = GST_ELEMENT (data);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  return NULL;
+}
+
+void
+stop ()
+{
+  if (pipeline) {
+    g_thread_new ("stop-pipeline", _stop_thread, gst_object_ref (pipeline));
+    pipeline = NULL;
+  }
+}
+
 int
 main (int argc, char **argv)
 {
