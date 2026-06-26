@@ -87,6 +87,25 @@ _stop_thread (gpointer data)
   return NULL;
 }
 
+static gpointer
+_play_thread (gpointer data)
+{
+  GstElement *pipeline = GST_ELEMENT (data);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  gst_object_unref (pipeline);
+
+  return NULL;
+}
+
+void
+play ()
+{
+  if (pipeline) {
+    g_thread_new ("play-pipeline", _play_thread, gst_object_ref (pipeline));
+  }
+}
+
 void
 stop ()
 {
@@ -112,6 +131,7 @@ main (int argc, char **argv)
 
   GST_INFO ("Initializing pipeline");
   init_pipeline ();
+  play ();
 
   return 0;
 }

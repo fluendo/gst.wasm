@@ -13,7 +13,7 @@ executable(executable_name,
       dependency('gstaudioconvert'),
     ],
     link_args: common_link_args + [
-      '-sEXPORTED_FUNCTIONS=_stop',
+      '-sEXPORTED_FUNCTIONS=_stop,_play',
       '-sASYNCIFY',
       # This is giving problems when running the WebRunner at set_format (RDI-2850)
       '-sPROXY_TO_PTHREAD',
