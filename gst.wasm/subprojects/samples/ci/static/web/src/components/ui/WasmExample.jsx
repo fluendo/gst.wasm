@@ -160,6 +160,15 @@ export function WasmExample({
     }
   }, [activeTab, logEntries]);
 
+  const handlePlay = () => {
+    if (moduleRef.current && typeof moduleRef.current._play === 'function') {
+      moduleRef.current._play();
+      console.info(`[React] Started playing ${pageName}`);
+    } else {
+      console.warn(`[React] _play function is not available for ${pageName}`);
+    }
+  };
+
   const handleStop = () => {
     if (moduleRef.current && typeof moduleRef.current._stop === 'function') {
       moduleRef.current._stop();
@@ -238,6 +247,13 @@ export function WasmExample({
               )}
             </div>
             <div className="canvas-panel-footer">
+              <button
+                className="play-btn"
+                onClick={handlePlay}
+                disabled={!moduleLoaded}
+              >
+                Play
+              </button>
               <button
                 className="stop-btn"
                 onClick={handleStop}
