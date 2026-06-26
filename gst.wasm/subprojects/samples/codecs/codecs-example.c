@@ -59,16 +59,20 @@ init_pipeline ()
       "webstreamsrc "
       "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\""
       " ! qtdemux name=demux multiqueue name=q"
-#if 1 // <-- change to 0 to disable video
+#if 0 // <-- change to 0 to disable video
       " demux. ! video/x-h264 ! q. "
       " q. ! webcodecsviddech264sw ! webcanvassink"
 #endif
 #if 1 // <-- change to 0 to disable audio
       " demux. ! audio/mpeg ! q. "
-      " q. ! webcodecsauddecaacsw ! audioconvert ! openalsink"
+      " q. ! webcodecsauddecaacsw ! audioconvert ! fakesink silent=false"
 #endif
       ,
       NULL);
+
+  g_signal_connect (pipeline, "deep-notify",
+      G_CALLBACK (gst_object_default_deep_notify), NULL);
+
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
