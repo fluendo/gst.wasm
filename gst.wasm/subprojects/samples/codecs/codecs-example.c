@@ -116,16 +116,6 @@ stop ()
   }
 }
 
-void
-quit ()
-{
-  if (pipeline) {
-    _stop_thread (pipeline);
-  }
-  g_main_loop_quit (loop);
-  g_main_loop_unref (loop);
-}
-
 int
 main (int argc, char **argv)
 {
