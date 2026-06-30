@@ -28,6 +28,10 @@ GST_DEBUG_CATEGORY_STATIC (example_dbg);
 #define GST_CAT_DEFAULT example_dbg
 
 static GstElement *pipeline;
+static GMainLoop *loop;
+
+void play ();
+void stop ();
 
 static void
 register_elements ()
@@ -53,8 +57,11 @@ register_elements ()
 #endif
 
 static void
-init_pipeline ()
+ensure_pipeline ()
 {
+  if (pipeline)
+    return;
+
   pipeline = gst_parse_launch (
       "webstreamsrc "
       "location=\"" GSTWASM_CODECS_EXAMPLE_SRC "\""
@@ -72,8 +79,21 @@ init_pipeline ()
 
   g_signal_connect (pipeline, "deep-notify",
       G_CALLBACK (gst_object_default_deep_notify), NULL);
+}
 
+static gpointer
+_play_thread (gpointer data)
+{
+  ensure_pipeline ();
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  return NULL;
+}
+
+void
+play ()
+{
+  g_thread_new ("play-pipeline", _play_thread, NULL);
 }
 
 static gpointer
@@ -87,32 +107,23 @@ _stop_thread (gpointer data)
   return NULL;
 }
 
-static gpointer
-_play_thread (gpointer data)
-{
-  GstElement *pipeline = GST_ELEMENT (data);
-
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gst_object_unref (pipeline);
-
-  return NULL;
-}
-
-void
-play ()
-{
-  if (pipeline) {
-    g_thread_new ("play-pipeline", _play_thread, gst_object_ref (pipeline));
-  }
-}
-
 void
 stop ()
 {
   if (pipeline) {
-    g_thread_new ("stop-pipeline", _stop_thread, gst_object_ref (pipeline));
+    g_thread_new ("stop-pipeline", _stop_thread, pipeline);
     pipeline = NULL;
   }
+}
+
+void
+quit ()
+{
+  if (pipeline) {
+    _stop_thread (pipeline);
+  }
+  g_main_loop_quit (loop);
+  g_main_loop_unref (loop);
 }
 
 int
@@ -123,15 +134,18 @@ main (int argc, char **argv)
   GST_DEBUG_CATEGORY_INIT (
       example_dbg, "example", 0, "webcodecs wasm example");
   gst_debug_set_threshold_from_string (
-      "example:5, webcodecs*:3, videodecoder*:3", FALSE);
+      "example:5, webcodecs*:3, videodecoder*:3,webrunner*:6,2", FALSE);
 
   gst_emscripten_init ();
   GST_INFO ("Registering elements");
   register_elements ();
 
-  GST_INFO ("Initializing pipeline");
-  init_pipeline ();
-  play ();
+  ensure_pipeline ();
 
+  GST_INFO ("Entering main loop, waiting for play/stop events");
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_main_loop_run (loop);
+
+  g_main_loop_unref (loop);
   return 0;
 }
