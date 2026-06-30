@@ -159,7 +159,6 @@ gst_web_codecs_video_decoder_on_output (guintptr self_, val video_frame)
   GstWebCodecsVideoDecoder *self = (GstWebCodecsVideoDecoder *) self_;
   GstVideoDecoder *dec = GST_VIDEO_DECODER (self);
   GstVideoCodecFrame *frame;
-  GstFlowReturn flow;
   val vf_timestamp;
 
   GST_INFO_OBJECT (self, "VideoFrame Received");
@@ -211,11 +210,11 @@ gst_web_codecs_video_decoder_on_output (guintptr self_, val video_frame)
     gst_object_unref (runner);
   }
 
-  flow = gst_video_decoder_finish_frame (dec, frame);
+  self->downstream_flow_ret = gst_video_decoder_finish_frame (dec, frame);
   frame = NULL;
-  if (flow != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Flow error: %d", flow);
-    goto done;
+  if (self->downstream_flow_ret != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (self, "Flow error: %d", self->downstream_flow_ret);
+    self->decoder.call<void> ("close");
   }
 
 done:
@@ -273,6 +272,13 @@ gst_web_codecs_video_decoder_decode (gpointer data)
   GST_DEBUG_OBJECT (self,
       "Decoding frame at %" GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
+
+  if (self->downstream_flow_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self, "Nothing to decode. Last flow status: '%s'",
+        gst_flow_get_name (self->downstream_flow_ret));
+    gst_video_codec_frame_unref (frame);
+    return;
+  }
 
   /* TODO use 'transfer' option in case we provide an allocator to avoid
    * the copy. For that, we need to create the memory in JS and give the
@@ -413,7 +419,6 @@ gst_web_codecs_video_decoder_handle_frame (
   GstWebCodecsVideoDecoder *self = GST_WEB_CODECS_VIDEO_DECODER (decoder);
   GstWebCodecsVideoDecoderDecodeData *decode_data;
   GstWebRunner *runner;
-  GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (decoder, "Handling frame");
   /* Wait until there is nothing pending to be to dequeued or there is a buffer
@@ -428,6 +433,9 @@ gst_web_codecs_video_decoder_handle_frame (
   self->dequeue_size++;
   g_mutex_unlock (&self->dequeue_lock);
   GST_VIDEO_DECODER_STREAM_LOCK (self);
+
+  if (self->downstream_flow_ret != GST_FLOW_OK)
+    return self->downstream_flow_ret;
 
   /* We are ready to process data */
   GST_DEBUG_OBJECT (self, "Ready to process more data");
@@ -444,7 +452,7 @@ gst_web_codecs_video_decoder_handle_frame (
 
   GST_DEBUG_OBJECT (decoder, "Handle frame done");
 
-  return res;
+  return self->downstream_flow_ret;
 }
 
 static gboolean
@@ -538,6 +546,8 @@ gst_web_codecs_video_decoder_start (GstVideoDecoder *decoder)
   gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (self, "Start");
+
+  self->downstream_flow_ret = GST_FLOW_OK;
   runner = gst_web_canvas_get_runner (self->canvas);
   if (!gst_web_runner_run (runner, NULL)) {
     GST_ERROR_OBJECT (self, "Impossible to run the runner");
