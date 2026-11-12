@@ -76,3 +76,9 @@ remote = "fluendo"
 name = "emscripten-fix-function-bitcasts"
 summary = "Fixes needed to use custom llvm branch fixing function pointer issues"
 status = "pending"
+
+[[features]]
+remote = "fluendo"
+name = "emscripten-rust"
+summary = "Build Rust code for the WEB platform with a pinned nightly and build-std"
+status = "pending"

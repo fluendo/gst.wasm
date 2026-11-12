@@ -90,6 +90,7 @@ The [current status](https://github.com/fluendo/cerbero/compare/main...fluendo:c
 * ⏳ `emscripten-hbbtv`: Add 'hbbtv' variant with compatibility parameters to run on TV browsers [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-hbbtv)
 * ⏳ `emscripten-gl`: Add OpenGL support in gst-plugins-base through new Emscripten based WebGL backend [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-gl)
 * ⏳ `emscripten-fix-function-bitcasts`: Fixes needed to use custom llvm branch fixing function pointer issues [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-fix-function-bitcasts)
+* ⏳ `emscripten-rust`: Build Rust code for the WEB platform with a pinned nightly and build-std [(Branch link)](https://github.com/fluendo/cerbero/tree/emscripten-rust)
 <!-- END guw cerbero.toml markdown -->
 
 
