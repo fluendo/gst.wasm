@@ -1,0 +1,124 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+#
+# gst.wasm override of the stock gst-plugins-rs recipe.
+#
+# Inherit the stock recipe and change only the WEB build behaviour. The stock
+# recipe owns the crate/plugin list; for the initial wasm bring-up we derive a
+# smaller subset from it instead of maintaining a second list.
+#
+# Rust is enabled on WEB by the emscripten-rust feature: the Rust bootstrapper
+# installs a pinned nightly with rust-src + wasm32 std, and Cargo is configured
+# with `-Z build-std` and atomics (see cerbero/config.py, bootstrap/rust.py and
+# build/build.py).
+
+import os
+import re
+from pathlib import Path
+
+import cerbero
+from cerbero.build import recipe
+from cerbero.enums import LibraryType, Platform
+from cerbero.utils import shell
+
+
+def recipes_path():
+    if os.environ.get('CERBERO_UNINSTALLED'):
+        return os.path.join(os.path.dirname(cerbero.__file__), '..', 'recipes')
+    return os.path.join(os.path.dirname(cerbero.__file__), '..', 'cerbero_share', 'recipes')
+
+
+original_recipe = recipe.import_recipe(os.path.join(recipes_path(), 'gst-plugins-rs.recipe'))
+
+
+class Recipe(original_recipe):
+    def recipe_dir(self):
+        return recipes_path()
+
+    def enable_plugin(self, name, category):
+        # The base prepare() starts with LibraryType.BOTH for non-app
+        # platforms, so enable_plugin() would also register the shared
+        # library. Force static for WEB while the base populates its file
+        # lists; the real build type is set again after prepare().
+        if self.config.target_platform == Platform.WEB:
+            library_type = self.library_type
+            self.library_type = LibraryType.STATIC
+            try:
+                super().enable_plugin(name, category)
+            finally:
+                self.library_type = library_type
+        else:
+            super().enable_plugin(name, category)
+
+    def prepare(self):
+        if self.config.target_platform == Platform.WEB:
+            # Initial bring-up subset, derived from the stock list. Expand this
+            # filter (or turn it into an exclusion set) once the rest of the
+            # wasm infrastructure is settled.
+            self.cargo_packages = [p for p in self.cargo_packages if p == 'analytics']
+            # openssl is not built for wasm. With the analytics-only subset no
+            # remaining crate needs it.
+            self.deps = [d for d in self.deps if d != 'openssl']
+            self.cargo_features = list(self.cargo_features)
+
+        super().prepare()
+
+        if self.config.target_platform == Platform.WEB:
+            # The stock recipe selected BOTH for non-app platforms.
+            self.library_type = LibraryType.STATIC
+            # The stock recipe enables v1_22 on every GStreamer crate because
+            # it builds the full package set. With the analytics-only subset,
+            # features for crates outside its dependency graph are rejected by
+            # Cargo. Keep only the analytics dependencies.
+            analytics_deps = {'gst', 'gst-base', 'gst-video', 'gst-rtp', 'gst-check'}
+            self.cargo_features = [
+                f for f in self.cargo_features if f.split('/', 1)[0] in analytics_deps
+            ]
+            # The analytics crate gates the combiner/splitter/tensor decoders
+            # behind v1_28. The feature also carries the gst-analytics 1.28
+            # minimum version, so it fails configure on an older dist.
+            self.cargo_features.append('gst-plugin-analytics/v1_28')
+
+    def requires_melding(self):
+        # dragonfire 0.1.x has no wasm object format. Link the individual
+        # plugin archives instead of generating libgstrsworkspace.a.
+        if self.config.target_platform == Platform.WEB:
+            return False
+        return super().requires_melding()
+
+    async def configure(self):
+        await super().configure()
+        if self.config.target_platform == Platform.WEB:
+            # cargo-c runs with --frozen --offline. Populate the Cargo cache
+            # first, using the nightly toolchain selected by the Cargo build
+            # type.
+            await shell.async_call(
+                [self.cargo, 'fetch', '--locked'],
+                self.config_src_dir,
+                logfile=self.logfile,
+                env=self.env,
+            )
+
+    async def install(self):
+        await super().install()
+        if self.config.target_platform != Platform.WEB:
+            return
+
+        # The base install() already moved the plugin .pc files from
+        # lib/pkgconfig to lib/gstreamer-1.0/pkgconfig. The wasm dist is
+        # static-only, so pull Requires.private entries into Requires and use
+        # the no-export gmodule variant.
+        for f in self.files_list_by_category(self.DEVEL_CAT, only_existing=False):
+            if not f.endswith('.pc') or 'gstreamer-1.0' not in f:
+                continue
+            dst = Path(self.config.prefix, f)
+            if not dst.exists():
+                continue
+            pc_file = dst.read_text(encoding='utf-8')
+            pc_file = re.sub(r'Requires\.private:', 'Requires:', pc_file)
+            # gmodule-2.0.pc adds -Wl,--export-dynamic. The static wasm dist
+            # uses gmodule-no-export-2.0 everywhere else (see
+            # gstreamer-1.0.pc), and export-dynamic makes wasm-ld pull
+            # libglib's gtestutils object, which references the unix IO
+            # channel constructor that the wasm GLib fork does not provide.
+            pc_file = re.sub(r'(?<!-)\bgmodule-2\.0\b', 'gmodule-no-export-2.0', pc_file)
+            dst.write_text(pc_file, encoding='utf-8')
