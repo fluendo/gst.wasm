@@ -43,6 +43,7 @@ examples = [
   'webtransportsrc-streams',
   'gstinspect',
   'dash',
+  'rsanalytics',
 ]
 
 common_link_args = [
